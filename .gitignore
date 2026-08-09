@@ -1,0 +1,16 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Keys and sensitive outputs
+keys/
+*.pem
+*.bin
+*.wav
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
