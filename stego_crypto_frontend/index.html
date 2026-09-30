@@ -419,25 +419,195 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 6: METRICS -->
+    <!-- TAB 6: METRICS & SIGNAL DISTORTION ANALYSIS LAB -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <section class="tab-view" id="tab-metrics">
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="card-title text-lg font-bold text-white mb-2">Signal Metrics & Quality Assessment Lab</div>
-        <p class="text-xs text-slate-400 mb-6">Calculate MSE, PSNR (dB), and SNR between original and modified carrier signals.</p>
+      <div class="sub-dock-wrapper flex justify-center mb-6">
+        <div class="sub-dock-nav inline-flex gap-2 bg-white/5 backdrop-blur-xl p-1.5 rounded-full border border-white/10">
+          <div class="sub-dock-item active px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="metrics-subtab-image">🖼️ Image Quality & Split Slider</div>
+          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="metrics-subtab-audio">🎵 Audio Quality & Noise Lab</div>
+          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="metrics-subtab-presets">⚡ One-Click Benchmarks</div>
+        </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="metric-card bg-slate-950/80 p-5 rounded-xl border border-white/10 text-center">
-            <span class="metric-lbl text-xs uppercase text-slate-400">Peak PSNR</span>
-            <span class="metric-val text-3xl font-bold font-mono text-emerald-400 mt-2 block">52.4 dB</span>
+      <!-- SUB-TAB 1: IMAGE QUALITY & SPLIT COMPARATOR -->
+      <div class="subtab-panel active" id="metrics-subtab-image">
+        <div class="glass-card p-6 rounded-2xl mb-6">
+          <div class="card-title text-lg font-bold text-white mb-2">Image Distortion & Quality Assessment Lab</div>
+          <p class="text-xs text-slate-400 mb-6">Upload original carrier and encoded/stego images to compute MSE, PSNR (dB), and render amplified pixel-difference heatmaps.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all mb-4" id="dz-metric-img-orig">
+                <div class="dropzone-icon text-3xl mb-1">📷</div>
+                <div class="dropzone-title text-xs font-semibold text-white">Upload Original Image</div>
+                <input type="file" id="file-metric-img-orig" accept="image/png, image/jpeg" style="display: none;">
+              </div>
+              <div id="badge-metric-orig" class="badge badge-info mb-4" style="display: none;">Original Loaded</div>
+
+              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-metric-img-mod">
+                <div class="dropzone-icon text-3xl mb-1">🧪</div>
+                <div class="dropzone-title text-xs font-semibold text-white">Upload Modified / Stego Image</div>
+                <input type="file" id="file-metric-img-mod" accept="image/png, image/jpeg" style="display: none;">
+              </div>
+              <div id="badge-metric-mod" class="badge badge-info mt-2 mb-4" style="display: none;">Modified Loaded</div>
+
+              <button class="btn btn-primary w-full py-3" id="btn-run-image-metrics">
+                <span>📊 Compute Image Metrics & Heatmap</span>
+              </button>
+            </div>
+
+            <div>
+              <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">Quantitative Quality Results</div>
+              
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="metric-card bg-slate-950/80 p-4 rounded-xl border border-white/10 text-center">
+                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Peak PSNR</span>
+                  <span class="metric-val text-2xl font-bold font-mono text-emerald-400 mt-1 block" id="val-img-psnr">-- dB</span>
+                </div>
+                <div class="metric-card bg-slate-950/80 p-4 rounded-xl border border-white/10 text-center">
+                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Mean Squared Error</span>
+                  <span class="metric-val text-2xl font-bold font-mono text-accent mt-1 block" id="val-img-mse">--</span>
+                </div>
+              </div>
+
+              <div class="p-4 bg-slate-950/80 border border-white/10 rounded-xl mb-4">
+                <div class="text-xs font-semibold text-slate-300 mb-1">Imperceptibility Verdict:</div>
+                <div class="text-sm font-bold font-mono text-emerald-400" id="val-img-verdict">Upload 2 images to evaluate imperceptibility</div>
+              </div>
+
+              <!-- Interactive Image Split Slider Comparator -->
+              <div class="text-xs font-semibold text-slate-300 mb-2">Interactive Image Split Comparator (Drag Handle):</div>
+              <div class="relative w-full h-[220px] rounded-xl overflow-hidden border border-white/10 bg-slate-950 cursor-ew-resize select-none" id="box-img-split-comparator">
+                <img id="img-split-orig" class="absolute top-0 left-0 w-full h-full object-contain" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%2394a3b8' font-size='12'%3EOriginal Image%3C/text%3E%3C/svg%3E">
+                <div class="absolute top-0 left-0 w-1/2 h-full overflow-hidden border-r-2 border-accent" id="wrap-split-mod">
+                  <img id="img-split-mod" class="absolute top-0 left-0 w-full h-full object-contain" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231e1b4b'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23e040fb' font-size='12'%3EModified Image%3C/text%3E%3C/svg%3E">
+                </div>
+                <div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-emerald-400">ORIGINAL</div>
+                <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-accent">MODIFIED</div>
+              </div>
+            </div>
           </div>
-          <div class="metric-card bg-slate-950/80 p-5 rounded-xl border border-white/10 text-center">
-            <span class="metric-lbl text-xs uppercase text-slate-400">Mean Squared Error</span>
-            <span class="metric-val text-3xl font-bold font-mono text-accent mt-2 block">0.00037</span>
+
+          <!-- Amplified Difference Heatmap -->
+          <div class="mt-6 pt-6 border-t border-white/10">
+            <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">🔍 Amplified Pixel Difference Heatmap (|Modified - Original| × 10)</div>
+            <div class="p-4 bg-slate-950 border border-white/10 rounded-xl">
+              <canvas id="canvas-img-diff-heatmap" height="160" class="w-full rounded-lg bg-black"></canvas>
+            </div>
           </div>
-          <div class="metric-card bg-slate-950/80 p-5 rounded-xl border border-white/10 text-center">
-            <span class="metric-lbl text-xs uppercase text-slate-400">Signal-to-Noise</span>
-            <span class="metric-val text-3xl font-bold font-mono text-cyan-400 mt-2 block">48.1 dB</span>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: AUDIO QUALITY & NOISE LAB -->
+      <div class="subtab-panel" id="metrics-subtab-audio" style="display: none;">
+        <div class="glass-card p-6 rounded-2xl mb-6">
+          <div class="card-title text-lg font-bold text-white mb-2">Audio Signal & Acoustic Noise Floor Assessment Lab</div>
+          <p class="text-xs text-slate-400 mb-6">Compare original 16-bit PCM WAV audio with stego audio to measure MSE, PSNR, SNR, and plot acoustic noise floor.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all mb-4" id="dz-metric-aud-orig">
+                <div class="dropzone-icon text-3xl mb-1">🎵</div>
+                <div class="dropzone-title text-xs font-semibold text-white">Upload Original Audio (.wav)</div>
+                <input type="file" id="file-metric-aud-orig" accept="audio/wav, .wav" style="display: none;">
+              </div>
+              <div id="badge-aud-orig" class="badge badge-info mb-4" style="display: none;">Original Audio Loaded</div>
+
+              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-metric-aud-mod">
+                <div class="dropzone-icon text-3xl mb-1">🎧</div>
+                <div class="dropzone-title text-xs font-semibold text-white">Upload Modified Stego Audio (.wav)</div>
+                <input type="file" id="file-metric-aud-mod" accept="audio/wav, .wav" style="display: none;">
+              </div>
+              <div id="badge-aud-mod" class="badge badge-info mt-2 mb-4" style="display: none;">Stego Audio Loaded</div>
+
+              <button class="btn btn-primary w-full py-3" id="btn-run-audio-metrics">
+                <span>🎧 Compute Audio Metrics & Noise Signal</span>
+              </button>
+            </div>
+
+            <div>
+              <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">Acoustic Signal Metrics</div>
+              
+              <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center">
+                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Peak PSNR</span>
+                  <span class="metric-val text-xl font-bold font-mono text-emerald-400 mt-1 block" id="val-aud-psnr">-- dB</span>
+                </div>
+                <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center">
+                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Signal-to-Noise</span>
+                  <span class="metric-val text-xl font-bold font-mono text-cyan-400 mt-1 block" id="val-aud-snr">-- dB</span>
+                </div>
+                <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center">
+                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Mean Sq Error</span>
+                  <span class="metric-val text-xl font-bold font-mono text-accent mt-1 block" id="val-aud-mse">--</span>
+                </div>
+              </div>
+
+              <div class="p-4 bg-slate-950/80 border border-white/10 rounded-xl mb-4">
+                <div class="text-xs font-semibold text-slate-300 mb-1">Acoustic Quality Verdict:</div>
+                <div class="text-sm font-bold font-mono text-emerald-400" id="val-aud-verdict">Upload 2 WAV files to evaluate acoustic noise</div>
+              </div>
+
+              <!-- Synchronized Audio Players for Listening Tests -->
+              <div class="space-y-2">
+                <div class="text-xs font-semibold text-slate-300">Original Carrier Audio Player:</div>
+                <audio id="player-metric-orig" controls class="w-full h-8 rounded-lg bg-slate-950 border border-white/10"></audio>
+
+                <div class="text-xs font-semibold text-slate-300 pt-2">Stego Audio Player:</div>
+                <audio id="player-metric-mod" controls class="w-full h-8 rounded-lg bg-slate-950 border border-white/10"></audio>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acoustic Residual Noise Waveform Plot -->
+          <div class="mt-6 pt-6 border-t border-white/10">
+            <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">📊 Acoustic Residual Difference Signal (|Stego PCM - Original PCM|)</div>
+            <div class="p-4 bg-slate-950 border border-white/10 rounded-xl">
+              <canvas id="canvas-audio-metric-noise" height="150" class="w-full rounded-lg bg-black"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 3: ONE-CLICK BENCHMARKS -->
+      <div class="subtab-panel" id="metrics-subtab-presets" style="display: none;">
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="card-title text-lg font-bold text-white mb-2">Synthetic Signal Quality Benchmark Presets</div>
+          <p class="text-xs text-slate-400 mb-6">Test the metrics lab instantly with one-click precomputed synthetic benchmark samples.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-1bit-audio">
+              <div class="text-sm font-bold text-white flex items-center justify-between">
+                <span>🎵 1-Bit Audio LSB Stego Benchmark</span>
+                <span class="badge badge-success">60.2 dB PSNR</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">Simulates 16-bit PCM WAV audio with 1-bit LSB steganography payload embedding.</p>
+            </button>
+
+            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-1bit-image">
+              <div class="text-sm font-bold text-white flex items-center justify-between">
+                <span>🖼️ 1-Bit Image LSB Stego Benchmark</span>
+                <span class="badge badge-success">51.1 dB PSNR</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">Simulates RGBA image with 1-bit LSB steganography across pixel channels.</p>
+            </button>
+
+            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-dct-watermark">
+              <div class="text-sm font-bold text-white flex items-center justify-between">
+                <span>💧 8x8 Block DCT Watermark Benchmark</span>
+                <span class="badge badge-warning">42.8 dB PSNR</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">Simulates Discrete Cosine Transform (DCT) mid-frequency coefficient watermarking.</p>
+            </button>
+
+            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-heavy-noise">
+              <div class="text-sm font-bold text-white flex items-center justify-between">
+                <span>⚠️ Heavy Compression Noise Distortion</span>
+                <span class="badge badge-danger">28.4 dB PSNR</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">Simulates additive Gaussian noise and lossy compression degradation.</p>
+            </button>
           </div>
         </div>
       </div>
