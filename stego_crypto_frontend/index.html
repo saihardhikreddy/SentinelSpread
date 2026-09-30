@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stego — Cybersecurity & Cryptography Suite</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- WebGL2 Canvas for Smooth Liquid Ridged Sphere -->
+  <canvas id="gl"></canvas>
+
+  <!-- Top Navigation Header Bar -->
+  <nav class="navbar">
+    <div class="nav-brand" data-tab="tab-overview">
+      <div class="brand-logo-dots">
+        <div class="brand-dot dot-pink"></div>
+        <div class="brand-dot dot-purple"></div>
+        <div class="brand-dot dot-teal"></div>
+      </div>
+      <div class="brand-name">stegosuite</div>
+    </div>
+
+    <!-- Top Sliding Glass Capsule Pill Dock -->
+    <div class="top-dock-container">
+      <div class="nav-pill-sliding" id="nav-pill-active"></div>
+      <ul class="top-dock-menu">
+        <li class="dock-text-item active" data-tab="tab-overview">Overview</li>
+        <li class="dock-text-item" data-tab="tab-steganography">Steganography</li>
+        <li class="dock-text-item" data-tab="tab-watermarking">Watermarking</li>
+        <li class="dock-text-item" data-tab="tab-rsa-edu">RSA (Edu)</li>
+        <li class="dock-text-item" data-tab="tab-webcrypto">WebCrypto</li>
+        <li class="dock-text-item" data-tab="tab-metrics">Metrics</li>
+      </ul>
+    </div>
+
+    <div class="nav-status">
+      <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-code); font-size: 12px; color: var(--text-muted);">
+        <div class="status-dot" id="api-status-dot"></div>
+        <span id="api-status-text">FastAPI Connected</span>
+      </div>
+      <a href="/docs" target="_blank" class="btn btn-secondary btn-sm">API Docs ⚡</a>
+    </div>
+  </nav>
+
+  <!-- Main Viewport Stage -->
+  <div class="app-viewport">
+
+    <!-- VIEW 1: OVERVIEW -->
+    <section class="tab-view active" id="tab-overview">
+      <div class="hero-section">
+        <div class="hero-text-wrapper" id="hero-main-text">
+          <h1 class="hero-title">Steganography system that<br>simply works.</h1>
+          <p class="hero-sub">Algorithmic execution of your secret data payloads.</p>
+          <div>
+            <button class="btn-pill-app" id="btn-hero-start" data-tab="tab-steganography">
+              <span>🛡️ Explore Stego Studio</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-scroll-revealer" id="hero-scroll-text">
+          <h2 class="revealer-title">Hello, I am Stego.<br>Your security assistant</h2>
+          <p class="revealer-sub">
+            StegoSuite cryptography engine fundamentally protects data privacy with hybrid RSA encryption, LSB audio/image steganography, and invisible DCT watermarking.
+          </p>
+        </div>
+
+        <div class="stats-banner scroll-reveal">
+          <div class="stat-item">
+            <div class="stat-num" data-target="2048">2048</div>
+            <div class="stat-label">Bits Key Length</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" data-target="100">100%</div>
+            <div class="stat-label">LSB Pixel Accuracy</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" data-target="52">52 dB</div>
+            <div class="stat-label">Peak Signal-to-Noise</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" data-target="5">&lt;5 ms</div>
+            <div class="stat-label">API Latency</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: STEGANOGRAPHY -->
+    <section class="tab-view" id="tab-steganography">
+      <div class="sub-dock-wrapper">
+        <div class="sub-dock-nav">
+          <div class="sub-dock-item active" data-subtab="steg-subtab-image">🖼️ Image Steganography</div>
+          <div class="sub-dock-item" data-subtab="steg-subtab-audio">🎵 Audio & Media Stego</div>
+          <div class="sub-dock-item" data-subtab="steg-subtab-keys">🔑 RSA Key Generator</div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 1: IMAGE STEGANOGRAPHY -->
+      <div class="subtab-panel active" id="steg-subtab-image">
+        <div class="glass-card scroll-reveal" style="margin-bottom: 28px;">
+          <div class="step-header">
+            <span class="badge badge-info">EMBED</span>
+            <span class="card-title">Encrypt & Embed into Image</span>
+          </div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <div>
+              <div class="dropzone" id="dz-steg-carrier">
+                <div class="dropzone-icon">📷</div>
+                <div class="dropzone-title">Upload Carrier Image</div>
+                <input type="file" id="file-steg-carrier" accept="image/png, image/jpeg" style="display: none;">
+              </div>
+              <div class="preview-box" id="prev-steg-carrier" style="display: none;">
+                <img id="img-steg-carrier" src="" alt="Carrier Preview">
+              </div>
+              <div class="form-group" style="margin-top: 16px;">
+                <label for="input-steg-msg">Secret Message Payload</label>
+                <textarea id="input-steg-msg" placeholder="Enter confidential text payload..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="input-steg-pwd">Encryption Password (AES Pre-encryption)</label>
+                <input type="password" id="input-steg-pwd" placeholder="Enter password or use generated RSA Public Key">
+              </div>
+              <button class="btn btn-primary" id="btn-steg-embed-act" style="width: 100%;">
+                <span>🛡️ Embed Message into Image</span>
+              </button>
+            </div>
+
+            <div>
+              <div style="font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Stego Image Output</div>
+              <div id="box-steg-out-res" style="display: none;">
+                <div class="preview-box">
+                  <img id="img-steg-out" src="" alt="Stego Output">
+                </div>
+                <div class="grid-3" style="gap: 12px; margin-top: 16px;">
+                  <div class="metric-card"><span class="metric-lbl">Bits Used</span><span class="metric-val" id="res-steg-bits">0</span></div>
+                  <div class="metric-card"><span class="metric-lbl">PSNR</span><span class="metric-val" id="res-steg-psnr">0 dB</span></div>
+                  <div class="metric-card"><span class="metric-lbl">MSE</span><span class="metric-val" id="res-steg-mse">0</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: AUDIO STEGANOGRAPHY -->
+      <div class="subtab-panel" id="steg-subtab-audio" style="display: none;">
+        <div class="glass-card scroll-reveal">
+          <div class="card-title">Audio & Video Steganography Studio (WAV / MP4)</div>
+          <div class="grid-2" style="margin-top: 16px;">
+            <div>
+              <div class="dropzone" id="dz-audio-embed">
+                <div class="dropzone-icon">🎵</div>
+                <div class="dropzone-title">Upload WAV or MP4 File</div>
+                <input type="file" id="file-audio-embed" accept="audio/wav, video/mp4, .wav, .mp4" style="display: none;">
+              </div>
+              <div id="audio-embed-file-badge" class="badge badge-info" style="display: none; margin-top: 8px;">No File Selected</div>
+              <div class="form-group" style="margin-top: 14px;">
+                <label for="input-audio-embed-text">Secret Text Payload</label>
+                <textarea id="input-audio-embed-text" placeholder="Enter confidential message to embed..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="input-audio-embed-pwd">Encryption Password</label>
+                <input type="password" id="input-audio-embed-pwd" placeholder="Enter secret password for AES-128-CBC encryption">
+              </div>
+              <button class="btn btn-primary" id="btn-audio-embed-act" style="width: 100%;">
+                <span>🔒 Encrypt & Download Stego Audio (.wav)</span>
+              </button>
+            </div>
+
+            <div>
+              <div class="dropzone" id="dz-audio-extract">
+                <div class="dropzone-icon">🎧</div>
+                <div class="dropzone-title">Upload Stego Audio/Video File</div>
+                <input type="file" id="file-audio-extract" accept="audio/wav, video/mp4, .wav, .mp4" style="display: none;">
+              </div>
+              <div class="form-group" style="margin-top: 14px;">
+                <label for="input-audio-extract-pwd">Decryption Password</label>
+                <input type="password" id="input-audio-extract-pwd" placeholder="Enter encryption password">
+              </div>
+              <button class="btn btn-secondary" id="btn-audio-extract-act" style="width: 100%;">
+                <span>🔓 Extract Secret Payload</span>
+              </button>
+              <div class="code-container" style="margin-top: 14px;">
+                <pre class="code-block" id="output-audio-recovered">Extracted audio payload will appear here...</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Proof & Acoustic Payload Metrics Panel -->
+        <div class="glass-card scroll-reveal" id="card-audio-proof" style="margin-top: 24px;">
+          <div style="font-size: 14px; font-weight: 600; color: var(--pink-primary); margin-bottom: 16px; font-family: var(--font-code);">
+            Here is the visual proof of your <strong>Application-Layer Audio Stegocrypto Engine ( audio_stego.py )</strong>:
+          </div>
+
+          <!-- Plot 1: Audio Waveform Comparison -->
+          <div class="plot-box-card" style="margin-bottom: 20px;">
+            <div class="plot-header-bar">
+              <span class="plot-title-text">📊 Audio Waveform Comparison (Acoustic Payload Imperceptibility)</span>
+              <div class="plot-legend-group">
+                <span class="legend-chip"><span class="chip-color chip-cyan"></span> Original Carrier PCM</span>
+                <span class="legend-chip"><span class="chip-color chip-pink"></span> Stego Audio (AES-128 LSB Embedded)</span>
+              </div>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="canvas-audio-waveform" height="180" style="width: 100%; border-radius: var(--radius-sm); background: #06030c; border: 1px solid var(--border-glass);"></canvas>
+            </div>
+          </div>
+
+          <!-- Plot 2: LSB Sample Residual Difference -->
+          <div class="plot-box-card" style="margin-bottom: 24px;">
+            <div class="plot-header-bar">
+              <span class="plot-title-text">📊 LSB Sample Residual Difference (Strictly bounded to ±1 LSB bit modification)</span>
+              <div class="plot-legend-group">
+                <span class="legend-chip"><span class="chip-color chip-green"></span> LSB Delta (|Stego - Original|)</span>
+              </div>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="canvas-audio-residual" height="150" style="width: 100%; border-radius: var(--radius-sm); background: #06030c; border: 1px solid var(--border-glass);"></canvas>
+            </div>
+          </div>
+
+          <!-- Green Neon Encrypted Envelope Metadata Box -->
+          <div class="terminal-envelope-box">
+            <div class="term-section-title">🔒 ENCRYPTED ENVELOPE METADATA:</div>
+            <div class="term-row">• Magic Header: <span id="meta-magic" class="term-val">ASTG (4 Bytes)</span> | Payload Length Indicator: <span id="meta-length" class="term-val">96 Bytes</span></div>
+            <div class="term-row">• Cipher Algorithm: <span id="meta-cipher" class="term-val">AES-128-CBC (PKCS7 Padded)</span> | Derived Key: <span id="meta-key" class="term-val">SHA-256(...)[:16]</span></div>
+            <div class="term-row">• Total LSB Bits Embedded: <span id="meta-bits" class="term-val">832 bits</span> | Carrier Capacity Used: <span id="meta-cap" class="term-val">0.94%</span></div>
+            <div class="term-section-title" style="margin-top: 14px;">🔓 RECOVERED PLAINTEXT EXTRACTED FROM LSB BITSTREAM:</div>
+            <div class="term-quote">&gt; "<span id="meta-plaintext">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</span>"</div>
+            <div class="term-status-line" id="meta-status">✓ STATUS: 100% ACOUSTIC-LAYER PAYLOAD RECOVERY VERIFIED</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="app.js"></script>
+</body>
+</html>

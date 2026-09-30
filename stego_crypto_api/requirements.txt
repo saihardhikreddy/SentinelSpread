@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+cryptography
+pillow
+numpy
+scipy
+pytest
+python-multipart
