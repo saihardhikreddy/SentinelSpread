@@ -43,10 +43,10 @@
   <!-- WebGL2 Liquid Noise-Displaced Sphere & Particle Canvas -->
   <canvas id="gl"></canvas>
 
-  <!-- Top Navigation Bar with Sliding Glass Capsule Pill Dock -->
+  <!-- Top Navigation Bar with Sliding Glass Capsule Pill Dock (Overview Removed) -->
   <nav class="navbar">
     <!-- Brand -->
-    <div class="nav-brand" data-tab="tab-overview">
+    <div class="nav-brand" id="nav-brand-logo">
       <div class="brand-logo-dots">
         <div class="brand-dot dot-pink"></div>
         <div class="brand-dot dot-purple"></div>
@@ -59,8 +59,7 @@
     <div class="top-dock-container">
       <div class="nav-pill-sliding" id="nav-pill-active"></div>
       <ul class="top-dock-menu">
-        <li class="dock-text-item active" data-tab="tab-overview">Overview</li>
-        <li class="dock-text-item" data-tab="tab-steganography">Steganography</li>
+        <li class="dock-text-item active" data-tab="tab-steganography">Steganography</li>
         <li class="dock-text-item" data-tab="tab-watermarking">Watermarking</li>
         <li class="dock-text-item" data-tab="tab-rsa-edu">RSA (Edu)</li>
         <li class="dock-text-item" data-tab="tab-webcrypto">WebCrypto</li>
@@ -68,856 +67,401 @@
       </ul>
     </div>
 
+    <!-- API Connection Status -->
+    <div class="nav-status">
+      <div class="flex items-center gap-2 font-mono text-xs text-slate-400">
+        <div class="status-dot" id="api-status-dot"></div>
+        <span id="api-status-text">FastAPI Connected</span>
+      </div>
+      <a href="/docs" target="_blank" class="btn btn-secondary btn-sm">API Docs ⚡</a>
+    </div>
   </nav>
 
   <!-- Main Viewport Stage -->
   <div class="app-viewport">
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW 1: OVERVIEW (HERO LANDING WITH 9000-PARTICLE REVOLUTION) -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view active" id="tab-overview">
-      
-      <!-- Long Scroll Stage with Sticky Centerpiece Pinning -->
-      <div class="hero-scroll-stage">
-        <div class="hero-sticky-pin">
-          
-          <!-- Stage 1: Initial Hero Title -->
-          <div class="hero-text-wrapper" id="hero-main-text">
-            <h1 class="hero-title text-reveal-blur revealed">Molecular dynamics that<br><span class="text-shimmer">simply works.</span></h1>
-            <p class="hero-sub">Algorithmic execution of your LAMMPS simulations powered by Cloud Gemini (gemini-2.5-flash) and liquid physics RAG.</p>
-            
-            <div class="flex items-center justify-center gap-3">
-              <button class="btn-pill-app magnetic-btn" id="btn-hero-start" data-tab="tab-chatbot">
-                <span>⚛ Explore AI Research Chat</span>
-              </button>
-              <button class="btn-pill-app magnetic-btn" onclick="switchTab('tab-workspace')">
-                <span>📂 Open Project Workspace</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Stage 2: Revealed Centerpiece on Scroll (1:1 with Particle Sphere) -->
-          <div class="hero-scroll-revealer" id="hero-scroll-text">
-            <h2 class="revealer-title">Hello, I am LAMMPS AI.<br><span class="text-shimmer">Your research, assistant</span></h2>
-            <p class="revealer-sub">
-              Grounded offline intelligence for liquid-state simulations — from automated fluid ensemble generation to real-time 3D molecular & fluid structure inspection.
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Feature Cards Grid (Spotlight Hover + 3D Tilt + Scroll Reveal) -->
-      <div class="grid-3 scroll-reveal" style="margin-top: 48px;">
-        <div class="glass-card cursor-pointer tilt-card" data-tab="tab-studio">
-          <div class="card-icon">⚛</div>
-          <h3 class="card-title">Interactive Script Studio</h3>
-          <p class="card-desc">Generate complete NVE/NVT/NPT scripts with EAM, Tersoff, and LJ force fields with automatic unit balancing.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card" onclick="openErrorAnalyzer()">
-          <div class="card-icon">🔍</div>
-          <h3 class="card-title">Diagnostic Error Analyzer</h3>
-          <p class="card-desc">Instantly diagnose runtime tracebacks (Lost atoms, Out of range, Illegal fix) with verified code patches.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card" onclick="openScriptDoctor()">
-          <div class="card-icon">🩺</div>
-          <h3 class="card-title">Script Doctor</h3>
-          <p class="card-desc">Auto-repair broken pasted scripts — inserting missing atom styles, bounding conditions, and fixing timesteps.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card" data-tab="tab-visualizer">
-          <div class="card-icon">🔮</div>
-          <h3 class="card-title">3D Molecular Visualizer</h3>
-          <p class="card-desc">Interactive 3D molecular & fluid structure orbital viewer with mouse orbit, zoom, and real-time kinetic energy HUD.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card" data-tab="tab-runner">
-          <div class="card-icon">⚡</div>
-          <h3 class="card-title">Local Binary Runner</h3>
-          <p class="card-desc">Executes simulations on your locally installed LAMMPS binary with sandboxed directories and timeout safety.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card" data-tab="tab-docs">
-          <div class="card-icon">📖</div>
-          <h3 class="card-title">Grounded Documentation</h3>
-          <p class="card-desc">Multi-signal retriever across 41 official LAMMPS manual chapters with exact command syntax citations.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW 2: AI CHATBOT                                          -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-chatbot">
-      <div class="max-w-4xl mx-auto space-y-6">
-        
-        <!-- Header Controls -->
-        <div class="glass-card flex items-center justify-between p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent text-lg">⚛</div>
-            <div>
-              <div class="text-sm font-bold text-white">LAMMPS Research Partner</div>
-              <div class="text-[11px] font-mono text-gray-400">Gemma 4 · 100% Offline Local Engine</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="switchTab('tab-workspace')" class="px-3 py-1.5 rounded-xl border border-accent/30 bg-accent/10 hover:bg-accent/20 text-xs font-mono text-accent flex items-center gap-1.5 transition-all" title="View active project workspace files">
-              <span>📂</span>
-              <span id="chat-workspace-status">Workspace: Open Folder</span>
-            </button>
-            <button onclick="openApiKeyModal()" class="px-3 py-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-xs font-mono text-purple-300 flex items-center gap-1.5 transition-all" title="Configure Gemini API Key">
-              <span>🔑</span>
-              <span>API Key</span>
-            </button>
-            <button onclick="startNewConversation()" class="btn btn-secondary btn-sm">
-              <span>+ New Session</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Chat Viewport -->
-        <div class="chat-viewport space-y-4" id="chat-messages">
-          <div class="glass-card">
-            <h3 class="text-base font-bold text-white mb-2">Welcome to your local LAMMPS Research Studio</h3>
-            <p class="text-sm text-gray-300 leading-relaxed mb-4">
-              Ask any materials science question, request customized simulation scripts, or drop/paste error tracebacks to repair.
-            </p>
-            <div class="grid-2">
-              <button class="quick-prompt-card" onclick="askPredefined('Simulate molten aluminum at 1000 K using an NVT ensemble')">
-                <span class="text-xl">⚛</span>
-                <div class="text-left">
-                  <div class="text-xs font-bold text-white">Molten Aluminum</div>
-                  <div class="text-[11px] text-gray-400">Post-melt NVT liquid equilibration</div>
-                </div>
-              </button>
-              <button class="quick-prompt-card" onclick="askPredefined('Simulate rigid SPC/E water at 300 K in NVT ensemble')">
-                <span class="text-xl">💧</span>
-                <div class="text-left">
-                  <div class="text-xs font-bold text-white">SPC/E Water Liquid</div>
-                  <div class="text-[11px] text-gray-400">Rigid SHAKE + Coulombic solver</div>
-                </div>
-              </button>
-              <button class="quick-prompt-card" onclick="askPredefined('Create a simple Lennard-Jones liquid simulation')">
-                <span class="text-xl">🧪</span>
-                <div class="text-left">
-                  <div class="text-xs font-bold text-white">LJ Liquid Fluid</div>
-                  <div class="text-[11px] text-gray-400">Equilibration in reduced units</div>
-                </div>
-              </button>
-              <button class="quick-prompt-card" onclick="askPredefined('Calculate shear viscosity using Green-Kubo for Lennard-Jones liquid')">
-                <span class="text-xl">📊</span>
-                <div class="text-left">
-                  <div class="text-xs font-bold text-white">Green-Kubo Viscosity</div>
-                  <div class="text-[11px] text-gray-400">Stress tensor autocorrelation</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Chat Prompt Bar with Drop File Support -->
-        <div class="space-y-2">
-          <!-- Active File Attached Badge (if file dropped) -->
-          <div id="chat-file-badge" class="hidden items-center justify-between px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/30 text-xs font-mono text-accent">
-            <div class="flex items-center gap-2">
-              <span>📎</span>
-              <span id="chat-file-name">script.in</span>
-              <span class="text-gray-400 text-[10px]" id="chat-file-size">(1.2 KB)</span>
-            </div>
-            <button onclick="removeChatAttachedFile()" class="text-gray-400 hover:text-white text-sm">✕</button>
-          </div>
-
-          <div class="prompt-glass flex items-end gap-3 p-3 rounded-2xl relative" id="chat-dropzone">
-            <!-- Hidden File Input -->
-            <input type="file" id="chat-file-input" class="hidden" accept=".in,.lmp,.lammps,.txt,.log,.dat" onchange="handleChatFileInput(event)">
-            
-            <button type="button" class="text-gray-400 hover:text-accent transition-colors p-2 text-lg" title="Attach LAMMPS Script File (.in, .lmp, .txt, .log)" onclick="document.getElementById('chat-file-input').click()">
-              📎
-            </button>
-
-            <textarea id="user-prompt" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 resize-none outline-none max-h-32" rows="1" placeholder="Ask anything about LAMMPS, request a script, or drop file here..."></textarea>
-            
-            <button id="btn-send" onclick="submitUserMessage()" class="btn btn-primary" style="padding: 10px 18px;">
-              <span>Send ⚡</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW 3: SCRIPT STUDIO                                       -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-studio">
-      <!-- Sub-dock Navigation Capsule -->
-      <div class="sub-dock-wrapper">
-        <div class="sub-dock-nav">
-          <div class="sub-dock-item active" data-subtab="studio-gen" onclick="switchStudioSubtab('studio-gen')">🛠️ Interactive Builder</div>
-          <div class="sub-dock-item" data-subtab="studio-doctor" onclick="switchStudioSubtab('studio-doctor')">🔍 Error Analyzer & Doctor</div>
-        </div>
-      </div>
-
-      <!-- Subtab 1: Interactive Parameter Builder -->
-      <div id="studio-gen" class="subtab-panel active">
-        <div class="grid-2">
-          
-          <!-- Parameters Control -->
-          <div class="glass-card space-y-5">
-            <div class="step-header">
-              <span class="step-badge">BUILD</span>
-              <span class="step-title">Simulation Parameters</span>
-            </div>
-
-            <div class="form-group">
-              <div class="flex justify-between text-xs font-semibold text-gray-300 mb-2">
-                <span>Target Temperature</span>
-                <span class="font-mono text-accent" id="val-temp-display">900 K</span>
-              </div>
-              <input type="range" id="param-temp-slider" min="50" max="2500" step="50" value="900" oninput="updateParamPreview()" class="range-slider w-full">
-            </div>
-
-            <div class="form-group">
-              <div class="flex justify-between text-xs font-semibold text-gray-300 mb-2">
-                <span>Initial Temperature</span>
-                <span class="font-mono text-accent" id="val-tstart-display">300 K</span>
-              </div>
-              <input type="range" id="param-tstart-slider" min="50" max="1500" step="50" value="300" oninput="updateParamPreview()" class="range-slider w-full">
-            </div>
-
-            <div class="form-group">
-              <label class="block text-xs font-semibold text-gray-300 mb-2">Integration Timestep</label>
-              <select id="param-dt-select" class="input-glass w-full" onchange="updateParamPreview()">
-                <option value="0.0005">0.0005 ps (0.5 fs) - Ultra-Stable</option>
-                <option value="0.001" selected>0.001 ps (1.0 fs) - Standard Metals</option>
-                <option value="0.002">0.002 ps (2.0 fs) - Fast Dynamics</option>
-                <option value="0.005">0.005 tau - Lennard-Jones</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <div class="flex justify-between text-xs font-semibold text-gray-300 mb-2">
-                <span>Total Run Steps</span>
-                <span class="font-mono text-accent" id="val-steps-display">2000 steps</span>
-              </div>
-              <input type="range" id="param-steps-slider" min="500" max="10000" step="500" value="2000" oninput="updateParamPreview()" class="range-slider w-full">
-            </div>
-
-            <div class="form-group">
-              <label class="block text-xs font-semibold text-gray-300 mb-2">Thermodynamic Ensemble</label>
-              <div class="grid grid-cols-3 gap-2">
-                <button type="button" class="ensemble-btn active" data-ensemble="NVT" onclick="selectEnsemble('NVT')">NVT</button>
-                <button type="button" class="ensemble-btn" data-ensemble="NPT" onclick="selectEnsemble('NPT')">NPT</button>
-                <button type="button" class="ensemble-btn" data-ensemble="NVE" onclick="selectEnsemble('NVE')">NVE</button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <div class="flex justify-between text-xs font-semibold text-gray-300 mb-2">
-                <span>Lattice Grid (Box Size)</span>
-                <span class="font-mono text-accent" id="val-lat-display">4 × 4 × 4 (256 atoms)</span>
-              </div>
-              <input type="range" id="param-lattice-slider" min="2" max="8" step="1" value="4" oninput="updateParamPreview()" class="range-slider w-full">
-            </div>
-
-            <button class="btn btn-primary w-full mt-4" onclick="executeCustomizedSimulation()">
-              <span>⚡ Authorize & Run Locally</span>
-            </button>
-          </div>
-
-          <!-- Live Synchronized Script Preview -->
-          <div class="glass-card flex flex-col">
-            <div class="flex items-center justify-between border-b border-white/[0.06] pb-3 mb-3">
-              <span class="text-sm font-bold text-white">Synchronized LAMMPS Script</span>
-              <span class="text-[10px] font-mono text-emerald flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_6px_#34d399]"></span>
-                LIVE SYNCHRONIZED
-              </span>
-            </div>
-            <pre class="code-block flex-1 max-h-[520px]" id="param-script-code"></pre>
-          </div>
-        </div>
-      </div>
-
-      <!-- Subtab 2: Script Doctor & Syntax Fixer with Dropzone -->
-      <div id="studio-doctor" class="subtab-panel">
-        <div class="glass-card max-w-4xl mx-auto space-y-5">
-          <div class="flex items-center justify-between border-b border-white/[0.06] pb-3">
-            <div class="step-header mb-0">
-              <span class="step-badge" style="background: rgba(6,182,212,0.2); color: #22d3ee; border-color: rgba(6,182,212,0.4);">DIAGNOSE</span>
-              <span class="step-title">Diagnostic Error Analyzer & Script Doctor</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[11px] font-mono text-gray-400">Load Preset:</span>
-              <button class="btn btn-secondary btn-sm py-1 px-2.5 text-xs" onclick="loadDoctorPreset('timestep')">Dangerous dt</button>
-              <button class="btn btn-secondary btn-sm py-1 px-2.5 text-xs" onclick="loadDoctorPreset('missing_pot')">Missing Pair</button>
-              <button class="btn btn-secondary btn-sm py-1 px-2.5 text-xs" onclick="loadDoctorPreset('lost_atoms')">Lost Atoms</button>
-            </div>
-          </div>
-
-          <!-- Drag and Drop Zone for Script Doctor -->
-          <div class="drop-zone" id="doctor-dropzone" onclick="document.getElementById('doctor-file-input').click()">
-            <input type="file" id="doctor-file-input" class="hidden" accept=".in,.lmp,.lammps,.txt,.log,.dat" onchange="handleDoctorFileInput(event)">
-            <div class="drop-zone-content flex flex-col items-center justify-center py-4">
-              <div class="text-3xl mb-1">📂</div>
-              <div class="text-sm font-semibold text-white">Drag & drop your LAMMPS script or log file here</div>
-              <div class="text-xs text-gray-400 mt-1">Supports <span class="font-mono text-accent">.in, .lmp, .lammps, .log, .txt</span> — or click to browse</div>
-            </div>
-            <div id="doctor-drop-file-info" class="hidden text-xs font-mono text-emerald mt-2 text-center">
-              ✓ Loaded: <span id="doctor-drop-filename">in.script</span> (<span id="doctor-drop-filesize">0 KB</span>)
-            </div>
-          </div>
-
-          <div>
-            <div class="flex items-center justify-between text-xs font-semibold text-gray-300 mb-2">
-              <span>LAMMPS Input Script or Runtime Traceback:</span>
-              <span class="text-gray-500 font-mono" id="doctor-line-counter">0 lines</span>
-            </div>
-            <textarea id="doctor-input" class="input-glass w-full h-44 font-mono text-xs mb-3" oninput="updateDoctorLineCount()" placeholder="units metal&#10;atom_style atomic&#10;lattice fcc 4.05&#10;create_box 1 box&#10;pair_style eam/alloy&#10;timestep 0.08&#10;run 100"></textarea>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <button id="btn-doctor-run" class="btn btn-primary" onclick="submitDoctorScript()">
-              <span>🔍 Analyze & Automatically Fix Script</span>
-            </button>
-            <button class="btn btn-secondary" onclick="clearDoctorInput()">
-              <span>Clear</span>
-            </button>
-          </div>
-
-          <!-- Doctor Diagnosis & Repaired Script Result Card -->
-          <div id="doctor-result-card" class="mt-6 pt-5 border-t border-white/[0.06] space-y-4" style="display: none;">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald shadow-[0_0_8px_#34d399]"></span>
-                <span class="text-sm font-bold text-white" id="doctor-status-title">Diagnosis & Automated Repairs</span>
-              </div>
-              <span class="badge badge-success" id="doctor-badge-status">Fixed</span>
-            </div>
-
-            <div id="doctor-diagnosis-text" class="text-xs text-gray-300 leading-relaxed bg-white/[0.02] p-3 rounded-lg border border-white/[0.06]">
-              <!-- Diagnosis details -->
-            </div>
-
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-bold text-accent font-mono">REPAIRED SCRIPT</span>
-                <button class="text-xs text-gray-400 hover:text-white" onclick="navigator.clipboard.writeText(document.getElementById('doctor-fixed-code').innerText); showToast('Copied repaired script!');">📋 Copy</button>
-              </div>
-              <pre class="code-block text-xs max-h-60" id="doctor-fixed-code"></pre>
-            </div>
-
-            <div class="flex items-center gap-3 pt-2">
-              <button class="btn btn-primary btn-sm" id="doctor-btn-run" onclick="executeFromChat(document.getElementById('doctor-fixed-code').innerText)">
-                <span>⚡ Authorize & Run Repaired Simulation</span>
-              </button>
-              <button class="btn btn-secondary btn-sm" onclick="activateTab('tab-chatbot')">
-                <span>💬 Discuss with AI Chatbot</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW 4: SIMULATION RUNNER                                   -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-runner">
-      <div class="space-y-6">
-        <!-- Persistent Synthetic Data Banner -->
-        <div id="runner-synthetic-banner" class="hidden p-4 rounded-xl border border-amber-500/40 bg-amber-950/40 text-amber-300 flex items-center justify-between shadow-[0_0_24px_rgba(245,158,11,0.18)]">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">⚠️</span>
-            <div>
-              <div class="font-bold text-xs uppercase tracking-widest text-amber-400">SYNTHETIC DATA — BUILT-IN OFFLINE MD ENGINE</div>
-              <div class="text-xs text-amber-200/80 mt-0.5">Local LAMMPS binary not found. Trajectory and thermodynamic states simulated by the built-in offline numerical engine.</div>
-            </div>
-          </div>
-          <span class="text-xs font-mono px-3 py-1 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 tracking-wider">OFFLINE ENGINE</span>
-        </div>
-
-        <div class="glass-card">
-          <div class="flex items-center justify-between border-b border-white/[0.06] pb-3 mb-4">
-            <h3 class="text-base font-bold text-white">Execution Monitor & Results</h3>
-            <div class="flex items-center gap-3">
-              <span id="runner-status-pill" class="badge badge-info">IDLE</span>
-              <!-- Direct Script File Upload to Run -->
-              <input type="file" id="runner-file-input" class="hidden" accept=".in,.lmp,.lammps,.txt" onchange="handleRunnerFileInput(event)">
-              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('runner-file-input').click()">
-                <span>📂 Drop / Load Script to Run</span>
-              </button>
-            </div>
-          </div>
-          <div id="runner-output-container" class="text-sm text-gray-400 font-mono">
-            No simulation has been executed in this session yet. Build a script in the <a href="#" data-tab="tab-studio" class="text-accent underline">Script Studio</a> or request one in the AI Chat.
-          </div>
-        </div>
-
-        <!-- Live Linux Terminal Console Mirror (Authentic Big Window) -->
-        <div class="glass-card terminal-window-wrapper relative overflow-hidden" id="runner-terminal-card">
-          <!-- Terminal Titlebar (Ubuntu / macOS Chrome) -->
-          <div class="terminal-titlebar flex items-center justify-between px-4 py-2.5 bg-[#0e1322] border-b border-white/10 rounded-t-xl select-none">
-            <div class="flex items-center gap-2.5">
-              <!-- Window control dots -->
-              <div class="flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] cursor-pointer hover:opacity-80 transition-opacity" title="Close / Clear Console" onclick="clearTerminalOutput()"></span>
-                <span class="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] cursor-pointer hover:opacity-80 transition-opacity" title="Minimize / Compact View" onclick="setTerminalHeight('compact')"></span>
-                <span class="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] cursor-pointer hover:opacity-80 transition-opacity" title="Maximize / Big Terminal" onclick="toggleTerminalExpand()"></span>
-              </div>
-              <div class="flex items-center gap-2 text-xs font-mono font-bold text-gray-300 ml-2">
-                <span class="text-emerald-400 font-bold">❯_</span>
-                <span>lammps@wsl2:~/simulations — bash (140×45)</span>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 font-mono text-xs">
-              <span id="runner-terminal-status" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_6px_#34d399] animate-pulse"></span>
-                Ready
-              </span>
-              <button class="btn btn-secondary btn-sm text-[11px] px-2.5 py-0.5" onclick="copyTerminalOutput()" title="Copy entire terminal log">
-                <span>📋 Copy</span>
-              </button>
-              <button class="btn btn-secondary btn-sm text-[11px] px-2.5 py-0.5" onclick="clearTerminalOutput()" title="Clear terminal text">
-                <span>🗑️ Clear</span>
-              </button>
-              <button id="btn-terminal-expand" class="btn btn-secondary btn-sm text-[11px] px-2.5 py-0.5" onclick="toggleTerminalExpand()" title="Toggle Big Terminal Size">
-                <span id="terminal-expand-icon">⛶ Expand</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Big Terminal Screen Body -->
-          <pre id="runner-terminal-pre" class="terminal-screen font-mono text-xs leading-relaxed text-emerald-300 bg-[#070b14] p-5 h-[480px] overflow-y-auto border-x border-b border-white/10 rounded-b-xl selection:bg-emerald-500/30 whitespace-pre-wrap transition-all duration-300 shadow-inner">┌──(lammps㉿wsl2)-[~/simulations]
-└─$ lmp -in in.run -log log.lammps
-[WSL2 Ubuntu 24.04 LTS — LAMMPS Parallel Execution Engine]
-[Live stdout mirror connected via Server-Sent Events]
-══════════════════════════════════════════════════════════════════════════════════════════════
-Waiting for simulation command... Run from 3D Player below or drop a script.
-</pre>
-        </div>
-
-        <!-- 3D Atomic Trajectory Player (WebGL2 Instanced with Direct Runner) -->
-        <div class="glass-card" id="runner-trajectory-card">
-          <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-white/[0.06] pb-3 mb-3 gap-3">
-            <div class="flex items-center gap-2.5">
-              <span class="text-base text-accent">⚛</span>
-              <div>
-                <h3 class="text-xs font-bold text-white uppercase tracking-wider">3D Atomic Trajectory Player (Instanced WebGL2)</h3>
-                <div class="text-[10px] text-gray-400 font-mono">Real-time GPU instancing · Viridis physical fields · 60fps PBC motion</div>
-              </div>
-            </div>
-
-            <!-- Direct Simulation Runner Controls Inside 3D Player -->
-            <div class="flex flex-wrap items-center gap-2">
-              <!-- Persistent Simulation vs Interpolation Indicator (D3) -->
-              <div id="traj-timestep-badge" class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shadow-[0_0_8px_rgba(52,211,153,0.2)]">
-                ● Timestep 0 (SIMULATED)
-              </div>
-              <span class="text-xs font-mono text-gray-400" id="traj-frame-counter">Frame 0 / 0</span>
-
-              <!-- Preset selector -->
-              <select id="traj-sim-preset-select" class="input-glass text-xs py-1 px-2.5 font-mono max-w-[200px]" title="Select a simulation preset to run directly in WebGL">
-                <option value="lj_benchmark">LJ Fluid (256 atoms, Reduced)</option>
-                <option value="molten_al">Molten Aluminum (1000 K, EAM)</option>
-                <option value="water_liquid">SPC/E Water (300 K, SHAKE)</option>
-                <option value="studio_script">Active Script Studio Code</option>
-              </select>
-
-              <!-- Direct Run Button -->
-              <button id="btn-traj-run-sim" class="btn btn-primary btn-sm bg-gradient-to-r from-accent to-pink-500 hover:brightness-110 text-white font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(224,64,251,0.35)]" onclick="runWebGL3DRunnerSimulation()">
-                <span>🚀 Run WebGL Simulation</span>
-              </button>
-
-              <!-- Expand Canvas Button -->
-              <button id="btn-traj-expand" class="btn btn-secondary btn-sm" onclick="toggleTrajViewerExpand()" title="Expand / Shrink 3D Canvas">
-                <span id="traj-expand-icon">⛶ Expand</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Color Mode, Normalization, Camera & Speed Controls Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-2.5 mb-2.5 px-1">
-            <div class="flex items-center gap-1.5 text-xs font-mono" id="traj-color-modes">
-              <span class="text-gray-400 text-[11px] uppercase mr-1">Color:</span>
-              <button id="btn-color-element" class="pill-tab-btn active" onclick="setTrajColorMode('element')">Element (CPK)</button>
-              <button id="btn-color-ke" class="pill-tab-btn" onclick="setTrajColorMode('kinetic_energy')">Kinetic Energy</button>
-              <button id="btn-color-stress" class="pill-tab-btn" onclick="setTrajColorMode('von_mises_stress')">Von Mises Stress</button>
-            </div>
-
-            <div class="flex items-center gap-1.5 text-xs font-mono hidden" id="traj-norm-controls">
-              <span class="text-gray-400 text-[11px] uppercase mr-1">Scale:</span>
-              <button id="btn-norm-frame" class="pill-tab-btn active" onclick="setTrajNormMode('frame')">Frame Min/Max</button>
-              <button id="btn-norm-run" class="pill-tab-btn" onclick="setTrajNormMode('run')">Run Min/Max</button>
-            </div>
-
-            <div class="flex items-center gap-2 text-xs font-mono">
-              <div class="flex items-center gap-1 bg-black/50 px-2 py-0.5 rounded-lg border border-white/10">
-                <span class="text-[10px] text-gray-400 uppercase mr-1">Speed:</span>
-                <button class="text-[11px] px-1 text-gray-300 hover:text-white" onclick="setTrajSpeed(0.5, this)">0.5x</button>
-                <button class="text-[11px] px-1 text-accent font-bold" onclick="setTrajSpeed(1.0, this)">1x</button>
-                <button class="text-[11px] px-1 text-gray-300 hover:text-white" onclick="setTrajSpeed(2.0, this)">2x</button>
-                <button class="text-[11px] px-1 text-gray-300 hover:text-white" onclick="setTrajSpeed(4.0, this)">4x</button>
-              </div>
-              <button class="btn btn-secondary btn-sm text-[11px] py-0.5 px-2" onclick="resetTrajCamera()" title="Reset Camera Orbit & Zoom">
-                <span>⌂ Reset View</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- WebGL2 Canvas with Floating Scrub/Play Controls -->
-          <div id="traj-canvas-container" class="relative w-full rounded-xl overflow-hidden bg-black/70 border border-white/[0.08] shadow-2xl transition-all duration-300">
-            <canvas id="trajectory-canvas" class="w-full h-[520px] block cursor-grab active:cursor-grabbing"></canvas>
-            <div class="absolute bottom-3 left-4 right-4 bg-black/80 backdrop-blur-md px-4 py-2.5 rounded-xl flex items-center gap-3 border border-white/15 shadow-2xl">
-              <button id="traj-btn-play" class="btn btn-secondary btn-sm px-3" onclick="toggleTrajectoryPlay()">
-                <span id="traj-play-icon">▶ Play</span>
-              </button>
-              <input type="range" id="traj-scrubber" min="0" max="0" value="0" step="0.1" class="w-full accent-accent cursor-pointer" oninput="scrubTrajectory(this.value)">
-              <span class="text-xs font-mono text-gray-300 whitespace-nowrap min-w-[70px] text-right" id="traj-scrub-indicator">0 / 0</span>
-            </div>
-          </div>
-
-          <!-- Viridis Colorbar Legend (C3 & B3) -->
-          <div id="traj-colorbar-container" class="hidden mt-2.5 p-3 rounded-xl bg-black/40 border border-white/5 space-y-2 font-mono text-xs">
-            <div class="flex items-center justify-between text-[11px] text-gray-300">
-              <div class="flex items-center gap-2">
-                <span id="traj-colorbar-title" class="font-bold text-accent">Kinetic Energy</span>
-                <span id="traj-colorbar-norm-desc" class="text-gray-400 text-[10px]">(Frame Normalization)</span>
-              </div>
-              <div id="traj-colorbar-synthetic-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                ⚠️ SYNTHETIC FIELD DATA
-              </div>
-            </div>
-            <div class="relative w-full h-3 rounded-full overflow-hidden shadow-inner border border-white/10" style="background: linear-gradient(to right, #440154, #482878, #3e4a89, #31688e, #26828e, #1f9e89, #35b779, #6ece58, #b5de2b, #fde725);">
-            </div>
-            <div class="flex items-center justify-between text-[10px] text-gray-400 font-mono">
-              <span id="traj-colorbar-min">0.00</span>
-              <span id="traj-colorbar-mid">0.50</span>
-              <span id="traj-colorbar-max">1.00</span>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Post-Run OVITO Structure & Coordination Analysis Card -->
-        <div class="glass-card hidden" id="runner-ovito-card">
-          <div class="flex items-center justify-between border-b border-white/[0.06] pb-2.5 mb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-accent">🔬</span>
-              <h3 class="text-xs font-bold text-white uppercase tracking-wider">OVITO Structure & Coordination Analysis</h3>
-            </div>
-            <span class="badge badge-success text-[11px]">Render Complete</span>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-            <div>
-              <img id="runner-ovito-image" class="w-full rounded-xl border border-white/10 shadow-lg object-cover" alt="OVITO Final Frame Render">
-            </div>
-            <div class="space-y-3">
-              <h4 class="text-xs font-bold text-accent font-mono">COORDINATION NUMBER HISTOGRAM</h4>
-              <div id="runner-ovito-hist" class="space-y-1.5 text-xs font-mono text-gray-300 bg-black/40 p-3 rounded-lg border border-white/5 max-h-48 overflow-y-auto">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="glass-card">
-          <div class="flex items-center justify-between border-b border-white/[0.06] pb-3 mb-4">
-            <h3 class="text-sm font-bold text-white">Thermodynamic Time Series</h3>
-            <div class="flex items-center gap-2" id="runner-chart-modes">
-              <button class="pill-tab-btn active" onclick="switchRunnerChartMode('Temp')">Temperature T(t)</button>
-              <button class="pill-tab-btn" onclick="switchRunnerChartMode('Energy')">Energy E(t)</button>
-              <button class="pill-tab-btn" onclick="switchRunnerChartMode('Press')">Pressure P(t)</button>
-              <button class="pill-tab-btn" onclick="switchRunnerChartMode('Density')">Density ρ(t)</button>
-            </div>
-          </div>
-          <canvas id="runner-chart-canvas" width="900" height="380" class="w-full rounded-xl bg-black/40"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW 5: 3D MOLECULAR & LIQUID STRUCTURE VISUALIZER          -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-visualizer">
-      <div class="grid-2">
-        <div class="glass-card space-y-5">
-          <div class="step-header">
-            <span class="step-badge">3D FLUID</span>
-            <span class="step-title">Liquid Structure Controls</span>
-          </div>
-
-          <div class="form-group">
-            <label class="block text-xs font-semibold text-gray-300 mb-2">System / Liquid</label>
-            <select id="vis-mat-select" class="input-glass w-full" onchange="updateStandalone3D()">
-              <option value="Water">Water (H2O) — Molecular Liquid</option>
-              <option value="Argon">Argon (Ar) — Liquid Noble Gas</option>
-              <option value="LJ">Lennard-Jones Liquid Fluid</option>
-              <option value="Aluminum">Molten Aluminum (Al)</option>
-              <option value="Copper">Molten Copper (Cu)</option>
-              <option value="Iron">Molten Iron (Fe)</option>
-              <option value="Nickel">Molten Nickel (Ni)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <div class="flex justify-between text-xs font-semibold text-gray-300 mb-2">
-              <span>System Temperature</span>
-              <span class="font-mono text-accent" id="vis-temp-display">300 K</span>
-            </div>
-            <input type="range" id="vis-temp-slider" min="50" max="2500" step="50" value="300" class="range-slider w-full" oninput="updateStandalone3D()">
-          </div>
-
-          <div class="form-group">
-            <div class="flex justify-between text-xs font-semibold text-gray-300 mb-2">
-              <span>Lattice Grid Dimensions</span>
-              <span class="font-mono text-accent" id="vis-grid-display">4 × 4 × 4</span>
-            </div>
-            <input type="range" id="vis-grid-slider" min="2" max="6" step="1" value="4" class="range-slider w-full" oninput="updateStandalone3D()">
-          </div>
-
-          <div class="space-y-2 pt-2 border-t border-white/[0.06]">
-            <label class="block text-xs font-semibold text-gray-400">Camera Controls</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button class="btn btn-secondary btn-sm" onclick="toggleStandaloneAutoRotate()">⟲ Auto-Rotate</button>
-              <button class="btn btn-secondary btn-sm" onclick="resetStandaloneView()">⌂ Reset View</button>
-              <button class="btn btn-secondary btn-sm" onclick="adjustStandaloneZoom(1.25)">⊕ Zoom In</button>
-              <button class="btn btn-secondary btn-sm" onclick="adjustStandaloneZoom(0.8)">⊖ Zoom Out</button>
-            </div>
-          </div>
-
-          <div class="pt-3 border-t border-white/[0.06] space-y-2">
-            <button class="btn btn-primary w-full py-2.5 font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-accent to-pink-500 hover:brightness-110 shadow-[0_0_20px_rgba(224,64,251,0.3)] text-white text-xs" onclick="launchVisualizerInWebGLRunner()">
-              <span>🚀 Simulate This in WebGL2 Runner</span>
-            </button>
-            <p class="text-[10px] text-gray-400 text-center font-mono">Synthesizes script and streams live WebGL2 trajectory & terminal mirror</p>
-          </div>
-        </div>
-
-        <div class="glass-card p-3 relative flex flex-col justify-center items-center">
-          <div class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-400 border-b border-white/[0.06] mb-2">
-            <span>Interactive 3D Orbital Canvas</span>
-            <span class="font-mono text-accent">Drag to Orbit · Scroll to Zoom</span>
-          </div>
-          <canvas id="standalone-vis-canvas" width="850" height="520" class="w-full rounded-xl cursor-grab bg-[#080410]/80"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW: WORKSPACE CODEBASE RAG & FILE EXPLORER                -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-workspace">
-      <div class="space-y-6">
-        <!-- Header & Folder Opener -->
-        <div class="glass-card flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
-          <div>
-            <div class="flex items-center gap-3 mb-1">
-              <span class="text-2xl">📂</span>
-              <h2 class="text-xl font-bold text-white tracking-tight">Project Workspace & Codebase RAG</h2>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" id="ws-badge">
-                Ready to Index
-              </span>
-            </div>
-            <p class="text-xs text-gray-400">
-              Open any research directory to index all simulation scripts, topologies, potentials, and Python pipelines into local Gemma 4 RAG.
-            </p>
-          </div>
-          
-          <div class="flex items-center gap-3">
-            <input type="text" id="ws-folder-path-input" placeholder="e.g. D:/projects/MySimulations" class="bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs font-mono text-gray-200 placeholder-gray-500 outline-none focus:border-accent/60 w-64 md:w-80">
-            <button onclick="handleOpenWorkspaceFromInput()" class="btn btn-primary btn-sm flex items-center gap-2">
-              <span>Scan & Index 🚀</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Summary Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="ws-stats-grid">
-          <div class="glass-card p-4">
-            <div class="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1">Indexed Files</div>
-            <div class="text-2xl font-black text-white font-mono" id="ws-stat-files">0</div>
-            <div class="text-[10px] text-gray-500 mt-1" id="ws-stat-root">No folder open</div>
-          </div>
-          <div class="glass-card p-4">
-            <div class="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1">Code Chunks</div>
-            <div class="text-2xl font-black text-accent font-mono" id="ws-stat-chunks">0</div>
-            <div class="text-[10px] text-gray-500 mt-1">Multi-signal AST blocks</div>
-          </div>
-          <div class="glass-card p-4">
-            <div class="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1">LAMMPS Scripts</div>
-            <div class="text-2xl font-black text-emerald-400 font-mono" id="ws-stat-scripts">0</div>
-            <div class="text-[10px] text-gray-500 mt-1">.in / .lmp files</div>
-          </div>
-          <div class="glass-card p-4">
-            <div class="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1">Potentials & Data</div>
-            <div class="text-2xl font-black text-purple-400 font-mono" id="ws-stat-potentials">0</div>
-            <div class="text-[10px] text-gray-500 mt-1">.eam, .tersoff, .data</div>
-          </div>
-        </div>
-
-        <!-- Main Workspace Explorer: 2-Column Split -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- Left Column: File Tree Explorer (4 cols) -->
-          <div class="lg:col-span-4 space-y-4">
-            <div class="glass-card p-4">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-bold font-mono text-gray-300 uppercase tracking-wider">📁 Project Explorer</h3>
-                <button onclick="refreshWorkspaceStatus()" class="text-xs text-gray-400 hover:text-white" title="Refresh Tree">🔄</button>
-              </div>
-              <div class="workspace-tree-container" id="ws-tree-container">
-                <div class="text-xs text-gray-500 py-6 text-center">Open a project folder above to explore files.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Column: Codebase Semantic Search & File Viewer (8 cols) -->
-          <div class="lg:col-span-8 space-y-4">
-            <!-- Workspace Search Bar -->
-            <div class="glass-card p-3 flex items-center gap-3">
-              <span class="text-gray-400 text-sm">🔍</span>
-              <input type="text" id="ws-search-input" onkeydown="if(event.key==='Enter') handleWorkspaceSearch()" placeholder="Semantic Search across all files (e.g. 'pair_style eam', 'timestep', 'calculate_diffusion')..." class="flex-1 bg-transparent text-xs text-white placeholder-gray-500 outline-none font-mono">
-              <button onclick="handleWorkspaceSearch()" class="btn btn-secondary btn-sm">
-                <span>Search Codebase</span>
-              </button>
-            </div>
-
-            <!-- Search Results or File Code Viewer -->
-            <div class="glass-card p-4 space-y-3" id="ws-viewer-card">
-              <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                <div class="flex items-center gap-2">
-                  <span class="text-base" id="ws-viewer-icon">📄</span>
-                  <span class="text-xs font-bold font-mono text-white" id="ws-viewer-filename">Select a file to inspect</span>
-                  <span class="text-[10px] font-mono text-gray-400" id="ws-viewer-lines"></span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button id="btn-ws-ask-ai" onclick="askAiAboutCurrentFile()" class="btn btn-primary btn-sm text-[11px] hidden">
-                    <span>⚡ Ask AI About this File</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Code Preview Area -->
-              <pre class="workspace-code-preview" id="ws-code-content"><code>// Click any file in the Project Explorer or search the codebase above to preview contents and line numbers...</code></pre>
-            </div>
-
-            <!-- Workspace Search Results Container -->
-            <div class="glass-card p-4 space-y-3 hidden" id="ws-search-results-card">
-              <div class="flex items-center justify-between border-b border-white/10 pb-2">
-                <span class="text-xs font-bold font-mono text-accent" id="ws-search-hits-count">Search Results</span>
-                <button onclick="closeWorkspaceSearchResults()" class="text-xs text-gray-400 hover:text-white">✕ Close</button>
-              </div>
-              <div class="space-y-2 max-h-96 overflow-y-auto" id="ws-search-hits-list"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW 6: DOCS & SETUP                                        -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-docs">
-      <div class="space-y-8">
-        <div>
-          <h2 class="text-3xl font-extrabold text-white tracking-tight mb-2">LAMMPS Documentation & Installation Guide</h2>
-          <p class="text-sm text-gray-400">Official manuals, OS binaries, and package installation procedures</p>
-        </div>
-
-        <!-- Official Links Cards -->
-        <div class="grid-4">
-          <a href="https://www.lammps.org" target="_blank" class="glass-card text-center hover:border-accent/40 transition-all group tilt-card">
-            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🌐</div>
-            <div class="text-xs font-bold text-white">Official Website</div>
-            <div class="text-[10px] text-gray-500 font-mono mt-0.5">lammps.org</div>
-          </a>
-          <a href="https://docs.lammps.org" target="_blank" class="glass-card text-center hover:border-accent/40 transition-all group tilt-card">
-            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">📖</div>
-            <div class="text-xs font-bold text-white">Official Documentation</div>
-            <div class="text-[10px] text-gray-500 font-mono mt-0.5">docs.lammps.org</div>
-          </a>
-          <a href="https://rpm.lammps.org/windows/" target="_blank" class="glass-card text-center hover:border-accent/40 transition-all group tilt-card">
-            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">💾</div>
-            <div class="text-xs font-bold text-white">Windows Binaries</div>
-            <div class="text-[10px] text-gray-500 font-mono mt-0.5">rpm.lammps.org/windows</div>
-          </a>
-          <a href="https://github.com/lammps/lammps" target="_blank" class="glass-card text-center hover:border-accent/40 transition-all group tilt-card">
-            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🐙</div>
-            <div class="text-xs font-bold text-white">GitHub Repository</div>
-            <div class="text-[10px] text-gray-500 font-mono mt-0.5">github.com/lammps</div>
-          </a>
-        </div>
-
-        <!-- OS Install Guide Tabs -->
-        <div class="sub-dock-wrapper">
-          <div class="sub-dock-nav">
-            <div class="sub-dock-item active" onclick="switchOsTab('win')">🪟 Windows</div>
-            <div class="sub-dock-item" onclick="switchOsTab('linux')">🐧 Linux (Ubuntu / Fedora)</div>
-            <div class="sub-dock-item" onclick="switchOsTab('mac')">🍎 macOS (Apple Silicon)</div>
-            <div class="sub-dock-item" onclick="switchOsTab('conda')">🐍 Conda Python</div>
-          </div>
-        </div>
-
-        <div class="glass-card" id="os-tab-content">
-          <!-- Dynamic OS content populated via JS -->
-        </div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- Floating 3D Atom Tooltip HUD -->
-  <div id="atom-tooltip-hud" class="atom-hud-panel" style="display: none;">
-    <div class="flex items-center justify-between mb-1.5">
-      <span class="font-bold text-white text-xs" id="hud-id">Atom #128</span>
-      <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-accent/20 text-accent" id="hud-elem">Al (Aluminum)</span>
-    </div>
-    <div class="text-[11px] text-gray-400 space-y-1">
-      <div>Position: <strong class="text-gray-200 font-mono" id="hud-pos">8.10, 12.15, 4.05 Å</strong></div>
-      <div>Local Temp: <strong class="text-gray-200 font-mono" id="hud-temp">782.4 K</strong></div>
-      <div>Kinetic Energy: <strong class="text-gray-200 font-mono" id="hud-ke">0.042 eV</strong></div>
-      <div>Coordination: <strong class="text-gray-200 font-mono" id="hud-coord">12 (FCC)</strong></div>
-    </div>
-  </div>
-
-  <!-- Gemini API Key Modal -->
-  <div id="api-key-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
-    <div class="glass-card max-w-md w-full p-6 space-y-4 rounded-2xl border border-accent/40 shadow-2xl relative bg-[#130826]/95">
-      <div class="flex items-center justify-between border-b border-white/[0.08] pb-3">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <span class="text-accent text-lg">✨</span> Google Cloud Gemini Setup
-        </h3>
-        <button onclick="closeApiKeyModal()" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
-      </div>
-      <p class="text-xs text-gray-300 leading-relaxed">
-        The research assistant uses Google Cloud Gemini (<code class="text-accent font-mono">gemini-2.5-flash</code>) for dynamic molecular dynamics script synthesis, natural language reasoning, and parameter extraction.
-      </p>
-      <div class="space-y-2">
-        <label class="text-xs font-semibold text-gray-200">Gemini API Key</label>
-        <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-black/60 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:border-accent focus:outline-none transition-colors">
-        <p class="text-[11px] text-gray-400">
-          Get a free API key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="text-accent underline hover:text-white">Google AI Studio</a>. Saved securely to your local environment.
+    <!-- ALWAYS VISIBLE HERO HEADER BANNER ON PAGE LOAD -->
+    <div class="hero-scroll-stage mb-8">
+      <div class="hero-text-wrapper text-center">
+        <h1 class="hero-title text-reveal-blur revealed">Covert communications that<br><span class="text-shimmer">simply works.</span></h1>
+        <p class="hero-sub max-w-2xl mx-auto text-slate-400 text-sm mt-2 mb-6">
+          SentinelSpread SDC Suite — DSSS Spread-Spectrum, AES-256-GCM + RSA-OAEP Hybrid Cryptography, LSB Audio/Image Steganography & 8x8 DCT Watermarking.
         </p>
-      </div>
-      <div class="flex items-center justify-between pt-2">
-        <span id="api-key-test-status" class="text-xs font-mono text-gray-400"></span>
-        <div class="flex items-center gap-2">
-          <button onclick="closeApiKeyModal()" class="btn btn-secondary btn-sm">Cancel</button>
-          <button onclick="saveApiKey()" id="btn-save-key" class="btn btn-primary btn-sm bg-accent hover:bg-accent/80 text-white font-bold px-4">
-            <span>Connect & Save</span>
-          </button>
+
+        <!-- Live Metrics Stats Banner -->
+        <div class="stats-banner grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-slate-950/70 border border-white/10 rounded-2xl max-w-4xl mx-auto">
+          <div class="stat-item text-center">
+            <div class="stat-num text-3xl font-bold font-mono text-accent" data-target="2048">2048</div>
+            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Bit RSA Keypair</div>
+          </div>
+          <div class="stat-item text-center">
+            <div class="stat-num text-3xl font-bold font-mono text-emerald-400" data-target="100">100%</div>
+            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">LSB Bit Accuracy</div>
+          </div>
+          <div class="stat-item text-center">
+            <div class="stat-num text-3xl font-bold font-mono text-cyan-400" data-target="52">52.4 dB</div>
+            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Peak Signal-to-Noise</div>
+          </div>
+          <div class="stat-item text-center">
+            <div class="stat-num text-3xl font-bold font-mono text-purple-400" data-target="5">&lt; 5 ms</div>
+            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">API Processing</div>
+          </div>
         </div>
       </div>
     </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 1: STEGANOGRAPHY (DEFAULT ACTIVE TAB) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section class="tab-view active" id="tab-steganography">
+      <div class="sub-dock-wrapper flex justify-center mb-6">
+        <div class="sub-dock-nav inline-flex gap-2 bg-white/5 backdrop-blur-xl p-1.5 rounded-full border border-white/10">
+          <div class="sub-dock-item active px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="steg-subtab-audio">🎵 Audio & Media Stego</div>
+          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="steg-subtab-image">🖼️ Image Steganography</div>
+          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="steg-subtab-keys">🔑 RSA Key Generator</div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 1: AUDIO STEGANOGRAPHY -->
+      <div class="subtab-panel active" id="steg-subtab-audio">
+        <div class="glass-card p-6 rounded-2xl mb-6">
+          <div class="card-title text-lg font-bold text-white mb-2">Sentinel Audio Stegocrypto Engine (16-bit PCM WAV / MP4)</div>
+          <p class="text-xs text-slate-400 mb-6">Embed encrypted data into audio LSBs with AES-128-CBC authenticated envelope & ASTG header.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-audio-embed">
+                <div class="dropzone-icon text-4xl mb-2">🎵</div>
+                <div class="dropzone-title text-sm font-semibold text-white">Upload 16-bit PCM WAV File</div>
+                <div class="dropzone-sub text-xs text-slate-400">Click or drag WAV carrier audio</div>
+                <input type="file" id="file-audio-embed" accept="audio/wav, .wav" style="display: none;">
+              </div>
+              <div id="audio-embed-file-badge" class="badge badge-info mt-2" style="display: none;">No File Selected</div>
+              
+              <div class="form-group mt-4">
+                <label for="input-audio-embed-text" class="text-xs font-semibold text-slate-300">Confidential Secret Payload</label>
+                <textarea id="input-audio-embed-text" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</textarea>
+              </div>
+              <div class="form-group">
+                <label for="input-audio-embed-pwd" class="text-xs font-semibold text-slate-300">Encryption Password (AES-128 Key Derivation)</label>
+                <input type="password" id="input-audio-embed-pwd" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="SentinelSecretKey2026" placeholder="Enter password">
+              </div>
+              <button class="btn btn-primary w-full py-3 mt-2" id="btn-audio-embed-act">
+                <span>🔒 Encrypt & Download Stego Audio (.wav)</span>
+              </button>
+            </div>
+
+            <div>
+              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-audio-extract">
+                <div class="dropzone-icon text-4xl mb-2">🎧</div>
+                <div class="dropzone-title text-sm font-semibold text-white">Upload Stego Audio File</div>
+                <div class="dropzone-sub text-xs text-slate-400">Click or drag WAV file to extract</div>
+                <input type="file" id="file-audio-extract" accept="audio/wav, .wav" style="display: none;">
+              </div>
+              <div id="audio-extract-file-badge" class="badge badge-info mt-2" style="display: none;">No File Selected</div>
+
+              <div class="form-group mt-4">
+                <label for="input-audio-extract-pwd" class="text-xs font-semibold text-slate-300">Decryption Password</label>
+                <input type="password" id="input-audio-extract-pwd" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="SentinelSecretKey2026" placeholder="Enter encryption passkey">
+              </div>
+              <button class="btn btn-secondary w-full py-3 mt-2" id="btn-audio-extract-act">
+                <span>🔓 Extract & Decrypt Secret Payload</span>
+              </button>
+              <div class="code-container mt-4">
+                <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-audio-recovered">Extracted payload string will appear here...</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Proof & Acoustic Payload Metrics Panel -->
+        <div class="glass-card p-6 rounded-2xl" id="card-audio-proof">
+          <div class="text-xs font-mono text-accent mb-4">
+            Visual proof of <strong>Application-Layer Audio Stegocrypto Engine (audio_stego.py)</strong>:
+          </div>
+
+          <!-- Plot 1: Audio Waveform Comparison Canvas -->
+          <div class="plot-box-card mb-5">
+            <div class="plot-header-bar flex justify-between items-center mb-3">
+              <span class="plot-title-text font-mono text-xs font-bold text-white">📊 Audio Waveform Comparison (Acoustic Payload Imperceptibility)</span>
+              <div class="plot-legend-group flex items-center gap-4 text-xs font-mono">
+                <span class="legend-chip flex items-center gap-1.5"><span class="chip-color chip-cyan"></span> Original Carrier PCM</span>
+                <span class="legend-chip flex items-center gap-1.5"><span class="chip-color chip-pink"></span> Stego Audio (AES-128 LSB Embedded)</span>
+              </div>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="canvas-audio-waveform" height="180" class="w-full rounded-lg bg-slate-950 border border-white/10"></canvas>
+            </div>
+          </div>
+
+          <!-- Plot 2: LSB Sample Residual Difference Canvas -->
+          <div class="plot-box-card mb-6">
+            <div class="plot-header-bar flex justify-between items-center mb-3">
+              <span class="plot-title-text font-mono text-xs font-bold text-white">📊 LSB Sample Residual Difference (Strictly bounded to ±1 LSB bit modification)</span>
+              <div class="plot-legend-group flex items-center gap-4 text-xs font-mono">
+                <span class="legend-chip flex items-center gap-1.5"><span class="chip-color chip-green"></span> LSB Delta (|Stego - Original|)</span>
+              </div>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="canvas-audio-residual" height="150" class="w-full rounded-lg bg-slate-950 border border-white/10"></canvas>
+            </div>
+          </div>
+
+          <!-- Green Neon Encrypted Envelope Metadata Box -->
+          <div class="terminal-envelope-box">
+            <div class="term-section-title text-emerald-400 font-mono text-xs font-bold mb-2">🔒 ENCRYPTED ENVELOPE METADATA:</div>
+            <div class="term-row text-xs text-yellow-200 mb-1">• Magic Header: <span id="meta-magic" class="term-val text-cyan-300">ASTG (4 Bytes)</span> | Payload Length Indicator: <span id="meta-length" class="term-val text-cyan-300">96 Bytes</span></div>
+            <div class="term-row text-xs text-yellow-200 mb-1">• Cipher Algorithm: <span id="meta-cipher" class="term-val text-cyan-300">AES-128-CBC (PKCS7 Padded)</span> | Derived Key: <span id="meta-key" class="term-val text-cyan-300">SHA-256(...)[:16]</span></div>
+            <div class="term-row text-xs text-yellow-200 mb-3">• Total LSB Bits Embedded: <span id="meta-bits" class="term-val text-cyan-300">832 bits</span> | Carrier Capacity Used: <span id="meta-cap" class="term-val text-cyan-300">0.94%</span></div>
+            <div class="term-section-title text-emerald-400 font-mono text-xs font-bold mb-1">🔓 RECOVERED PLAINTEXT EXTRACTED FROM LSB BITSTREAM:</div>
+            <div class="term-quote text-xs text-pink-400 bg-pink-500/10 border-l-2 border-pink-400 p-2 my-2">&gt; "<span id="meta-plaintext">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</span>"</div>
+            <div class="term-status-line text-xs font-bold text-emerald-400" id="meta-status">✓ STATUS: 100% ACOUSTIC-LAYER PAYLOAD RECOVERY VERIFIED</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: IMAGE STEGANOGRAPHY -->
+      <div class="subtab-panel" id="steg-subtab-image" style="display: none;">
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="card-title text-lg font-bold text-white mb-4">Image LSB Steganography Studio (PNG / JPEG)</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent" id="dz-steg-carrier">
+                <div class="dropzone-icon text-4xl mb-2">📷</div>
+                <div class="dropzone-title text-sm font-semibold text-white">Upload Carrier Image</div>
+                <input type="file" id="file-steg-carrier" accept="image/png, image/jpeg" style="display: none;">
+              </div>
+              <div class="preview-box mt-4 rounded-xl overflow-hidden bg-black max-h-60 flex items-center justify-center border border-white/10" id="prev-steg-carrier" style="display: none;">
+                <img id="img-steg-carrier" src="" alt="Carrier Preview" class="max-h-60 object-contain">
+              </div>
+              <div class="form-group mt-4">
+                <label for="input-steg-msg" class="text-xs font-semibold text-slate-300">Secret Message Payload</label>
+                <textarea id="input-steg-msg" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter text payload to embed in LSBs..."></textarea>
+              </div>
+              <button class="btn btn-primary w-full py-3 mt-2" id="btn-steg-embed-act">
+                <span>🛡️ Embed Message into Image</span>
+              </button>
+            </div>
+
+            <div>
+              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent" id="dz-steg-extract">
+                <div class="dropzone-icon text-4xl mb-2">🔍</div>
+                <div class="dropzone-title text-sm font-semibold text-white">Upload Stego Image</div>
+                <input type="file" id="file-steg-extract" accept="image/png, image/jpeg" style="display: none;">
+              </div>
+              <button class="btn btn-secondary w-full py-3 mt-4" id="btn-steg-extract-act">
+                <span>🔓 Extract Image Payload</span>
+              </button>
+              <div class="code-container mt-4">
+                <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-steg-recovered">Extracted image payload will appear here...</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 3: RSA KEY GENERATOR -->
+      <div class="subtab-panel" id="steg-subtab-keys" style="display: none;">
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="card-title text-lg font-bold text-white mb-2">RSA Asymmetric Key Generator (PKCS8 / PEM)</div>
+          <p class="text-xs text-slate-400 mb-6">Generate cryptographically secure 2048-bit or 4096-bit RSA key pairs for hybrid payload encryption.</p>
+
+          <div class="flex items-center gap-4 mb-6">
+            <label for="select-rsa-bits" class="text-xs font-semibold text-slate-300">Key Size (bits):</label>
+            <select id="select-rsa-bits" class="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-xs font-mono text-white">
+              <option value="2048" selected>2048 bits (Recommended)</option>
+              <option value="4096">4096 bits (High Security)</option>
+            </select>
+            <button class="btn btn-primary py-2 px-6" id="btn-generate-rsa">⚡ Generate Keypair</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="text-xs font-bold text-slate-300 mb-2">RSA Public Key (PEM)</div>
+              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-emerald-400 h-64 overflow-y-auto" id="display-pub-key">Click Generate to produce RSA public key...</pre>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-300 mb-2">RSA Private Key (PEM)</div>
+              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-pink-400 h-64 overflow-y-auto" id="display-priv-key">Click Generate to produce RSA private key...</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 2: WATERMARKING -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section class="tab-view" id="tab-watermarking" style="display: none;">
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="card-title text-lg font-bold text-white mb-2">Digital Watermarking Studio</div>
+        <p class="text-xs text-slate-400 mb-6">Apply visible text/logo overlays or embed invisible 8x8 block Discrete Cosine Transform (DCT) watermarks.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer" id="dz-wm-input">
+              <div class="dropzone-icon text-4xl mb-2">🖼️</div>
+              <div class="dropzone-title text-sm font-semibold text-white">Upload Base Image</div>
+              <input type="file" id="file-wm-input" accept="image/png, image/jpeg" style="display: none;">
+            </div>
+
+            <div class="form-group mt-4">
+              <label for="input-wm-text" class="text-xs font-semibold text-slate-300">Watermark Text</label>
+              <input type="text" id="input-wm-text" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="CONFIDENTIAL — SENTINEL SDC">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label for="input-wm-size" class="text-xs font-semibold text-slate-300">Font Size (px)</label>
+                <input type="number" id="input-wm-size" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="32">
+              </div>
+              <div class="form-group">
+                <label for="input-wm-opacity" class="text-xs font-semibold text-slate-300">Opacity (0.1 - 1.0)</label>
+                <input type="number" step="0.1" id="input-wm-opacity" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="0.4">
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-full py-3 mt-2" id="btn-apply-visible-wm">
+              <span>✨ Apply Visible Watermark</span>
+            </button>
+            <button class="btn btn-secondary w-full py-3 mt-2" id="btn-apply-dct-wm">
+              <span>🔬 Embed Invisible 8x8 DCT Watermark</span>
+            </button>
+          </div>
+
+          <div>
+            <div class="text-xs font-bold text-slate-300 mb-2">Watermarked Image Output</div>
+            <div class="preview-box rounded-xl overflow-hidden bg-black h-80 flex items-center justify-center border border-white/10">
+              <img id="img-wm-output" src="" alt="Watermark Output" class="max-h-80 object-contain">
+            </div>
+            <div class="code-container mt-4">
+              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-emerald-400" id="output-wm-stats">Watermark metrics and extraction results will appear here...</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 3: RSA EDUCATIONAL SANDBOX -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section class="tab-view" id="tab-rsa-edu" style="display: none;">
+      <div class="glass-card p-6 rounded-2xl mb-6">
+        <div class="card-title text-lg font-bold text-white mb-2">Miller-Rabin Primality Testing Console</div>
+        <p class="text-xs text-slate-400 mb-4">Probabilistic primality witness test for prime candidate generation.</p>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <input type="text" id="input-mr-n" class="flex-1 bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="104729" placeholder="Enter candidate integer n">
+          <button class="btn btn-primary py-3 px-6" id="btn-run-mr">Run Miller-Rabin Test</button>
+        </div>
+        <div class="mt-4 text-xs font-mono" id="output-mr-result"></div>
+      </div>
+
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="card-title text-lg font-bold text-white mb-2">Educational BigInt RSA Modular Exponentiation Sandbox</div>
+        <p class="text-xs text-slate-400 mb-6">Inspect raw modular exponentiation cryptography $(m^e) \pmod n$ and $(c^d) \pmod n$.</p>
+
+        <button class="btn btn-secondary py-3 px-6 mb-4" id="btn-edu-gen">⚡ Generate BigInt Prime Pair (p, q, n, phi, e, d)</button>
+        <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-cyan-300 h-64 overflow-y-auto" id="output-edu-keys">Click button above to compute prime factors...</pre>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 4: WEBCRYPTO PRODUCTION HYBRID CRYPTOGRAPHY -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section class="tab-view" id="tab-webcrypto" style="display: none;">
+      <div class="glass-card p-6 rounded-2xl mb-6">
+        <div class="card-title text-lg font-bold text-white mb-2">Production Hybrid RSA-OAEP 2048 + AES-256-GCM Encryption</div>
+        <p class="text-xs text-slate-400 mb-4">Hardware-accelerated envelope encryption with type-tagged headers.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="form-group">
+              <label for="input-hybrid-plain" class="text-xs font-semibold text-slate-300">Plaintext Message</label>
+              <textarea id="input-hybrid-plain" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter message to encrypt...">SENTINEL-SPREAD HIGH-SECURITY TRANSMISSION</textarea>
+            </div>
+            <button class="btn btn-primary w-full py-3" id="btn-hybrid-encrypt">🔒 Hybrid Encrypt</button>
+          </div>
+
+          <div>
+            <div class="text-xs font-bold text-slate-300 mb-2">Encrypted Hybrid JSON Packet</div>
+            <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent h-40 overflow-y-auto" id="output-hybrid-cipher">Click Hybrid Encrypt...</pre>
+            <button class="btn btn-secondary w-full py-3 mt-4" id="btn-hybrid-decrypt">🔓 Hybrid Decrypt Packet</button>
+            <div class="mt-2 text-xs font-mono text-emerald-400" id="output-hybrid-recovered"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="card-title text-lg font-bold text-white mb-2">RSA-PSS Digital Signatures & Hash Digest Studio</div>
+        <p class="text-xs text-slate-400 mb-4">Sign and verify payload integrity using SHA-256 and RSA-PSS padding.</p>
+
+        <div class="form-group">
+          <label for="input-sign-msg" class="text-xs font-semibold text-slate-300">Message Payload</label>
+          <input type="text" id="input-sign-msg" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="Integrity payload verification string">
+        </div>
+        <div class="flex gap-4">
+          <button class="btn btn-primary py-3 px-6" id="btn-sign-act">✍️ Sign Message</button>
+          <button class="btn btn-secondary py-3 px-6" id="btn-verify-act">✔️ Verify Signature</button>
+        </div>
+        <div class="code-container mt-4">
+          <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-yellow-300" id="output-sig-result">Signature result will appear here...</pre>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 5: QUALITY METRICS LAB -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section class="tab-view" id="tab-metrics" style="display: none;">
+      <div class="glass-card p-6 rounded-2xl mb-6">
+        <div class="card-title text-lg font-bold text-white mb-2">PCM Audio Signal Quality & PSNR/SNR Assessment Lab</div>
+        <p class="text-xs text-slate-400 mb-4">Quantitative metrics (MSE, PSNR dB, SNR dB) comparing original and stego audio files.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer" id="dz-met-orig-audio">
+            <div class="dropzone-icon text-3xl mb-1">🎵</div>
+            <div class="dropzone-title text-xs font-semibold text-white">Upload Original WAV</div>
+            <input type="file" id="file-met-orig-audio" accept="audio/wav" style="display: none;">
+          </div>
+          <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer" id="dz-met-mod-audio">
+            <div class="dropzone-icon text-3xl mb-1">🎧</div>
+            <div class="dropzone-title text-xs font-semibold text-white">Upload Stego WAV</div>
+            <input type="file" id="file-met-mod-audio" accept="audio/wav" style="display: none;">
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-full py-3 mt-4" id="btn-compare-audio-act">📊 Compare Audio Signal Quality</button>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
+            <span class="metric-lbl text-xs text-slate-400 block uppercase">MSE Error</span>
+            <span class="metric-val text-xl font-bold font-mono text-accent" id="met-val-mse">0.000000</span>
+          </div>
+          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
+            <span class="metric-lbl text-xs text-slate-400 block uppercase">PSNR (dB)</span>
+            <span class="metric-val text-xl font-bold font-mono text-emerald-400" id="met-val-psnr">0.00 dB</span>
+          </div>
+          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
+            <span class="metric-lbl text-xs text-slate-400 block uppercase">SNR (dB)</span>
+            <span class="metric-val text-xl font-bold font-mono text-cyan-400" id="met-val-snr">0.00 dB</span>
+          </div>
+          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
+            <span class="metric-lbl text-xs text-slate-400 block uppercase">Quality Verdict</span>
+            <span class="metric-val text-sm font-bold font-mono text-purple-300 mt-2 block" id="met-val-verdict">Awaiting Audio</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </div>
 
-  <!-- Toast Notification Container -->
-  <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-3 z-[10000]"></div>
-
-  <script src="trajectory-viewer.js"></script>
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
   <script src="app.js"></script>
 </body>
 </html>
-
