@@ -45,69 +45,90 @@ app.add_middleware(
 )
 
 
-# Pydantic Schemas
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Pydantic Request & Response Schemas
+# ═══════════════════════════════════════════════════════════════════════
+
 class RSAKeyGenRequest(BaseModel):
     key_size: int = Field(2048, description="RSA key size in bits (1024, 2048, 4096)")
+
 
 class RSAKeyGenResponse(BaseModel):
     public_key_pem: str
     private_key_pem: str
     key_size: int
 
+
 class HybridEncryptRequest(BaseModel):
     plaintext: str = Field(..., description="Message string to encrypt")
     public_key_pem: str = Field(..., description="RSA Public Key in PEM format")
+
 
 class HybridDecryptRequest(BaseModel):
     payload: Dict[str, Any] = Field(..., description="Encrypted hybrid JSON object")
     private_key_pem: str = Field(..., description="RSA Private Key in PEM format")
 
+
 class SignRequest(BaseModel):
     message: str = Field(..., description="Message string to sign")
     private_key_pem: str = Field(..., description="RSA-PSS Private Key in PEM format")
+
 
 class VerifyRequest(BaseModel):
     message: str = Field(..., description="Message string to verify")
     signature_b64: str = Field(..., description="Base64 encoded RSA-PSS signature")
     public_key_pem: str = Field(..., description="RSA-PSS Public Key in PEM format")
 
+
 class HashRequest(BaseModel):
     text: Optional[str] = None
     data_b64: Optional[str] = None
+
 
 class AESEncryptRequest(BaseModel):
     plaintext: str = Field(..., description="Message string to encrypt")
     password: str = Field(..., description="Secret key or password")
 
+
 class AESDecryptRequest(BaseModel):
     ciphertext_payload: str = Field(..., description="Encrypted AES payload JSON string")
     password: str = Field(..., description="Secret key or password")
 
+
 class EduKeyGenRequest(BaseModel):
     bits: int = Field(2048, description="Key bit length (1024, 2048, 4096)")
+
 
 class EduEncryptRequest(BaseModel):
     plaintext: str
     public_key: Dict[str, str] = Field(..., description="Dict containing 'n' and 'e'")
 
+
 class EduDecryptRequest(BaseModel):
     ciphertext: str = Field(..., description="Decimal string ciphertext")
     private_key: Dict[str, str] = Field(..., description="Dict containing 'n' and 'd'")
+
 
 class MillerRabinRequest(BaseModel):
     n: str = Field(..., description="Integer candidate string")
     rounds: int = Field(20, description="Number of witness rounds")
 
+
 class StegoCapacityRequest(BaseModel):
     width: int
     height: int
+
 
 class StegoEmbedRequest(BaseModel):
     image_b64: str = Field(..., description="Base64 encoded input image (PNG/JPEG)")
     payload_text: str = Field(..., description="Secret text payload to embed")
 
+
 class StegoExtractRequest(BaseModel):
     stego_image_b64: str = Field(..., description="Base64 encoded stego image")
+
 
 class WatermarkTextRequest(BaseModel):
     image_b64: str
@@ -117,6 +138,7 @@ class WatermarkTextRequest(BaseModel):
     position: str = "bottom-right"
     color_hex: str = "#ffffff"
 
+
 class WatermarkLogoRequest(BaseModel):
     base_image_b64: str
     logo_image_b64: str
@@ -124,27 +146,38 @@ class WatermarkLogoRequest(BaseModel):
     scale: float = 0.2
     position: str = "bottom-right"
 
+
 class WatermarkDCTEmbedRequest(BaseModel):
     image_b64: str
     watermark_text: str
     strength: float = 20.0
+
 
 class WatermarkDCTExtractRequest(BaseModel):
     image_b64: str
     watermark_bit_length: int
     strength: float = 20.0
 
+
 class ImageCompareRequest(BaseModel):
     original_image_b64: str
     modified_image_b64: str
 
+
+# ═══════════════════════════════════════════════════════════════════════
+# Root & Health Endpoints
+# ═══════════════════════════════════════════════════════════════════════
 
 @app.get("/health", tags=["General"])
 def health_check():
     return {"status": "healthy", "timestamp": time.time()}
 
 
-# Cryptography Endpoints
+
+# ═══════════════════════════════════════════════════════════════════════
+# 1. Production Cryptography Endpoints (/api/crypto)
+# ═══════════════════════════════════════════════════════════════════════
+
 @app.post("/api/crypto/generate-rsa-keys", response_model=RSAKeyGenResponse, tags=["Production Cryptography"])
 def generate_rsa_keys(req: RSAKeyGenRequest):
     try:
@@ -157,6 +190,7 @@ def generate_rsa_keys(req: RSAKeyGenRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/crypto/encrypt-hybrid", tags=["Production Cryptography"])
 def encrypt_hybrid(req: HybridEncryptRequest):
     try:
@@ -166,6 +200,7 @@ def encrypt_hybrid(req: HybridEncryptRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/crypto/decrypt-hybrid", tags=["Production Cryptography"])
 def decrypt_hybrid(req: HybridDecryptRequest):
     try:
@@ -174,6 +209,7 @@ def decrypt_hybrid(req: HybridDecryptRequest):
         return {"plaintext": plaintext}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/crypto/encrypt-file", tags=["Production Cryptography"])
 async def encrypt_file_endpoint(
@@ -192,6 +228,7 @@ async def encrypt_file_endpoint(
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/crypto/decrypt-file", tags=["Production Cryptography"])
 async def decrypt_file_endpoint(
@@ -212,6 +249,7 @@ async def decrypt_file_endpoint(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/crypto/sign", tags=["Production Cryptography"])
 def sign_endpoint(req: SignRequest):
     try:
@@ -221,6 +259,7 @@ def sign_endpoint(req: SignRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/crypto/verify", tags=["Production Cryptography"])
 def verify_endpoint(req: VerifyRequest):
     try:
@@ -229,6 +268,7 @@ def verify_endpoint(req: VerifyRequest):
         return {"valid": valid}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/crypto/hash", tags=["Production Cryptography"])
 def hash_endpoint(req: HashRequest):
@@ -243,6 +283,7 @@ def hash_endpoint(req: HashRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/crypto/encrypt-aes", tags=["Production Cryptography"])
 def encrypt_aes_endpoint(req: AESEncryptRequest):
     try:
@@ -250,6 +291,7 @@ def encrypt_aes_endpoint(req: AESEncryptRequest):
         return res
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/crypto/decrypt-aes", tags=["Production Cryptography"])
 def decrypt_aes_endpoint(req: AESDecryptRequest):
@@ -260,7 +302,11 @@ def decrypt_aes_endpoint(req: AESDecryptRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Educational RSA Endpoints
+
+# ═══════════════════════════════════════════════════════════════════════
+# 2. Educational RSA Endpoints (/api/crypto-edu)
+# ═══════════════════════════════════════════════════════════════════════
+
 @app.post("/api/crypto-edu/generate-keys", tags=["Educational RSA"])
 def edu_generate_keys(req: EduKeyGenRequest):
     try:
@@ -275,6 +321,7 @@ def edu_generate_keys(req: EduKeyGenRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/crypto-edu/encrypt", tags=["Educational RSA"])
 def edu_encrypt(req: EduEncryptRequest):
     try:
@@ -283,6 +330,7 @@ def edu_encrypt(req: EduEncryptRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/crypto-edu/decrypt", tags=["Educational RSA"])
 def edu_decrypt(req: EduDecryptRequest):
     try:
@@ -290,6 +338,7 @@ def edu_decrypt(req: EduDecryptRequest):
         return {"plaintext": plaintext}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/crypto-edu/miller-rabin", tags=["Educational RSA"])
 def edu_miller_rabin(req: MillerRabinRequest):
@@ -301,7 +350,10 @@ def edu_miller_rabin(req: MillerRabinRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Steganography Endpoints
+# ═══════════════════════════════════════════════════════════════════════
+# 3. Steganography Endpoints (/api/stego)
+# ═══════════════════════════════════════════════════════════════════════
+
 @app.post("/api/stego/capacity", tags=["Steganography"])
 def stego_capacity(req: StegoCapacityRequest):
     cap_bytes = stego_engine.calculate_capacity_bytes(req.width, req.height)
@@ -312,12 +364,17 @@ def stego_capacity(req: StegoCapacityRequest):
         "capacity_bits": cap_bytes * 8
     }
 
+
 @app.post("/api/stego/embed", tags=["Steganography"])
 def stego_embed(req: StegoEmbedRequest):
     try:
+        # Decode base64 image
         raw_img_bytes = base64.b64decode(req.image_b64.split(",")[-1])
         res = stego_engine.embed_data(raw_img_bytes, req.payload_text)
+        
+        # Calculate image metrics (MSE / PSNR)
         comp_metrics = metrics.compare_images(raw_img_bytes, res["stego_image_bytes"])
+        
         stego_b64 = base64.b64encode(res["stego_image_bytes"]).decode('utf-8')
         
         return {
@@ -332,11 +389,13 @@ def stego_embed(req: StegoEmbedRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/stego/extract", tags=["Steganography"])
 def stego_extract(req: StegoExtractRequest):
     try:
         raw_img_bytes = base64.b64decode(req.stego_image_b64.split(",")[-1])
         res_bytes, res_text = stego_engine.extract_data(raw_img_bytes)
+        
         return {
             "status": "success",
             "extracted_text": res_text,
@@ -344,6 +403,7 @@ def stego_extract(req: StegoExtractRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/stego/audio/embed", tags=["Steganography"])
 async def audio_stego_embed_endpoint(
@@ -354,6 +414,7 @@ async def audio_stego_embed_endpoint(
     try:
         file_bytes = await file.read()
         res = audio_stego_engine.embed_audio_bytes(file_bytes, text, password)
+        
         out_filename = f"stego_{file.filename.rsplit('.', 1)[0]}.wav"
         return Response(
             content=res["stego_wav_bytes"],
@@ -362,6 +423,7 @@ async def audio_stego_embed_endpoint(
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/stego/audio/embed-details", tags=["Steganography"])
 async def audio_stego_embed_details_endpoint(
@@ -372,12 +434,14 @@ async def audio_stego_embed_details_endpoint(
     try:
         file_bytes = await file.read()
         res = audio_stego_engine.embed_audio_bytes(file_bytes, text, password)
+        
         stego_b64 = base64.b64encode(res["stego_wav_bytes"]).decode('utf-8')
         res_copy = {k: v for k, v in res.items() if k != "stego_wav_bytes"}
         res_copy["stego_audio_b64"] = f"data:audio/wav;base64,{stego_b64}"
         return res_copy
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/stego/audio/extract", tags=["Steganography"])
 async def audio_stego_extract_endpoint(
@@ -400,7 +464,12 @@ async def audio_stego_extract_endpoint(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Watermarking Endpoints
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 4. Digital Watermarking Endpoints (/api/watermark)
+# ═══════════════════════════════════════════════════════════════════════
+
 @app.post("/api/watermark/visible-text", tags=["Digital Watermarking"])
 def watermark_text_endpoint(req: WatermarkTextRequest):
     try:
@@ -413,8 +482,10 @@ def watermark_text_endpoint(req: WatermarkTextRequest):
             position=req.position,
             color_hex=req.color_hex
         )
+        
         comp_metrics = metrics.compare_images(raw_img_bytes, wm_bytes)
         wm_b64 = base64.b64encode(wm_bytes).decode('utf-8')
+
         return {
             "status": "success",
             "watermarked_image_b64": f"data:image/png;base64,{wm_b64}",
@@ -423,11 +494,13 @@ def watermark_text_endpoint(req: WatermarkTextRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/watermark/visible-logo", tags=["Digital Watermarking"])
 def watermark_logo_endpoint(req: WatermarkLogoRequest):
     try:
         base_bytes = base64.b64decode(req.base_image_b64.split(",")[-1])
         logo_bytes = base64.b64decode(req.logo_image_b64.split(",")[-1])
+        
         wm_bytes = watermark_engine.add_visible_logo_watermark(
             base_bytes,
             logo_bytes,
@@ -435,8 +508,10 @@ def watermark_logo_endpoint(req: WatermarkLogoRequest):
             scale=req.scale,
             position=req.position
         )
+        
         comp_metrics = metrics.compare_images(base_bytes, wm_bytes)
         wm_b64 = base64.b64encode(wm_bytes).decode('utf-8')
+
         return {
             "status": "success",
             "watermarked_image_b64": f"data:image/png;base64,{wm_b64}",
@@ -444,6 +519,7 @@ def watermark_logo_endpoint(req: WatermarkLogoRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/watermark/invisible-dct-embed", tags=["Digital Watermarking"])
 def watermark_dct_embed(req: WatermarkDCTEmbedRequest):
@@ -454,8 +530,10 @@ def watermark_dct_embed(req: WatermarkDCTEmbedRequest):
             watermark_text=req.watermark_text,
             strength=req.strength
         )
+        
         comp_metrics = metrics.compare_images(raw_img_bytes, res["watermarked_bytes"])
         wm_b64 = base64.b64encode(res["watermarked_bytes"]).decode('utf-8')
+        
         return {
             "status": "success",
             "watermarked_image_b64": f"data:image/png;base64,{wm_b64}",
@@ -467,6 +545,7 @@ def watermark_dct_embed(req: WatermarkDCTEmbedRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/watermark/invisible-dct-extract", tags=["Digital Watermarking"])
 def watermark_dct_extract(req: WatermarkDCTExtractRequest):
     try:
@@ -476,6 +555,7 @@ def watermark_dct_extract(req: WatermarkDCTExtractRequest):
             watermark_bit_length=req.watermark_bit_length,
             strength=req.strength
         )
+        
         return {
             "status": "success",
             "extracted_text": res["extracted_text"],
@@ -485,16 +565,24 @@ def watermark_dct_extract(req: WatermarkDCTExtractRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Quality Metrics Endpoints
+# ═══════════════════════════════════════════════════════════════════════
+# 5. Analysis & Metrics Endpoints (/api/metrics)
+# ═══════════════════════════════════════════════════════════════════════
+
 @app.post("/api/metrics/compare", tags=["Analysis Metrics"])
 def compare_images_endpoint(req: ImageCompareRequest):
     try:
         orig_bytes = base64.b64decode(req.original_image_b64.split(",")[-1])
         mod_bytes = base64.b64decode(req.modified_image_b64.split(",")[-1])
+        
         res = metrics.compare_images(orig_bytes, mod_bytes)
-        return {"status": "success", "metrics": res}
+        return {
+            "status": "success",
+            "metrics": res
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/metrics/compare-audio", tags=["Analysis Metrics"])
 async def compare_audio_endpoint(
@@ -504,13 +592,22 @@ async def compare_audio_endpoint(
     try:
         orig_bytes = await original_file.read()
         mod_bytes = await modified_file.read()
+        
         res = metrics.compare_audio_bytes(orig_bytes, mod_bytes)
-        return {"status": "success", "metrics": res}
+        return {
+            "status": "success",
+            "metrics": res
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Static UI Mounting
+
+# ═══════════════════════════════════════════════════════════════════════
+# Static Files UI Mounting (Mounted at root '/' after API endpoints)
+# ═══════════════════════════════════════════════════════════════════════
+
 frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "stego_crypto_frontend"))
 os.makedirs(frontend_dir, exist_ok=True)
 app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend_ui")
+

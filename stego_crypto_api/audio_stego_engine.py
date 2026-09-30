@@ -86,6 +86,7 @@ def embed_audio_bytes(wav_bytes: bytes, text: str, password: str) -> dict:
     ciphertext_packet = aes_encrypt(text, key_bytes)
     payload_len = len(ciphertext_packet)
     
+    # Construct complete steganographic payload bitstream
     header = MAGIC_HEADER + struct.pack(">I", payload_len)
     full_payload = header + ciphertext_packet
     payload_bits = bytes_to_bits(full_payload)
@@ -103,6 +104,7 @@ def embed_audio_bytes(wav_bytes: bytes, text: str, password: str) -> dict:
     if total_bits_needed > total_samples:
         raise ValueError(f"Audio capacity exceeded! Required samples: {total_bits_needed}, Available: {total_samples}")
         
+    # LSB Embedding
     for i in range(total_bits_needed):
         samples[i] = (samples[i] & ~1) | payload_bits[i]
         
@@ -113,13 +115,15 @@ def embed_audio_bytes(wav_bytes: bytes, text: str, password: str) -> dict:
         
     stego_wav_bytes = out_io.getvalue()
     
+    # Calculate Audio Signal Metrics (MSE & PSNR)
     orig_s = np.frombuffer(raw_frames, dtype=np.int16).astype(np.float64)
     stego_s = samples.astype(np.float64)
     mse = float(np.mean((orig_s - stego_s) ** 2))
     max_val = 32767.0
     psnr = float(10 * np.log10((max_val ** 2) / mse)) if mse > 0 else 99.99
 
-    plot_len = min(2000, total_samples)
+    # Generate waveform plot samples (first 1000 samples for high-resolution waveform plot)
+    plot_len = min(1000, total_samples)
     orig_slice = orig_s[:plot_len].astype(int).tolist()
     stego_slice = stego_s[:plot_len].astype(int).tolist()
     lsb_deltas = np.abs(orig_s[:plot_len] - stego_s[:plot_len]).astype(float).tolist()
@@ -164,7 +168,7 @@ def extract_audio_bytes(wav_bytes: bytes, password: str) -> str:
     with wave.open(io.BytesIO(wav_bytes), 'rb') as wf:
         params = wf.getparams()
         if params.sampwidth != 2:
-            raise ValueError("Only 16-bit PCM WAV files supported.")
+            raise ValueError(f"Only 16-bit PCM WAV files supported.")
         raw_frames = wf.readframes(params.nframes)
         
     samples = np.frombuffer(raw_frames, dtype=np.int16)

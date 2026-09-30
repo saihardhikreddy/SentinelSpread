@@ -5,13 +5,15 @@ Provides quantitative metrics to evaluate image degradation caused by steganogra
 
 import io
 import math
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Tuple
 import numpy as np
 from PIL import Image
+
 
 def calculate_mse(image_array1: np.ndarray, image_array2: np.ndarray) -> float:
     """
     Calculate Mean Squared Error (MSE) between two image numpy arrays.
+    MSE = (1 / (M * N * C)) * sum( (I1 - I2)^2 )
     """
     if image_array1.shape != image_array2.shape:
         raise ValueError(f"Image shapes do not match: {image_array1.shape} vs {image_array2.shape}")
@@ -22,14 +24,18 @@ def calculate_mse(image_array1: np.ndarray, image_array2: np.ndarray) -> float:
     mse = err / float(image_array1.size)
     return float(mse)
 
+
 def calculate_psnr(mse: float, max_pixel: float = 255.0) -> float:
     """
     Calculate Peak Signal-to-Noise Ratio (PSNR) in decibels (dB).
+    PSNR = 10 * log10( MAX^2 / MSE )
+    If MSE == 0, returns 100.0 dB (perfect match).
     """
     if mse <= 1e-10:
         return 100.0  # Perfect match convention
     psnr = 10.0 * math.log10((max_pixel ** 2) / mse)
     return float(psnr)
+
 
 def compare_images(
     original_input: Union[bytes, io.BytesIO, Image.Image],
@@ -37,6 +43,15 @@ def compare_images(
 ) -> Dict[str, Any]:
     """
     Compare original image and modified image (stego or watermarked).
+    Returns dict:
+      {
+        "mse": float,
+        "psnr_db": float,
+        "width": int,
+        "height": int,
+        "channels": int,
+        "verdict": str
+      }
     """
     def load_rgba(inp):
         if isinstance(inp, (bytes, io.BytesIO)):
@@ -53,6 +68,7 @@ def compare_images(
     img_mod = load_rgba(modified_input)
 
     if img_orig.size != img_mod.size:
+        # Resize modified to match original for comparison
         img_mod = img_mod.resize(img_orig.size, Image.Resampling.LANCZOS)
 
     arr_orig = np.array(img_orig, dtype=np.uint8)
@@ -61,6 +77,7 @@ def compare_images(
     mse = calculate_mse(arr_orig, arr_mod)
     psnr = calculate_psnr(mse)
 
+    # Quality verdict
     if psnr >= 50.0:
         verdict = "Imperceptible / Excellent quality"
     elif psnr >= 40.0:
@@ -80,11 +97,13 @@ def compare_images(
         "quality_verdict": verdict
     }
 
+
 def compare_audio_bytes(orig_bytes: bytes, mod_bytes: bytes) -> dict:
     """
     Compare original and modified 16-bit PCM WAV audio using MSE, PSNR, SNR, and sample parameters.
     """
     import wave
+    import io
     
     with wave.open(io.BytesIO(orig_bytes), 'rb') as wf1, wave.open(io.BytesIO(mod_bytes), 'rb') as wf2:
         framerate = wf1.getframerate()
@@ -134,3 +153,4 @@ def compare_audio_bytes(orig_bytes: bytes, mod_bytes: bytes) -> dict:
         "quality_verdict": verdict,
         "verdict_badge": verdict_badge
     }
+

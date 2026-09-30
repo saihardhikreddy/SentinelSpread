@@ -36,6 +36,7 @@ def test_audio_stego_api():
     assert response.status_code == 200, f"Embed endpoint failed: {response.text}"
     stego_wav_bytes = response.content
     assert len(stego_wav_bytes) > 0, "Stego WAV output empty!"
+    print("  -> Embed Endpoint Success! Received Stego WAV file.")
 
     # 2. Test Extract Endpoint
     ext_response = client.post(
@@ -47,6 +48,7 @@ def test_audio_stego_api():
     ext_data = ext_response.json()
     assert ext_data["status"] == "success"
     assert ext_data["extracted_text"] == secret_text
+    print(f"  -> Extract Endpoint Success! Recovered: '{ext_data['extracted_text']}'")
 
     # 3. Test Audio Quality Metrics Endpoint
     metrics_response = client.post(
@@ -62,6 +64,10 @@ def test_audio_stego_api():
     assert "psnr_db" in met_data["metrics"]
     assert "snr_db" in met_data["metrics"]
     assert "mse" in met_data["metrics"]
+    print(f"  -> Audio Metrics Endpoint Success! PSNR: {met_data['metrics']['psnr_db']} dB, SNR: {met_data['metrics']['snr_db']} dB")
+
+    print("\nALL AUDIO/VIDEO STEGANOGRAPHY API TESTS PASSED 100%!")
 
 if __name__ == "__main__":
     test_audio_stego_api()
+

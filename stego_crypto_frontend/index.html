@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stego — Cybersecurity & Cryptography Suite</title>
   
+  <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -16,7 +17,7 @@
   <!-- WebGL2 Canvas for Smooth Liquid Ridged Sphere -->
   <canvas id="gl"></canvas>
 
-  <!-- Top Navigation Header Bar -->
+  <!-- Top Navigation Header Bar with Top Sliding Dock (Matches Screenshot 1:1) -->
   <nav class="navbar">
     <div class="nav-brand" data-tab="tab-overview">
       <div class="brand-logo-dots">
@@ -52,12 +53,17 @@
   <!-- Main Viewport Stage -->
   <div class="app-viewport">
 
-    <!-- VIEW 1: OVERVIEW -->
+    <!-- ===================================================================
+         VIEW 1: OVERVIEW (HERO LANDING WITH SMOOTH LIQUID RIDGED SPHERE)
+         =================================================================== -->
     <section class="tab-view active" id="tab-overview">
+      
+      <!-- KiddyBank Style Hero Section -->
       <div class="hero-section">
         <div class="hero-text-wrapper" id="hero-main-text">
           <h1 class="hero-title">Steganography system that<br>simply works.</h1>
           <p class="hero-sub">Algorithmic execution of your secret data payloads.</p>
+          
           <div>
             <button class="btn-pill-app" id="btn-hero-start" data-tab="tab-steganography">
               <span>🛡️ Explore Stego Studio</span>
@@ -65,13 +71,15 @@
           </div>
         </div>
 
+        <!-- Scroll-Revealed Text Container (Matches Video & Screenshot 1:1) -->
         <div class="hero-scroll-revealer" id="hero-scroll-text">
-          <h2 class="revealer-title">Hello, I am Stego.<br>Your security assistant</h2>
+          <h2 class="revealer-title">Hello, I am Stego.<br>Your security, assistant</h2>
           <p class="revealer-sub">
-            StegoSuite cryptography engine fundamentally protects data privacy with hybrid RSA encryption, LSB audio/image steganography, and invisible DCT watermarking.
+            StegoSuite cryptography engine is considered one of the technologies that can fundamentally protect data privacy. We show three possibilities — from hybrid RSA encryption to invisible DCT watermarking.
           </p>
         </div>
 
+        <!-- Animated Stat Counters Banner -->
         <div class="stats-banner scroll-reveal">
           <div class="stat-item">
             <div class="stat-num" data-target="2048">2048</div>
@@ -91,10 +99,54 @@
           </div>
         </div>
       </div>
+
+      <!-- Feature Cards Grid (Spotlight Hover + Scroll Reveal) -->
+      <div class="grid-3 scroll-reveal" style="margin-top: 40px;">
+        <div class="glass-card">
+          <div class="card-icon">🔐</div>
+          <h3 class="card-title">Native WebCrypto & API</h3>
+          <p class="card-desc">Hardware-accelerated RSA-OAEP 2048 and AES-256-GCM authenticated encryption directly integrated with our FastAPI backend engine.</p>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-icon">🛡️</div>
+          <h3 class="card-title">Advanced Steganography</h3>
+          <p class="card-desc">Hide encrypted payloads inside carrier images using robust Least Significant Bit (LSB) embedding with real-time capacity monitoring.</p>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-icon">📁</div>
+          <h3 class="card-title">File Packaging Encryption</h3>
+          <p class="card-desc">Securely package and encrypt any binary document or file format into portable encrypted `.enc` binary payloads using hybrid cryptography.</p>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-icon">✍️</div>
+          <h3 class="card-title">Digital Signatures</h3>
+          <p class="card-desc">Sign and verify message digests using RSA-PSS to guarantee authenticity, non-repudiation, and payload integrity in transit.</p>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-icon">🧮</div>
+          <h3 class="card-title">Educational Mode</h3>
+          <p class="card-desc">Explore the underlying mathematics of RSA with custom BigInt implementation, Miller-Rabin primality testing, and modular exponentiation.</p>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-icon">🌊</div>
+          <h3 class="card-title">Digital Watermarking</h3>
+          <p class="card-desc">Apply visible text/logo copyright overlays or embed invisible 8x8 block Discrete Cosine Transform (DCT) frequency domain watermarks.</p>
+        </div>
+      </div>
     </section>
 
-    <!-- VIEW 2: STEGANOGRAPHY -->
+
+    <!-- ===================================================================
+         VIEW 2: STEGANOGRAPHY (WITH SUB-DOCK WORKFLOW & MEDIA PLAYERS)
+         =================================================================== -->
     <section class="tab-view" id="tab-steganography">
+      
+      <!-- Steganography Sub-Dock Navigation Capsule -->
       <div class="sub-dock-wrapper">
         <div class="sub-dock-nav">
           <div class="sub-dock-item active" data-subtab="steg-subtab-image">🖼️ Image Steganography</div>
@@ -105,30 +157,50 @@
 
       <!-- SUB-TAB 1: IMAGE STEGANOGRAPHY -->
       <div class="subtab-panel active" id="steg-subtab-image">
+        <!-- Step 2: Encrypt & Embed into Image -->
         <div class="glass-card scroll-reveal" style="margin-bottom: 28px;">
           <div class="step-header">
-            <span class="badge badge-info">EMBED</span>
-            <span class="card-title">Encrypt & Embed into Image</span>
+            <span class="step-badge">EMBED</span>
+            <span class="step-title">Encrypt & Embed into Image</span>
+            <span class="step-desc">Encrypted with RSA public key / password and embedded via LSB</span>
           </div>
 
-          <div class="grid-2" style="margin-top: 16px;">
+          <div class="grid-2">
             <div>
+              <!-- Carrier Upload -->
               <div class="dropzone" id="dz-steg-carrier">
                 <div class="dropzone-icon">📷</div>
                 <div class="dropzone-title">Upload Carrier Image</div>
+                <div class="dropzone-sub">Select PNG or JPEG image</div>
                 <input type="file" id="file-steg-carrier" accept="image/png, image/jpeg" style="display: none;">
               </div>
+
               <div class="preview-box" id="prev-steg-carrier" style="display: none;">
                 <img id="img-steg-carrier" src="" alt="Carrier Preview">
               </div>
+
               <div class="form-group" style="margin-top: 16px;">
                 <label for="input-steg-msg">Secret Message Payload</label>
                 <textarea id="input-steg-msg" placeholder="Enter confidential text payload..."></textarea>
               </div>
+
+              <!-- Capacity Bar -->
+              <div class="capacity-wrapper">
+                <div class="capacity-header">
+                  <span>Carrier LSB Capacity</span>
+                  <span id="steg-cap-text">0 / 0 Bytes (0%)</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="steg-cap-fill"></div>
+                </div>
+              </div>
+
+              <!-- Password / AES Encryption Toggle -->
               <div class="form-group">
-                <label for="input-steg-pwd">Encryption Password (AES Pre-encryption)</label>
+                <label for="input-steg-pwd">Encryption Password (Optional AES Pre-encryption)</label>
                 <input type="password" id="input-steg-pwd" placeholder="Enter password or use generated RSA Public Key">
               </div>
+
               <button class="btn btn-primary" id="btn-steg-embed-act" style="width: 100%;">
                 <span>🛡️ Embed Message into Image</span>
               </button>
@@ -136,68 +208,182 @@
 
             <div>
               <div style="font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Stego Image Output</div>
+              <div id="box-steg-out-placeholder" style="border: 1px dashed var(--border-glass); border-radius: var(--radius-md); padding: 40px; text-align: center; color: var(--text-subtle);">
+                Upload carrier image and click "Embed Message" to generate stego PNG.
+              </div>
+
               <div id="box-steg-out-res" style="display: none;">
                 <div class="preview-box">
                   <img id="img-steg-out" src="" alt="Stego Output">
                 </div>
+
                 <div class="grid-3" style="gap: 12px; margin-top: 16px;">
-                  <div class="metric-card"><span class="metric-lbl">Bits Used</span><span class="metric-val" id="res-steg-bits">0</span></div>
-                  <div class="metric-card"><span class="metric-lbl">PSNR</span><span class="metric-val" id="res-steg-psnr">0 dB</span></div>
-                  <div class="metric-card"><span class="metric-lbl">MSE</span><span class="metric-val" id="res-steg-mse">0</span></div>
+                  <div class="metric-card">
+                    <span class="metric-lbl">Bits Used</span>
+                    <span class="metric-val" id="res-steg-bits">0</span>
+                  </div>
+                  <div class="metric-card">
+                    <span class="metric-lbl">PSNR</span>
+                    <span class="metric-val" id="res-steg-psnr">0 dB</span>
+                  </div>
+                  <div class="metric-card">
+                    <span class="metric-lbl">MSE</span>
+                    <span class="metric-val" id="res-steg-mse">0</span>
+                  </div>
                 </div>
+
+                <a id="btn-steg-download" class="btn btn-success" style="width: 100%; margin-top: 16px;" download="stego_image.png" href="#">
+                  <span>📥 Download Stego Image (PNG)</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Extract & Decrypt -->
+        <div class="glass-card scroll-reveal">
+          <div class="step-header">
+            <span class="step-badge" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">EXTRACT</span>
+            <span class="step-title">Extract & Decrypt (Image Stego)</span>
+            <span class="step-desc">Extract ciphertext from stego image and decrypt with private key / password</span>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <!-- Stego Upload -->
+              <div class="dropzone" id="dz-steg-extract">
+                <div class="dropzone-icon">🔍</div>
+                <div class="dropzone-title">Upload Stego Image</div>
+                <div class="dropzone-sub">Select stego image containing hidden payload</div>
+                <input type="file" id="file-steg-extract" accept="image/png, image/jpeg" style="display: none;">
+              </div>
+
+              <div class="preview-box" id="prev-steg-ext" style="display: none;">
+                <img id="img-steg-ext-prev" src="" alt="Stego Extract Preview">
+              </div>
+
+              <div class="form-group" style="margin-top: 16px;">
+                <label for="input-steg-ext-pwd">Decryption Password (If AES Encrypted)</label>
+                <input type="password" id="input-steg-ext-pwd" placeholder="Enter password if payload was AES encrypted">
+              </div>
+
+              <button class="btn btn-secondary" id="btn-steg-extract-act" style="width: 100%;">
+                <span>🔓 Extract & Decrypt Payload</span>
+              </button>
+            </div>
+
+            <div>
+              <div style="font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Recovered Message</div>
+              <div class="code-container">
+                <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-recovered">Copy</button>
+                <pre class="code-block" id="output-steg-recovered" style="min-height: 180px;">Extracted payload will appear here after clicking Extract...</pre>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- SUB-TAB 2: AUDIO STEGANOGRAPHY -->
+      <!-- SUB-TAB 2: AUDIO & MEDIA STEGO (WITH WEBPAGE AUDIO PLAYERS) -->
       <div class="subtab-panel" id="steg-subtab-audio" style="display: none;">
-        <div class="glass-card scroll-reveal">
-          <div class="card-title">Audio & Video Steganography Studio (WAV / MP4)</div>
-          <div class="grid-2" style="margin-top: 16px;">
+        <!-- Technical Info Banner: Why MP4 / WAV vs MP3 / M4A -->
+        <div class="glass-card scroll-reveal" style="margin-bottom: 20px; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.3);">
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="font-size: 24px;">💡</div>
             <div>
+              <h4 style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px;">Why WAV & MP4 formats? (MP3 / M4A vs Uncompressed PCM)</h4>
+              <p style="font-size: 13px; color: var(--text-main); line-height: 1.5;">
+                <strong>MP3 & M4A</strong> formats use <em>lossy compression</em> algorithms (psychoacoustic masking and MDCT quantization). This process overwrites least-significant bits during encoding, <strong>destroying hidden steganographic data</strong>.<br>
+                <strong>WAV (16-bit PCM)</strong> & <strong>MP4 video containers</strong> preserve uncompressed audio samples and frames bit-for-bit, guaranteeing 100% loss-free payload extraction and maximum embedding capacity.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card scroll-reveal">
+          <div class="step-header">
+            <span class="step-badge" style="background: linear-gradient(135deg, #a855f7, #6366f1);">AUDIO / VIDEO STUDIO</span>
+            <span class="step-title">Audio & Video Steganography Studio (WAV / MP4)</span>
+            <span class="step-desc">AES-128 Encrypted LSB Steganography with inline Web Audio Player controls</span>
+          </div>
+
+          <div class="grid-2">
+            <!-- Embed Section -->
+            <div style="border-right: 1px solid var(--border-glass); padding-right: 20px;">
+              <h3 style="font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">🛡️ Encrypt & Embed into Audio/Video</h3>
+              
               <div class="dropzone" id="dz-audio-embed">
                 <div class="dropzone-icon">🎵</div>
                 <div class="dropzone-title">Upload WAV or MP4 File</div>
+                <div class="dropzone-sub">Supports 16-bit PCM WAV & MP4 media</div>
                 <input type="file" id="file-audio-embed" accept="audio/wav, video/mp4, .wav, .mp4" style="display: none;">
               </div>
               <div id="audio-embed-file-badge" class="badge badge-info" style="display: none; margin-top: 8px;">No File Selected</div>
+
+              <!-- Carrier Audio Player -->
+              <div id="box-audio-carrier-player" style="display: none; margin-top: 12px;" class="audio-player-card">
+                <label style="font-size: 12px; font-weight: 600; color: var(--pink-primary); margin-bottom: 6px; display: block;">▶️ Original Carrier Audio Preview</label>
+                <audio id="player-audio-carrier" controls style="width: 100%; border-radius: var(--radius-sm);"></audio>
+              </div>
+
               <div class="form-group" style="margin-top: 14px;">
                 <label for="input-audio-embed-text">Secret Text Payload</label>
                 <textarea id="input-audio-embed-text" placeholder="Enter confidential message to embed..."></textarea>
               </div>
+
               <div class="form-group">
                 <label for="input-audio-embed-pwd">Encryption Password</label>
                 <input type="password" id="input-audio-embed-pwd" placeholder="Enter secret password for AES-128-CBC encryption">
               </div>
+
               <button class="btn btn-primary" id="btn-audio-embed-act" style="width: 100%;">
                 <span>🔒 Encrypt & Download Stego Audio (.wav)</span>
               </button>
+
+              <!-- Output Stego Audio Player -->
+              <div id="box-audio-out-player" style="display: none; margin-top: 16px;" class="audio-player-card">
+                <label style="font-size: 12px; font-weight: 600; color: var(--emerald-success); margin-bottom: 6px; display: block;">🎧 Stego Audio Output (Playable)</label>
+                <audio id="player-audio-output" controls style="width: 100%; border-radius: var(--radius-sm);"></audio>
+              </div>
             </div>
 
-            <div>
+            <!-- Extract Section -->
+            <div style="padding-left: 10px;">
+              <h3 style="font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">🔓 Extract & Decrypt from Audio/Video</h3>
+              
               <div class="dropzone" id="dz-audio-extract">
                 <div class="dropzone-icon">🎧</div>
                 <div class="dropzone-title">Upload Stego Audio/Video File</div>
+                <div class="dropzone-sub">Select stego WAV or MP4 file</div>
                 <input type="file" id="file-audio-extract" accept="audio/wav, video/mp4, .wav, .mp4" style="display: none;">
               </div>
+              <div id="audio-extract-file-badge" class="badge badge-info" style="display: none; margin-top: 8px;">No File Selected</div>
+
+              <!-- Input Stego Extract Audio Player -->
+              <div id="box-audio-extract-player" style="display: none; margin-top: 12px;" class="audio-player-card">
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; display: block;">▶️ Stego File Audio Preview</label>
+                <audio id="player-audio-extract" controls style="width: 100%; border-radius: var(--radius-sm);"></audio>
+              </div>
+
               <div class="form-group" style="margin-top: 14px;">
                 <label for="input-audio-extract-pwd">Decryption Password</label>
                 <input type="password" id="input-audio-extract-pwd" placeholder="Enter encryption password">
               </div>
-              <button class="btn btn-secondary" id="btn-audio-extract-act" style="width: 100%;">
+
+              <button class="btn btn-secondary" id="btn-audio-extract-act" style="width: 100%; margin-bottom: 16px;">
                 <span>🔓 Extract Secret Payload</span>
               </button>
-              <div class="code-container" style="margin-top: 14px;">
-                <pre class="code-block" id="output-audio-recovered">Extracted audio payload will appear here...</pre>
+
+              <label style="font-weight: 700; color: var(--text-bright);">Recovered Audio Secret Message</label>
+              <div class="code-container">
+                <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-audio-out">Copy</button>
+                <pre class="code-block" id="output-audio-recovered" style="min-height: 110px;">Extracted audio payload will appear here...</pre>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Visual Proof & Acoustic Payload Metrics Panel -->
-        <div class="glass-card scroll-reveal" id="card-audio-proof" style="margin-top: 24px;">
+        <!-- Visual Proof & Acoustic Payload Metrics Panel (audio_stego.py Engine Analysis) -->
+        <div class="glass-card scroll-reveal" id="card-audio-proof" style="display: none; margin-top: 24px;">
           <div style="font-size: 14px; font-weight: 600; color: var(--pink-primary); margin-bottom: 16px; font-family: var(--font-code);">
             Here is the visual proof of your <strong>Application-Layer Audio Stegocrypto Engine ( audio_stego.py )</strong>:
           </div>
@@ -235,17 +421,380 @@
             <div class="term-row">• Magic Header: <span id="meta-magic" class="term-val">ASTG (4 Bytes)</span> | Payload Length Indicator: <span id="meta-length" class="term-val">96 Bytes</span></div>
             <div class="term-row">• Cipher Algorithm: <span id="meta-cipher" class="term-val">AES-128-CBC (PKCS7 Padded)</span> | Derived Key: <span id="meta-key" class="term-val">SHA-256(...)[:16]</span></div>
             <div class="term-row">• Total LSB Bits Embedded: <span id="meta-bits" class="term-val">832 bits</span> | Carrier Capacity Used: <span id="meta-cap" class="term-val">0.94%</span></div>
+            
             <div class="term-section-title" style="margin-top: 14px;">🔓 RECOVERED PLAINTEXT EXTRACTED FROM LSB BITSTREAM:</div>
             <div class="term-quote">&gt; "<span id="meta-plaintext">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</span>"</div>
+            
             <div class="term-status-line" id="meta-status">✓ STATUS: 100% ACOUSTIC-LAYER PAYLOAD RECOVERY VERIFIED</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUB-TAB 3: RSA KEY GENERATOR -->
+      <div class="subtab-panel" id="steg-subtab-keys" style="display: none;">
+        <div class="glass-card scroll-reveal">
+          <div class="step-header">
+            <span class="step-badge">KEYPAIR</span>
+            <span class="step-title">Generate RSA Key Pair (2048-bit)</span>
+            <span class="step-desc">Keys encrypt message before embedding and decrypt after extraction</span>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <label>Public Key (Encrypts Payload)</label>
+                <button class="btn btn-secondary btn-sm" id="btn-steg-gen-keys">🔑 Generate 2048-bit Keys</button>
+              </div>
+              <div class="code-container">
+                <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-steg-pub">Copy</button>
+                <pre class="code-block" id="steg-pub-pem">Click "Generate 2048-bit Keys" to generate RSA-OAEP keys...</pre>
+              </div>
+            </div>
+
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <label>Private Key (Decrypts Payload)</label>
+              </div>
+              <div class="code-container">
+                <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-steg-priv">Copy</button>
+                <pre class="code-block" id="steg-priv-pem">Click "Generate 2048-bit Keys" to generate RSA-OAEP keys...</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================================
+         VIEW 3: WATERMARKING
+         =================================================================== -->
+    <section class="tab-view" id="tab-watermarking">
+      <div class="grid-2">
+        
+        <!-- Visible Text/Logo Watermark -->
+        <div class="glass-card scroll-reveal">
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Visible Text / Logo Watermarking</h2>
+          
+          <div class="dropzone" id="dz-wm-base">
+            <div class="dropzone-icon">🖼️</div>
+            <div class="dropzone-title">Upload Base Image</div>
+            <div class="dropzone-sub">Select image to watermark</div>
+            <input type="file" id="file-wm-base" accept="image/png, image/jpeg" style="display: none;">
+          </div>
+
+          <div class="form-group" style="margin-top: 16px;">
+            <label for="input-wm-text">Watermark Text Overlay</label>
+            <input type="text" id="input-wm-text" value="© CyberSteg Suite 2026">
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="input-wm-fs">Font Size: <span id="lbl-wm-fs">28px</span></label>
+              <input type="range" id="input-wm-fs" min="12" max="72" value="28">
+            </div>
+            <div class="form-group">
+              <label for="input-wm-op">Opacity: <span id="lbl-wm-op">0.4</span></label>
+              <input type="range" id="input-wm-op" min="0.1" max="1.0" step="0.05" value="0.4">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="input-wm-color">Text Color</label>
+              <input type="color" id="input-wm-color" value="#ffffff" style="height: 40px; width: 100%;">
+            </div>
+            <div class="form-group">
+              <label for="select-wm-pos">Position</label>
+              <select id="select-wm-pos">
+                <option value="bottom-right" selected>Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+                <option value="center">Center</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-apply-text-wm" style="width: 100%;">
+            <span>✨ Apply Visible Text Watermark</span>
+          </button>
+        </div>
+
+        <!-- Invisible DCT Watermark -->
+        <div class="glass-card scroll-reveal">
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Invisible 8x8 DCT Frequency Domain Watermark</h2>
+          
+          <div class="dropzone" id="dz-wm-dct">
+            <div class="dropzone-icon">🌊</div>
+            <div class="dropzone-title">Upload Image for DCT Watermarking</div>
+            <div class="dropzone-sub">Frequency domain embedding</div>
+            <input type="file" id="file-wm-dct" accept="image/png, image/jpeg" style="display: none;">
+          </div>
+
+          <div class="form-group" style="margin-top: 16px;">
+            <label for="input-dct-text">Watermark Secret String</label>
+            <input type="text" id="input-dct-text" value="STEGO-DCT-2026">
+          </div>
+
+          <div class="form-group">
+            <label for="input-dct-strength">Embedding Strength ($\alpha$): <span id="lbl-dct-strength">20.0</span></label>
+            <input type="range" id="input-dct-strength" min="5.0" max="60.0" step="1.0" value="20.0">
+          </div>
+
+          <div class="grid-2">
+            <button class="btn btn-primary" id="btn-dct-embed">🛡️ Embed DCT</button>
+            <button class="btn btn-secondary" id="btn-dct-extract">🔍 Extract DCT</button>
+          </div>
+
+          <div id="box-dct-result" style="display: none; margin-top: 16px;">
+            <pre class="code-block" id="output-dct-info"></pre>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Watermark Output Preview Card -->
+      <div class="glass-card scroll-reveal" id="card-wm-output" style="display: none; margin-top: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--text-bright);">Watermarked Output Image</h3>
+          <a id="btn-wm-download" class="btn btn-success btn-sm" download="watermarked.png" href="#">📥 Download Watermarked PNG</a>
+        </div>
+        <div class="preview-box">
+          <img id="img-wm-out" src="" alt="Watermarked Preview">
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===================================================================
+         VIEW 4: RSA (EDU)
+         =================================================================== -->
+    <section class="tab-view" id="tab-rsa-edu">
+      <div class="grid-2">
+        
+        <!-- Miller-Rabin Console -->
+        <div class="glass-card scroll-reveal">
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Miller-Rabin Primality Test</h2>
+          
+          <div class="form-group">
+            <label for="input-mr-candidate">Candidate Integer (n)</label>
+            <input type="text" id="input-mr-candidate" value="104729" placeholder="Enter integer to test...">
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="input-mr-rounds">Rounds (k)</label>
+              <input type="number" id="input-mr-rounds" value="20" min="1" max="100">
+            </div>
+            <div style="display: flex; align-items: flex-end; gap: 8px; margin-bottom: 16px;">
+              <button class="btn btn-secondary btn-sm" id="btn-sample-p">Sample Prime</button>
+              <button class="btn btn-secondary btn-sm" id="btn-sample-c">Composite</button>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-run-mr" style="width: 100%;">
+            <span>🧪 Run Primality Test</span>
+          </button>
+
+          <div id="mr-res-box" style="display: none; margin-top: 16px;">
+            <div class="metric-card">
+              <span class="metric-lbl">Primality Verdict</span>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span class="metric-val" id="mr-verdict-text">PROBABLY PRIME</span>
+                <span class="badge badge-success" id="mr-rounds-badge">20 Rounds</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BigInt Parameter Derivation -->
+        <div class="glass-card scroll-reveal">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--text-bright);">RSA Key Derivation</h2>
+            <button class="btn btn-primary btn-sm" id="btn-gen-edu">Generate 1024-bit</button>
+          </div>
+
+          <div class="form-group">
+            <label>Modulus $n = p \times q$</label>
+            <pre class="code-block" id="edu-n-box" style="max-height: 50px;">Click generate to compute parameters</pre>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Public Exponent $e$</label>
+              <pre class="code-block" id="edu-e-box" style="max-height: 50px;">65537</pre>
+            </div>
+            <div class="form-group">
+              <label>Private Exponent $d$</label>
+              <pre class="code-block" id="edu-d-box" style="max-height: 50px;">-</pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Raw Modular Exponentiation Sandbox -->
+      <div class="glass-card scroll-reveal" style="margin-top: 24px;">
+        <h2 style="font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Modular Exponentiation Sandbox ($c = m^e \pmod n$, $m = c^d \pmod n$)</h2>
+        
+        <div class="grid-2">
+          <div>
+            <div class="form-group">
+              <label for="input-edu-txt">Plaintext String</label>
+              <input type="text" id="input-edu-txt" value="Hello RSA!" placeholder="Short string...">
+            </div>
+            <button class="btn btn-primary" id="btn-edu-enc">Encrypt Ciphertext ($c = m^e \pmod n$)</button>
+            <div class="form-group" style="margin-top: 16px;">
+              <label>Decimal Ciphertext String ($c$)</label>
+              <pre class="code-block" id="out-edu-cipher">Ciphertext output will appear here...</pre>
+            </div>
+          </div>
+
+          <div>
+            <div class="form-group">
+              <label for="input-edu-cipher-in">Decimal Ciphertext Input</label>
+              <textarea id="input-edu-cipher-in" placeholder="Paste decimal ciphertext string..."></textarea>
+            </div>
+            <button class="btn btn-secondary" id="btn-edu-dec">Decrypt Plaintext ($m = c^d \pmod n$)</button>
+            <div class="form-group" style="margin-top: 16px;">
+              <label>Recovered Plaintext ($m$)</label>
+              <pre class="code-block" id="out-edu-plain">Decrypted text will appear here...</pre>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-  </div>
 
-  <div id="toast-container"></div>
-  <script src="app.js"></script>
-</body>
-</html>
+    <!-- ===================================================================
+         VIEW 5: WEBCRYPTO
+         =================================================================== -->
+    <section class="tab-view" id="tab-webcrypto">
+      
+      <!-- Key Manager -->
+      <div class="glass-card scroll-reveal" style="margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--text-bright);">RSA-OAEP 2048 Key Pair Manager</h2>
+            <p style="font-size: 13px; color: var(--text-subtle);">Hardware-accelerated RSA key generation via WebCrypto API</p>
+          </div>
+          <button class="btn btn-primary" id="btn-wc-gen-keys">🔑 Generate Key Pair</button>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Public Key (PEM)</label>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-wc-pub">Copy</button>
+              <pre class="code-block" id="wc-pub-pem">Click "Generate Key Pair"...</pre>
+            </div>
+          </div>
+          <div>
+            <label>Private Key (PEM)</label>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-wc-priv">Copy</button>
+              <pre class="code-block" id="wc-priv-pem">Click "Generate Key Pair"...</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hybrid Message Encryption & Decryption -->
+      <div class="grid-2" style="margin-bottom: 24px;">
+        
+        <div class="glass-card scroll-reveal">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Hybrid RSA-OAEP + AES-256-GCM Encrypt</h3>
+          <div class="form-group">
+            <label for="input-wc-plain">Message to Encrypt</label>
+            <textarea id="input-wc-plain" placeholder="Enter plaintext to encrypt..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="input-wc-pubkey">RSA Public Key (PEM)</label>
+            <textarea id="input-wc-pubkey" placeholder="Paste RSA Public Key PEM..."></textarea>
+          </div>
+          <button class="btn btn-primary" id="btn-wc-encrypt-act" style="width: 100%;">🔒 Hybrid Encrypt</button>
+          
+          <div id="box-wc-enc-res" style="display: none; margin-top: 16px;">
+            <label>Encrypted WebCrypto Payload (JSON)</label>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-wc-json">Copy</button>
+              <pre class="code-block" id="output-wc-json"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card scroll-reveal">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Hybrid Decrypt Message</h3>
+          <div class="form-group">
+            <label for="input-wc-json-in">Encrypted WebCrypto JSON Payload</label>
+            <textarea id="input-wc-json-in" placeholder="Paste WebCrypto JSON payload..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="input-wc-privkey">RSA Private Key (PEM)</label>
+            <textarea id="input-wc-privkey" placeholder="Paste RSA Private Key PEM..."></textarea>
+          </div>
+          <button class="btn btn-secondary" id="btn-wc-decrypt-act" style="width: 100%;">🔓 Hybrid Decrypt</button>
+
+          <div id="box-wc-dec-res" style="display: none; margin-top: 16px;">
+            <label>Decrypted Plaintext Message</label>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm code-copy-btn" id="btn-copy-wc-dec">Copy</button>
+              <pre class="code-block" id="output-wc-plaintext"></pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Binary File & Signatures -->
+      <div class="grid-2">
+        
+        <div class="glass-card scroll-reveal">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Secure Binary File Encryption</h3>
+          <div class="dropzone" id="dz-file-crypto">
+            <div class="dropzone-icon">📁</div>
+            <div class="dropzone-title">Upload File to Encrypt or Decrypt</div>
+            <div class="dropzone-sub">Supports any document or binary format</div>
+            <input type="file" id="file-crypto-in" style="display: none;">
+          </div>
+          <div id="file-badge" class="badge badge-info" style="display: none; margin-top: 10px;">No File Selected</div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <button class="btn btn-primary" id="btn-file-enc">🔒 Encrypt File</button>
+            <button class="btn btn-secondary" id="btn-file-dec">🔓 Decrypt File</button>
+          </div>
+        </div>
+
+        <div class="glass-card scroll-reveal">
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">SHA-256 & RSA-PSS Signatures</h3>
+          <div class="form-group">
+            <label for="input-hash-txt">String for SHA-256 Hash</label>
+            <input type="text" id="input-hash-txt" placeholder="Type text to hash...">
+          </div>
+          <div class="form-group">
+            <label>SHA-256 Digest</label>
+            <pre class="code-block" id="out-sha256-digest" style="padding: 8px;">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</pre>
+          </div>
+
+          <div class="grid-2">
+            <button class="btn btn-secondary btn-sm" id="btn-sign-msg">✍️ Sign Message</button>
+            <button class="btn btn-secondary btn-sm" id="btn-verify-sig">✓ Verify Signature</button>
+          </div>
+          <div id="box-sig-status" style="margin-top: 10px;"></div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ===================================================================
+         VIEW 6: QUALITY METRICS (IMAGE & AUDIO METRICS LABS)
+         =================================================================== -->
+    <section class="tab-view" id="tab-metrics">
+      
+      <!-- Metrics Sub-Dock Navigation Capsule -->
+      <div class="sub-dock-wrapper">
+        <div class="sub-dock-nav">
