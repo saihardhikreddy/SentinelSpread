@@ -9,6 +9,7 @@ let lastAudioProofData = null;
 
 window.addEventListener("DOMContentLoaded", () => {
     initTopSlidingDock();
+    initSubDocks();
     initMotionPrimitives();
     initFileDropzones();
     initSpotlightCards();
@@ -172,9 +173,9 @@ function initTopSlidingDock() {
 
 function initSubDocks() {
   document.querySelectorAll("[data-subtab]").forEach(item => {
-    item.addEventListener("click", () => {
-      const parentView = item.closest(".tab-view");
-      if (!parentView) return;
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      const parentView = item.closest(".tab-view") || document;
 
       parentView.querySelectorAll(".subtab-panel").forEach(p => {
         p.classList.remove("active");
