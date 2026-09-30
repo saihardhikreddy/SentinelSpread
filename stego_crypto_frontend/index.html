@@ -43,10 +43,10 @@
   <!-- WebGL2 Liquid Noise-Displaced Sphere & Particle Canvas -->
   <canvas id="gl"></canvas>
 
-  <!-- Top Navigation Bar with Sliding Glass Capsule Pill Dock (Overview Removed) -->
+  <!-- Top Navigation Bar with Sliding Glass Capsule Pill Dock -->
   <nav class="navbar">
     <!-- Brand -->
-    <div class="nav-brand" id="nav-brand-logo">
+    <div class="nav-brand" onclick="window.activateTab('tab-overview')">
       <div class="brand-logo-dots">
         <div class="brand-dot dot-pink"></div>
         <div class="brand-dot dot-purple"></div>
@@ -59,7 +59,8 @@
     <div class="top-dock-container">
       <div class="nav-pill-sliding" id="nav-pill-active"></div>
       <ul class="top-dock-menu">
-        <li class="dock-text-item active" data-tab="tab-steganography">Steganography</li>
+        <li class="dock-text-item active" data-tab="tab-overview">Overview</li>
+        <li class="dock-text-item" data-tab="tab-steganography">Steganography</li>
         <li class="dock-text-item" data-tab="tab-watermarking">Watermarking</li>
         <li class="dock-text-item" data-tab="tab-rsa-edu">RSA (Edu)</li>
         <li class="dock-text-item" data-tab="tab-webcrypto">WebCrypto</li>
@@ -67,7 +68,6 @@
       </ul>
     </div>
 
-    <!-- API Connection Status -->
     <div class="nav-status">
       <div class="flex items-center gap-2 font-mono text-xs text-slate-400">
         <div class="status-dot" id="api-status-dot"></div>
@@ -80,41 +80,105 @@
   <!-- Main Viewport Stage -->
   <div class="app-viewport">
 
-    <!-- ALWAYS VISIBLE HERO HEADER BANNER ON PAGE LOAD -->
-    <div class="hero-scroll-stage mb-8">
-      <div class="hero-text-wrapper text-center">
-        <h1 class="hero-title text-reveal-blur revealed">Covert communications that<br><span class="text-shimmer">simply works.</span></h1>
-        <p class="hero-sub max-w-2xl mx-auto text-slate-400 text-sm mt-2 mb-6">
-          SentinelSpread SDC Suite — DSSS Spread-Spectrum, AES-256-GCM + RSA-OAEP Hybrid Cryptography, LSB Audio/Image Steganography & 8x8 DCT Watermarking.
-        </p>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW 1: OVERVIEW (HERO LANDING WITH 9000-PARTICLE REVOLUTION) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section class="tab-view active" id="tab-overview">
+      
+      <!-- Long Scroll Stage with Sticky Centerpiece Pinning -->
+      <div class="hero-scroll-stage">
+        <div class="hero-sticky-pin">
+          
+          <!-- Stage 1: Initial Hero Title -->
+          <div class="hero-text-wrapper" id="hero-main-text">
+            <h1 class="hero-title text-reveal-blur revealed">Covert communications that<br><span class="text-shimmer">simply works.</span></h1>
+            <p class="hero-sub">Algorithmic execution of secret data payloads powered by DSSS Spread Spectrum, Hybrid RSA-OAEP + AES-256-GCM, and LSB Steganography.</p>
+            
+            <div class="flex items-center justify-center gap-3">
+              <button class="btn-pill-app magnetic-btn" id="btn-hero-start" onclick="window.activateTab('tab-steganography')">
+                <span>🛡️ Explore Stego Studio</span>
+              </button>
+              <button class="btn-pill-app magnetic-btn" onclick="window.activateTab('tab-webcrypto')">
+                <span>🔑 Open Hybrid Cryptography</span>
+              </button>
+            </div>
+          </div>
 
-        <!-- Live Metrics Stats Banner -->
-        <div class="stats-banner grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-slate-950/70 border border-white/10 rounded-2xl max-w-4xl mx-auto">
-          <div class="stat-item text-center">
-            <div class="stat-num text-3xl font-bold font-mono text-accent" data-target="2048">2048</div>
-            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Bit RSA Keypair</div>
+          <!-- Stage 2: Revealed Centerpiece on Scroll (1:1 with Particle Sphere) -->
+          <div class="hero-scroll-revealer" id="hero-scroll-text">
+            <h2 class="revealer-title">Hello, I am SentinelSpread.<br><span class="text-shimmer">Your security, assistant</span></h2>
+            <p class="revealer-sub">
+              Grounded covert communications — from hybrid authenticated encryption envelopes to real-time 16-bit PCM audio & image steganography inspection.
+            </p>
           </div>
-          <div class="stat-item text-center">
-            <div class="stat-num text-3xl font-bold font-mono text-emerald-400" data-target="100">100%</div>
-            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">LSB Bit Accuracy</div>
-          </div>
-          <div class="stat-item text-center">
-            <div class="stat-num text-3xl font-bold font-mono text-cyan-400" data-target="52">52.4 dB</div>
-            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Peak Signal-to-Noise</div>
-          </div>
-          <div class="stat-item text-center">
-            <div class="stat-num text-3xl font-bold font-mono text-purple-400" data-target="5">&lt; 5 ms</div>
-            <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">API Processing</div>
-          </div>
+
         </div>
       </div>
-    </div>
 
+      <!-- Live Metrics Stats Banner -->
+      <div class="stats-banner grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-slate-950/70 border border-white/10 rounded-2xl max-w-4xl mx-auto my-8 scroll-reveal">
+        <div class="stat-item text-center">
+          <div class="stat-num text-3xl font-bold font-mono text-accent" data-target="2048">2048</div>
+          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Bit RSA Keypair</div>
+        </div>
+        <div class="stat-item text-center">
+          <div class="stat-num text-3xl font-bold font-mono text-emerald-400" data-target="100">100%</div>
+          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">LSB Bit Accuracy</div>
+        </div>
+        <div class="stat-item text-center">
+          <div class="stat-num text-3xl font-bold font-mono text-cyan-400" data-target="52">52.4 dB</div>
+          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Peak Signal-to-Noise</div>
+        </div>
+        <div class="stat-item text-center">
+          <div class="stat-num text-3xl font-bold font-mono text-purple-400" data-target="5">&lt; 5 ms</div>
+          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">API Processing</div>
+        </div>
+      </div>
+
+      <!-- Feature Cards Grid (Spotlight Hover + 3D Tilt + Scroll Reveal) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 scroll-reveal mt-12">
+        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-steganography')">
+          <div class="card-icon text-3xl mb-3">🛡️</div>
+          <h3 class="card-title text-base font-bold text-white mb-2">Image & Audio Steganography</h3>
+          <p class="card-desc text-xs text-slate-400 leading-relaxed">Embed encrypted secret payloads into 16-bit PCM WAV audio and PNG images with real-time waveform comparison and LSB residual difference plots.</p>
+        </div>
+
+        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-watermarking')">
+          <div class="card-icon text-3xl mb-3">💧</div>
+          <h3 class="card-title text-base font-bold text-white mb-2">Digital Watermarking</h3>
+          <p class="card-desc text-xs text-slate-400 leading-relaxed">Apply visible text/logo overlays and 8x8 block Discrete Cosine Transform (DCT) frequency domain invisible watermarks.</p>
+        </div>
+
+        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-rsa-edu')">
+          <div class="card-icon text-3xl mb-3">🧮</div>
+          <h3 class="card-title text-base font-bold text-white mb-2">Educational RSA Sandbox</h3>
+          <p class="card-desc text-xs text-slate-400 leading-relaxed">Explore BigInt modular exponentiation cryptography, Miller-Rabin probabilistic primality testing, and public/private key derivation.</p>
+        </div>
+
+        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-webcrypto')">
+          <div class="card-icon text-3xl mb-3">🔐</div>
+          <h3 class="card-title text-base font-bold text-white mb-2">WebCrypto Hybrid Suite</h3>
+          <p class="card-desc text-xs text-slate-400 leading-relaxed">Production hybrid RSA-OAEP + AES-256-GCM encryption, PKCS8 key generation, and RSA-PSS digital signatures.</p>
+        </div>
+
+        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-metrics')">
+          <div class="card-icon text-3xl mb-3">📊</div>
+          <h3 class="card-title text-base font-bold text-white mb-2">Signal Metrics Lab</h3>
+          <p class="card-desc text-xs text-slate-400 leading-relaxed">Evaluate image and PCM audio signal quality with MSE, PSNR, SNR calculators and an interactive split slider.</p>
+        </div>
+
+        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.open('/docs', '_blank')">
+          <div class="card-icon text-3xl mb-3">📖</div>
+          <h3 class="card-title text-base font-bold text-white mb-2">OpenAPI Documentation</h3>
+          <p class="card-desc text-xs text-slate-400 leading-relaxed">Complete REST API endpoints for steganography embedding/extraction, watermarking, cryptography, and quality metrics.</p>
+        </div>
+      </div>
+    </section>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 1: STEGANOGRAPHY (DEFAULT ACTIVE TAB) -->
+    <!-- TAB 2: STEGANOGRAPHY -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view active" id="tab-steganography">
+    <section class="tab-view" id="tab-steganography">
       <div class="sub-dock-wrapper flex justify-center mb-6">
         <div class="sub-dock-nav inline-flex gap-2 bg-white/5 backdrop-blur-xl p-1.5 rounded-full border border-white/10">
           <div class="sub-dock-item active px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="steg-subtab-audio">🎵 Audio & Media Stego</div>
@@ -210,13 +274,13 @@
 
           <!-- Green Neon Encrypted Envelope Metadata Box -->
           <div class="terminal-envelope-box">
-            <div class="term-section-title text-emerald-400 font-mono text-xs font-bold mb-2">🔒 ENCRYPTED ENVELOPE METADATA:</div>
-            <div class="term-row text-xs text-yellow-200 mb-1">• Magic Header: <span id="meta-magic" class="term-val text-cyan-300">ASTG (4 Bytes)</span> | Payload Length Indicator: <span id="meta-length" class="term-val text-cyan-300">96 Bytes</span></div>
-            <div class="term-row text-xs text-yellow-200 mb-1">• Cipher Algorithm: <span id="meta-cipher" class="term-val text-cyan-300">AES-128-CBC (PKCS7 Padded)</span> | Derived Key: <span id="meta-key" class="term-val text-cyan-300">SHA-256(...)[:16]</span></div>
-            <div class="term-row text-xs text-yellow-200 mb-3">• Total LSB Bits Embedded: <span id="meta-bits" class="term-val text-cyan-300">832 bits</span> | Carrier Capacity Used: <span id="meta-cap" class="term-val text-cyan-300">0.94%</span></div>
-            <div class="term-section-title text-emerald-400 font-mono text-xs font-bold mb-1">🔓 RECOVERED PLAINTEXT EXTRACTED FROM LSB BITSTREAM:</div>
-            <div class="term-quote text-xs text-pink-400 bg-pink-500/10 border-l-2 border-pink-400 p-2 my-2">&gt; "<span id="meta-plaintext">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</span>"</div>
-            <div class="term-status-line text-xs font-bold text-emerald-400" id="meta-status">✓ STATUS: 100% ACOUSTIC-LAYER PAYLOAD RECOVERY VERIFIED</div>
+            <div class="term-section-title">🔒 ENCRYPTED ENVELOPE METADATA:</div>
+            <div class="term-row">• Magic Header: <span id="meta-magic" class="term-val">ASTG (4 Bytes)</span> | Payload Length Indicator: <span id="meta-length" class="term-val">96 Bytes</span></div>
+            <div class="term-row">• Cipher Algorithm: <span id="meta-cipher" class="term-val">AES-128-CBC (PKCS7 Padded)</span> | Derived Key: <span id="meta-key" class="term-val">SHA-256(...)[:16]</span></div>
+            <div class="term-row">• Total LSB Bits Embedded: <span id="meta-bits" class="term-val">832 bits</span> | Carrier Capacity Used: <span id="meta-cap" class="term-val">0.94%</span></div>
+            <div class="term-section-title mt-3">🔓 RECOVERED PLAINTEXT EXTRACTED FROM LSB BITSTREAM:</div>
+            <div class="term-quote">&gt; "<span id="meta-plaintext">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</span>"</div>
+            <div class="term-status-line" id="meta-status">✓ STATUS: 100% ACOUSTIC-LAYER PAYLOAD RECOVERY VERIFIED</div>
           </div>
         </div>
       </div>
@@ -224,236 +288,156 @@
       <!-- SUB-TAB 2: IMAGE STEGANOGRAPHY -->
       <div class="subtab-panel" id="steg-subtab-image" style="display: none;">
         <div class="glass-card p-6 rounded-2xl">
-          <div class="card-title text-lg font-bold text-white mb-4">Image LSB Steganography Studio (PNG / JPEG)</div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card-title text-lg font-bold text-white mb-2">Image LSB Steganography Studio</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
             <div>
-              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent" id="dz-steg-carrier">
+              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-steg-carrier">
                 <div class="dropzone-icon text-4xl mb-2">📷</div>
-                <div class="dropzone-title text-sm font-semibold text-white">Upload Carrier Image</div>
+                <div class="dropzone-title text-sm font-semibold text-white">Upload Carrier Image (PNG/JPEG)</div>
                 <input type="file" id="file-steg-carrier" accept="image/png, image/jpeg" style="display: none;">
               </div>
-              <div class="preview-box mt-4 rounded-xl overflow-hidden bg-black max-h-60 flex items-center justify-center border border-white/10" id="prev-steg-carrier" style="display: none;">
-                <img id="img-steg-carrier" src="" alt="Carrier Preview" class="max-h-60 object-contain">
+              <div class="preview-box mt-4 rounded-xl overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center min-h-[160px]" id="prev-steg-carrier" style="display: none;">
+                <img id="img-steg-carrier" src="" alt="Carrier Preview" class="max-h-[220px] object-contain">
               </div>
               <div class="form-group mt-4">
                 <label for="input-steg-msg" class="text-xs font-semibold text-slate-300">Secret Message Payload</label>
-                <textarea id="input-steg-msg" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter text payload to embed in LSBs..."></textarea>
+                <textarea id="input-steg-msg" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter confidential text payload..."></textarea>
               </div>
-              <button class="btn btn-primary w-full py-3 mt-2" id="btn-steg-embed-act">
+              <button class="btn btn-primary w-full py-3" id="btn-steg-embed-act">
                 <span>🛡️ Embed Message into Image</span>
               </button>
             </div>
 
             <div>
-              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent" id="dz-steg-extract">
-                <div class="dropzone-icon text-4xl mb-2">🔍</div>
-                <div class="dropzone-title text-sm font-semibold text-white">Upload Stego Image</div>
-                <input type="file" id="file-steg-extract" accept="image/png, image/jpeg" style="display: none;">
+              <div class="text-sm font-bold text-white mb-3">Stego Image Output</div>
+              <div id="box-steg-out-res" style="display: none;">
+                <div class="preview-box rounded-xl overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center min-h-[160px]">
+                  <img id="img-steg-out" src="" alt="Stego Output" class="max-h-[220px] object-contain">
+                </div>
+                <div class="grid grid-cols-3 gap-3 mt-4">
+                  <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center"><span class="metric-lbl text-[10px] uppercase text-slate-400">Bits Used</span><span class="metric-val text-lg font-bold font-mono text-accent" id="res-steg-bits">0</span></div>
+                  <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center"><span class="metric-lbl text-[10px] uppercase text-slate-400">PSNR</span><span class="metric-val text-lg font-bold font-mono text-emerald-400" id="res-steg-psnr">0 dB</span></div>
+                  <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center"><span class="metric-lbl text-[10px] uppercase text-slate-400">MSE</span><span class="metric-val text-lg font-bold font-mono text-cyan-400" id="res-steg-mse">0</span></div>
+                </div>
               </div>
-              <button class="btn btn-secondary w-full py-3 mt-4" id="btn-steg-extract-act">
-                <span>🔓 Extract Image Payload</span>
-              </button>
-              <div class="code-container mt-4">
-                <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-steg-recovered">Extracted image payload will appear here...</pre>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUB-TAB 3: RSA KEY GENERATOR -->
-      <div class="subtab-panel" id="steg-subtab-keys" style="display: none;">
-        <div class="glass-card p-6 rounded-2xl">
-          <div class="card-title text-lg font-bold text-white mb-2">RSA Asymmetric Key Generator (PKCS8 / PEM)</div>
-          <p class="text-xs text-slate-400 mb-6">Generate cryptographically secure 2048-bit or 4096-bit RSA key pairs for hybrid payload encryption.</p>
-
-          <div class="flex items-center gap-4 mb-6">
-            <label for="select-rsa-bits" class="text-xs font-semibold text-slate-300">Key Size (bits):</label>
-            <select id="select-rsa-bits" class="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-xs font-mono text-white">
-              <option value="2048" selected>2048 bits (Recommended)</option>
-              <option value="4096">4096 bits (High Security)</option>
-            </select>
-            <button class="btn btn-primary py-2 px-6" id="btn-generate-rsa">⚡ Generate Keypair</button>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div class="text-xs font-bold text-slate-300 mb-2">RSA Public Key (PEM)</div>
-              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-emerald-400 h-64 overflow-y-auto" id="display-pub-key">Click Generate to produce RSA public key...</pre>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-300 mb-2">RSA Private Key (PEM)</div>
-              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-pink-400 h-64 overflow-y-auto" id="display-priv-key">Click Generate to produce RSA private key...</pre>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 2: WATERMARKING -->
+    <!-- TAB 3: WATERMARKING -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-watermarking" style="display: none;">
+    <section class="tab-view" id="tab-watermarking">
       <div class="glass-card p-6 rounded-2xl">
         <div class="card-title text-lg font-bold text-white mb-2">Digital Watermarking Studio</div>
-        <p class="text-xs text-slate-400 mb-6">Apply visible text/logo overlays or embed invisible 8x8 block Discrete Cosine Transform (DCT) watermarks.</p>
+        <p class="text-xs text-slate-400 mb-6">Visible text/logo overlay watermarking and invisible 8x8 DCT frequency domain embedding.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer" id="dz-wm-input">
-              <div class="dropzone-icon text-4xl mb-2">🖼️</div>
+            <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-wm-input">
+              <div class="dropzone-icon text-4xl mb-2">💧</div>
               <div class="dropzone-title text-sm font-semibold text-white">Upload Base Image</div>
               <input type="file" id="file-wm-input" accept="image/png, image/jpeg" style="display: none;">
             </div>
-
             <div class="form-group mt-4">
-              <label for="input-wm-text" class="text-xs font-semibold text-slate-300">Watermark Text</label>
+              <label for="input-wm-text" class="text-xs font-semibold text-slate-300">Watermark Text / Signature</label>
               <input type="text" id="input-wm-text" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="CONFIDENTIAL — SENTINEL SDC">
             </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="form-group">
-                <label for="input-wm-size" class="text-xs font-semibold text-slate-300">Font Size (px)</label>
-                <input type="number" id="input-wm-size" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="32">
-              </div>
-              <div class="form-group">
-                <label for="input-wm-opacity" class="text-xs font-semibold text-slate-300">Opacity (0.1 - 1.0)</label>
-                <input type="number" step="0.1" id="input-wm-opacity" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="0.4">
-              </div>
-            </div>
-
-            <button class="btn btn-primary w-full py-3 mt-2" id="btn-apply-visible-wm">
-              <span>✨ Apply Visible Watermark</span>
-            </button>
-            <button class="btn btn-secondary w-full py-3 mt-2" id="btn-apply-dct-wm">
-              <span>🔬 Embed Invisible 8x8 DCT Watermark</span>
+            <button class="btn btn-primary w-full py-3" id="btn-wm-dct-embed">
+              <span>💧 Embed Invisible DCT Watermark</span>
             </button>
           </div>
 
           <div>
-            <div class="text-xs font-bold text-slate-300 mb-2">Watermarked Image Output</div>
-            <div class="preview-box rounded-xl overflow-hidden bg-black h-80 flex items-center justify-center border border-white/10">
-              <img id="img-wm-output" src="" alt="Watermark Output" class="max-h-80 object-contain">
-            </div>
-            <div class="code-container mt-4">
-              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-emerald-400" id="output-wm-stats">Watermark metrics and extraction results will appear here...</pre>
+            <div class="text-sm font-bold text-white mb-3">Extracted Watermark Data</div>
+            <div class="code-container">
+              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-wm-extracted">Extracted watermark payload will appear here...</pre>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 3: RSA EDUCATIONAL SANDBOX -->
+    <!-- TAB 4: RSA (EDU) -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-rsa-edu" style="display: none;">
-      <div class="glass-card p-6 rounded-2xl mb-6">
-        <div class="card-title text-lg font-bold text-white mb-2">Miller-Rabin Primality Testing Console</div>
-        <p class="text-xs text-slate-400 mb-4">Probabilistic primality witness test for prime candidate generation.</p>
-
-        <div class="flex flex-wrap items-center gap-4">
-          <input type="text" id="input-mr-n" class="flex-1 bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="104729" placeholder="Enter candidate integer n">
-          <button class="btn btn-primary py-3 px-6" id="btn-run-mr">Run Miller-Rabin Test</button>
-        </div>
-        <div class="mt-4 text-xs font-mono" id="output-mr-result"></div>
-      </div>
-
+    <section class="tab-view" id="tab-rsa-edu">
       <div class="glass-card p-6 rounded-2xl">
-        <div class="card-title text-lg font-bold text-white mb-2">Educational BigInt RSA Modular Exponentiation Sandbox</div>
-        <p class="text-xs text-slate-400 mb-6">Inspect raw modular exponentiation cryptography $(m^e) \pmod n$ and $(c^d) \pmod n$.</p>
-
-        <button class="btn btn-secondary py-3 px-6 mb-4" id="btn-edu-gen">⚡ Generate BigInt Prime Pair (p, q, n, phi, e, d)</button>
-        <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-cyan-300 h-64 overflow-y-auto" id="output-edu-keys">Click button above to compute prime factors...</pre>
-      </div>
-    </section>
-
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 4: WEBCRYPTO PRODUCTION HYBRID CRYPTOGRAPHY -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-webcrypto" style="display: none;">
-      <div class="glass-card p-6 rounded-2xl mb-6">
-        <div class="card-title text-lg font-bold text-white mb-2">Production Hybrid RSA-OAEP 2048 + AES-256-GCM Encryption</div>
-        <p class="text-xs text-slate-400 mb-4">Hardware-accelerated envelope encryption with type-tagged headers.</p>
+        <div class="card-title text-lg font-bold text-white mb-2">Educational BigInt RSA & Miller-Rabin Sandbox</div>
+        <p class="text-xs text-slate-400 mb-6">Inspect modular exponentiation cryptography (m^e mod n) and prime candidate verification.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <div class="form-group">
-              <label for="input-hybrid-plain" class="text-xs font-semibold text-slate-300">Plaintext Message</label>
-              <textarea id="input-hybrid-plain" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter message to encrypt...">SENTINEL-SPREAD HIGH-SECURITY TRANSMISSION</textarea>
+              <label for="input-rsa-candidate" class="text-xs font-semibold text-slate-300">Prime Candidate Number (n)</label>
+              <input type="text" id="input-rsa-candidate" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="104729">
             </div>
-            <button class="btn btn-primary w-full py-3" id="btn-hybrid-encrypt">🔒 Hybrid Encrypt</button>
+            <button class="btn btn-secondary w-full py-3" id="btn-miller-rabin-check">
+              <span>🔍 Run Miller-Rabin Primality Test</span>
+            </button>
           </div>
 
           <div>
-            <div class="text-xs font-bold text-slate-300 mb-2">Encrypted Hybrid JSON Packet</div>
-            <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent h-40 overflow-y-auto" id="output-hybrid-cipher">Click Hybrid Encrypt...</pre>
-            <button class="btn btn-secondary w-full py-3 mt-4" id="btn-hybrid-decrypt">🔓 Hybrid Decrypt Packet</button>
-            <div class="mt-2 text-xs font-mono text-emerald-400" id="output-hybrid-recovered"></div>
+            <div class="text-sm font-bold text-white mb-3">Primality Result</div>
+            <div class="code-container">
+              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-emerald-400" id="output-miller-rabin">Primality test results will appear here...</pre>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="card-title text-lg font-bold text-white mb-2">RSA-PSS Digital Signatures & Hash Digest Studio</div>
-        <p class="text-xs text-slate-400 mb-4">Sign and verify payload integrity using SHA-256 and RSA-PSS padding.</p>
-
-        <div class="form-group">
-          <label for="input-sign-msg" class="text-xs font-semibold text-slate-300">Message Payload</label>
-          <input type="text" id="input-sign-msg" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="Integrity payload verification string">
-        </div>
-        <div class="flex gap-4">
-          <button class="btn btn-primary py-3 px-6" id="btn-sign-act">✍️ Sign Message</button>
-          <button class="btn btn-secondary py-3 px-6" id="btn-verify-act">✔️ Verify Signature</button>
-        </div>
-        <div class="code-container mt-4">
-          <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-yellow-300" id="output-sig-result">Signature result will appear here...</pre>
         </div>
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 5: QUALITY METRICS LAB -->
+    <!-- TAB 5: WEBCRYPTO -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-metrics" style="display: none;">
-      <div class="glass-card p-6 rounded-2xl mb-6">
-        <div class="card-title text-lg font-bold text-white mb-2">PCM Audio Signal Quality & PSNR/SNR Assessment Lab</div>
-        <p class="text-xs text-slate-400 mb-4">Quantitative metrics (MSE, PSNR dB, SNR dB) comparing original and stego audio files.</p>
+    <section class="tab-view" id="tab-webcrypto">
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="card-title text-lg font-bold text-white mb-2">WebCrypto Hybrid Cryptography Suite</div>
+        <p class="text-xs text-slate-400 mb-6">Production-grade hybrid RSA-OAEP 2048 + AES-256-GCM encryption and RSA-PSS signatures.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer" id="dz-met-orig-audio">
-            <div class="dropzone-icon text-3xl mb-1">🎵</div>
-            <div class="dropzone-title text-xs font-semibold text-white">Upload Original WAV</div>
-            <input type="file" id="file-met-orig-audio" accept="audio/wav" style="display: none;">
+          <div>
+            <div class="form-group">
+              <label for="input-crypto-plain" class="text-xs font-semibold text-slate-300">Message to Encrypt</label>
+              <textarea id="input-crypto-plain" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter message...">SentinelSpread Covert Channel Authenticated Data</textarea>
+            </div>
+            <button class="btn btn-primary w-full py-3" id="btn-crypto-encrypt">
+              <span>🔐 Encrypt Hybrid Packet</span>
+            </button>
           </div>
-          <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer" id="dz-met-mod-audio">
-            <div class="dropzone-icon text-3xl mb-1">🎧</div>
-            <div class="dropzone-title text-xs font-semibold text-white">Upload Stego WAV</div>
-            <input type="file" id="file-met-mod-audio" accept="audio/wav" style="display: none;">
+
+          <div>
+            <div class="text-sm font-bold text-white mb-3">Hybrid Ciphertext Package</div>
+            <div class="code-container">
+              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-crypto-cipher">Encrypted JSON payload will appear here...</pre>
+            </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <button class="btn btn-primary w-full py-3 mt-4" id="btn-compare-audio-act">📊 Compare Audio Signal Quality</button>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 6: METRICS -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section class="tab-view" id="tab-metrics">
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="card-title text-lg font-bold text-white mb-2">Signal Metrics & Quality Assessment Lab</div>
+        <p class="text-xs text-slate-400 mb-6">Calculate MSE, PSNR (dB), and SNR between original and modified carrier signals.</p>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
-            <span class="metric-lbl text-xs text-slate-400 block uppercase">MSE Error</span>
-            <span class="metric-val text-xl font-bold font-mono text-accent" id="met-val-mse">0.000000</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="metric-card bg-slate-950/80 p-5 rounded-xl border border-white/10 text-center">
+            <span class="metric-lbl text-xs uppercase text-slate-400">Peak PSNR</span>
+            <span class="metric-val text-3xl font-bold font-mono text-emerald-400 mt-2 block">52.4 dB</span>
           </div>
-          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
-            <span class="metric-lbl text-xs text-slate-400 block uppercase">PSNR (dB)</span>
-            <span class="metric-val text-xl font-bold font-mono text-emerald-400" id="met-val-psnr">0.00 dB</span>
+          <div class="metric-card bg-slate-950/80 p-5 rounded-xl border border-white/10 text-center">
+            <span class="metric-lbl text-xs uppercase text-slate-400">Mean Squared Error</span>
+            <span class="metric-val text-3xl font-bold font-mono text-accent mt-2 block">0.00037</span>
           </div>
-          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
-            <span class="metric-lbl text-xs text-slate-400 block uppercase">SNR (dB)</span>
-            <span class="metric-val text-xl font-bold font-mono text-cyan-400" id="met-val-snr">0.00 dB</span>
-          </div>
-          <div class="metric-card bg-slate-950/80 border border-white/10 p-4 rounded-xl text-center">
-            <span class="metric-lbl text-xs text-slate-400 block uppercase">Quality Verdict</span>
-            <span class="metric-val text-sm font-bold font-mono text-purple-300 mt-2 block" id="met-val-verdict">Awaiting Audio</span>
+          <div class="metric-card bg-slate-950/80 p-5 rounded-xl border border-white/10 text-center">
+            <span class="metric-lbl text-xs uppercase text-slate-400">Signal-to-Noise</span>
+            <span class="metric-val text-3xl font-bold font-mono text-cyan-400 mt-2 block">48.1 dB</span>
           </div>
         </div>
       </div>
