@@ -1325,6 +1325,31 @@ pre.code-block {
 }
 
 /* ========================================================================
+   Tab View Visibilities & Display Rules
+   ======================================================================== */
+.tab-view {
+  display: none;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.tab-view.active {
+  display: block !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+.subtab-panel {
+  display: none;
+}
+
+.subtab-panel.active {
+  display: block !important;
+}
+
+
+/* ========================================================================
    Audio Stego Visual Proof Plots & Encrypted Terminal Box
    ======================================================================== */
 .plot-box-card {

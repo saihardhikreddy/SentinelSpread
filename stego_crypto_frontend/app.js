@@ -119,14 +119,19 @@ function initTopSlidingDock() {
   }
 
   const activeInitial = document.querySelector(".dock-text-item.active");
-  if (activeInitial) positionPill(activeInitial);
 
   window.activateTab = function(tabId) {
-    document.querySelectorAll(".tab-view").forEach(v => v.style.display = "none");
+    document.querySelectorAll(".tab-view").forEach(v => {
+      v.style.display = "none";
+      v.classList.remove("active");
+    });
     items.forEach(i => i.classList.remove("active"));
 
     const targetView = document.getElementById(tabId);
-    if (targetView) targetView.style.display = "block";
+    if (targetView) {
+      targetView.style.display = "block";
+      targetView.classList.add("active");
+    }
 
     const matchingItem = document.querySelector(`.dock-text-item[data-tab="${tabId}"]`);
     if (matchingItem) {
@@ -134,6 +139,13 @@ function initTopSlidingDock() {
       positionPill(matchingItem);
     }
   };
+
+  if (activeInitial) {
+    const initialTabId = activeInitial.getAttribute("data-tab");
+    window.activateTab(initialTabId);
+  } else {
+    window.activateTab("tab-steganography");
+  }
 
   items.forEach(item => {
     item.addEventListener("click", () => {
