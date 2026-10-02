@@ -2,7 +2,6 @@ import { createScrollConductor } from "./conductor.js?v=20261002b";
 import { createWorld, CHAPTERS } from "./world.js?v=20261002b";
 import { initWorkbench } from "./workbench.js?v=20261002b";
 import { health } from "./api.js?v=20261002b";
-import { initChapterLive } from "./radio.js?v=20261002b";
 
 const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 const body = document.body;
@@ -146,20 +145,9 @@ if (matchMedia("(pointer: fine)").matches && !motionQuery.matches) {
   })();
 }
 
-/* ─── Workbench + live readings + API status ─── */
+/* ─── Workbench + API status ─── */
 initWorkbench();
-initChapterLive();
 
-// A transmit or receive that succeeds gives the signal glow one pulse (not an ambient loop).
-let pulseTimer = 0;
-document.addEventListener("ss:radio", (e) => {
-  if (e.detail.stage === "receive" && !e.detail.ok) return;
-  body.classList.remove("signal-pulse");
-  void body.offsetWidth;
-  body.classList.add("signal-pulse");
-  clearTimeout(pulseTimer);
-  pulseTimer = setTimeout(() => body.classList.remove("signal-pulse"), 1800);
-});
 const status = $("api-status");
 async function ping() {
   const up = await health();
