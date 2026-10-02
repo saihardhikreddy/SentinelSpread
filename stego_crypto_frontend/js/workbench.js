@@ -1,7 +1,7 @@
 /* Workbench: every <form data-tool> maps to one handler below.
    Results are built with DOM nodes (never innerHTML) so payload text can't inject markup. */
 
-import { postJSON, postForm, fileToDataURL, fileToBase64, ApiError } from "./api.js?v=20261002b";
+import { postJSON, postForm, fileToDataURL, fileToBase64, ApiError, MSG } from "./api.js?v=20261002b";
 import { radioStatus, estimate, snrDb, transmit, receive } from "./radio.js?v=20261002b";
 import { createFlow } from "./flow.js?v=20261002b";
 
@@ -51,7 +51,17 @@ function copyButton(getText, label = "Copy") {
 function textOut(text, mono = false) {
   return h("div", { class: "out-block" },
     h(mono ? "pre" : "p", { class: mono ? null : "text-out", text }),
-    copyButton(() => text, "Copy"));
+    h("div", { class: "result-actions" }, copyButton(() => text, "Copy")));
+}
+
+/** Plain-language error, with the library's own wording tucked into a collapsed "Details" line. */
+function errorView(err) {
+  const message = err?.message || String(err);
+  const detail = err instanceof ApiError ? err.raw : err?.detail;
+  return [
+    h("p", { class: "error", role: "alert", text: message }),
+    detail && detail !== message && h("details", { class: "error-details" }, h("summary", { text: "Details" }), h("code", { text: detail })),
+  ];
 }
 
 const clock = (t) => (Number.isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "–:––");
@@ -108,7 +118,9 @@ function show(form, ...nodes) {
   out.replaceChildren(...nodes.flat(Infinity).filter(Boolean));
 }
 
-class UserError extends Error {}
+class UserError extends Error {
+  constructor(message, detail) { super(message); this.detail = detail; }
+}
 const need = (value, message) => {
   if (!value || (typeof value === "string" && !value.trim())) throw new UserError(message);
   return value;
@@ -288,7 +300,7 @@ const tools = {
       r = await postForm("/api/stego/audio/extract", { password: f.get("password"), file });
     } catch (err) {
       // A wrong key surfaces from the backend as a padding/decoding failure.
-      throw new UserError(`Nothing could be decrypted: wrong password, or this file holds no hidden message. (${err.message})`);
+      throw new UserError("Nothing could be decrypted: wrong password, or this file holds no hidden message.", err instanceof ApiError ? err.raw : err.message);
     }
     return [textOut(r.extracted_text), readings([["Cipher", r.cipher_algo], ["Key derivation", r.derived_key_hint]])];
   },
@@ -364,7 +376,9 @@ const tools = {
 
   async "hybrid-decrypt"(f) {
     let payload;
-    try { payload = JSON.parse(f.get("payload")); } catch { throw new UserError("The envelope is not valid JSON."); }
+    try { payload = JSON.parse(f.get("payload")); } catch (e) { throw new UserError(MSG.badEnvelope, `JSON.parse: ${e.message}`); }
+    const missing = ["enc_key_b64", "nonce_b64", "ciphertext_b64"].filter((k) => typeof payload?.[k] !== "string" || !payload[k]);
+    if (missing.length) throw new UserError(MSG.badEnvelope, `Missing or empty field${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}`);
     const r = await postJSON("/api/crypto/decrypt-hybrid", { payload, private_key_pem: pem("priv-pem", "private") });
     return [textOut(r.plaintext)];
   },
@@ -615,8 +629,7 @@ function initForms() {
         }
       } catch (err) {
         const out = form.querySelector(".result");
-        const node = h("p", { class: "error", role: "alert", text: err.message || String(err) });
-        if (out) out.replaceChildren(node); else alert(err.message);
+        if (out) out.replaceChildren(...errorView(err).filter(Boolean)); else alert(err.message);
       } finally {
         buttons.forEach((b) => (b.disabled = false));
         submitter.removeAttribute("aria-busy");

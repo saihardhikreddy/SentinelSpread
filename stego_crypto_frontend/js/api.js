@@ -11,6 +11,16 @@ export class ApiError extends Error {
 
 const DECRYPT_PATH = /decrypt|extract|verify|receive/;
 const CRYPTO_FAILURE = /padding|mac check|tag|decrypt|incorrect|authenticat|invalid (key|signature)|ciphertext|oaep|bad (key|magic)/i;
+// The envelope itself is broken (missing field, bad base64, wrong field length), as opposed to an intact
+// envelope that fails authentication. A KeyError arrives as just the quoted field name.
+const MALFORMED_ENVELOPE = /^'[^']*'$|length|size|base64|incorrect padding|json|expect|missing|not enough|invalid character|non-base|subscript|nonetype|attribute/i;
+const BAD_KEY = /deserializ|key data|could not.*key|pem|unsupported key/i;
+
+export const MSG = {
+  hybridFailed: "Couldn’t decrypt: the message was changed, or it was encrypted for a different key pair.",
+  badEnvelope: "This isn’t a valid encrypted envelope. Paste the full JSON from Hybrid encrypt.",
+  badKey: "That key isn’t valid. Paste a full PEM key including its BEGIN and END lines.",
+};
 
 /** Turn an API failure into a sentence a person can act on. */
 function friendly(path, status, detail) {
@@ -22,6 +32,10 @@ function friendly(path, status, detail) {
   }
   const text = typeof detail === "string" ? detail : "";
   if (status === 404 && text) return text;
+  if (path.includes("decrypt-hybrid") && status < 500) {
+    if (BAD_KEY.test(text)) return MSG.badKey;
+    return MALFORMED_ENVELOPE.test(text) ? MSG.badEnvelope : MSG.hybridFailed;
+  }
   if (status >= 500) return text && /\s/.test(text) && !/traceback|exception/i.test(text) ? text : "The server hit a problem handling that. Try again, and check the API log if it keeps happening.";
   if (DECRYPT_PATH.test(path) && (CRYPTO_FAILURE.test(text) || !/\s/.test(text))) {
     if (path.includes("audio")) return "Couldn’t read a message from this file: the password is wrong, or it carries no hidden message.";
@@ -29,7 +43,7 @@ function friendly(path, status, detail) {
     return "Couldn’t decrypt: the message was altered, or the wrong key or password was used.";
   }
   if (text && /\s/.test(text) && !/^['"{\[]/.test(text)) return text;       // already readable
-  if (/key|pem/i.test(text)) return "That key isn’t valid. Paste a full PEM key including its BEGIN and END lines.";
+  if (/key|pem/i.test(text)) return MSG.badKey;
   return "The server couldn’t process that input. Check the values and try again.";
 }
 
@@ -39,6 +53,7 @@ async function parse(res, path = "") {
   try {
     const body = await res.json();
     if (body && body.detail != null) { detail = body.detail; raw = typeof detail === "string" ? detail : JSON.stringify(detail); }
+    if (!raw) raw = `${res.status} ${res.statusText} (the library gave no message; typically a failed authentication tag)`;
   } catch { /* non-JSON error body */ }
   console.debug("[api]", path, res.status, raw);
   throw new ApiError(friendly(path, res.status, detail), { status: res.status, data: detail && typeof detail === "object" && !Array.isArray(detail) ? detail : null, raw });
