@@ -106,6 +106,35 @@ def add_visible_logo_watermark(
     return out_io.getvalue()
 
 
+def _dct2(block):
+    return scipy.fftpack.dct(scipy.fftpack.dct(block.T, norm='ortho').T, norm='ortho')
+
+
+def _idct2(block):
+    return scipy.fftpack.idct(scipy.fftpack.idct(block.T, norm='ortho').T, norm='ortho')
+
+
+def _block_origins(h_8, w_8, n):
+    """Top-left corners of the first n 8x8 blocks, row by row (the order the extractor reads)."""
+    return [(i, j) for i in range(0, h_8, 8) for j in range(0, w_8, 8)][:n]
+
+
+def _embed_bit(y, i, j, bit, strength):
+    # Mid-frequency pair (4, 3) vs (3, 4). Always force a gap of `strength` around their midpoint:
+    # a pair that is already ordered but only barely apart would otherwise flip after rounding.
+    d = _dct2(y[i:i+8, j:j+8])
+    mid = (d[4, 3] + d[3, 4]) / 2
+    sign = 1 if bit == 1 else -1
+    d[4, 3] = mid + sign * strength / 2
+    d[3, 4] = mid - sign * strength / 2
+    y[i:i+8, j:j+8] = _idct2(d)
+
+
+def _compose(y_full, cb_chan, cr_chan):
+    y_img = Image.fromarray(np.clip(np.round(y_full), 0, 255).astype(np.uint8), 'L')
+    return Image.merge('YCbCr', (y_img, cb_chan, cr_chan)).convert('RGB')
+
+
 def embed_invisible_dct_watermark(
     image_bytes: bytes,
     watermark_text: str,
@@ -113,6 +142,11 @@ def embed_invisible_dct_watermark(
 ) -> dict:
     """
     Embed invisible watermark string into 8x8 DCT mid-frequency coefficients of Y channel.
+
+    Only whole 8x8 blocks are marked; the right/bottom remainder is left untouched (the image is
+    never resized, which would shift the blocks off the grid the extractor reads). After embedding,
+    the mark is read back from the final RGB image: blocks whose bit did not survive rounding and
+    RGB clipping (saturated, high-contrast blocks) are re-marked with more strength.
     """
     img = Image.open(io.BytesIO(image_bytes)).convert('YCbCr')
     y_chan, cb_chan, cr_chan = img.split()
@@ -121,57 +155,43 @@ def embed_invisible_dct_watermark(
     h, w = y_full.shape
     h_8 = (h // 8) * 8
     w_8 = (w // 8) * 8
-    # Mark only the whole 8x8 blocks; the right/bottom remainder is left untouched.
-    y_arr = y_full[:h_8, :w_8].copy()
-    
+
     bits = []
     for char in watermark_text.encode('utf-8'):
         for i in range(7, -1, -1):
             bits.append((char >> i) & 1)
-            
+
     total_bits = len(bits)
     max_blocks = (h_8 // 8) * (w_8 // 8)
-    
+
     if total_bits > max_blocks:
         raise ValueError(f"Watermark text too long for DCT capacity! Bits: {total_bits}, Max blocks: {max_blocks}")
-        
-    block_idx = 0
-    for i in range(0, h_8, 8):
-        for j in range(0, w_8, 8):
-            if block_idx >= total_bits:
-                break
-            
-            block = y_arr[i:i+8, j:j+8]
-            dct_block = scipy.fftpack.dct(scipy.fftpack.dct(block.T, norm='ortho').T, norm='ortho')
-            
-            bit = bits[block_idx]
-            # Embed into mid-frequency coefficient (4, 3) vs (3, 4). Always force a gap of
-            # `strength` around their midpoint: a pair that is already ordered but only
-            # barely apart would otherwise flip after uint8 rounding and the RGB round trip.
-            mid = (dct_block[4, 3] + dct_block[3, 4]) / 2
-            sign = 1 if bit == 1 else -1
-            dct_block[4, 3] = mid + sign * strength / 2
-            dct_block[3, 4] = mid - sign * strength / 2
-                    
-            idct_block = scipy.fftpack.idct(scipy.fftpack.idct(dct_block.T, norm='ortho').T, norm='ortho')
-            y_arr[i:i+8, j:j+8] = idct_block
-            block_idx += 1
-            
-    # Paste the marked blocks back in place. (Resizing the cropped grid back to the full size,
-    # as before, resampled every pixel and shifted the blocks off the 8x8 grid the extractor
-    # reads, so marks were lost on any image whose sides are not multiples of 8.)
-    y_full[:h_8, :w_8] = y_arr
-    y_img = Image.fromarray(np.clip(np.round(y_full), 0, 255).astype(np.uint8), 'L')
-        
-    stego_img = Image.merge('YCbCr', (y_img, cb_chan, cr_chan)).convert('RGB')
-    
+
+    origins = _block_origins(h_8, w_8, total_bits)
+    for (i, j), bit in zip(origins, bits):
+        _embed_bit(y_full, i, j, bit, strength)
+    stego_img = _compose(y_full, cb_chan, cr_chan)
+
+    reinforced = 0
+    for attempt in range(1, 7):
+        y_rt = np.array(stego_img.convert('YCbCr').split()[0], dtype=np.float32)
+        wrong = [(i, j, bit) for (i, j), bit in zip(origins, bits)
+                 if (1 if _dct2(y_rt[i:i+8, j:j+8])[4, 3] > _dct2(y_rt[i:i+8, j:j+8])[3, 4] else 0) != bit]
+        if not wrong:
+            break
+        for i, j, bit in wrong:
+            _embed_bit(y_full, i, j, bit, strength * (1.6 ** attempt))
+        reinforced += len(wrong)
+        stego_img = _compose(y_full, cb_chan, cr_chan)
+
     out_io = io.BytesIO()
     stego_img.save(out_io, format='PNG')
-    
+
     return {
         "watermarked_bytes": out_io.getvalue(),
         "bits_embedded": total_bits,
-        "max_capacity_bits": max_blocks
+        "max_capacity_bits": max_blocks,
+        "blocks_reinforced": reinforced,
     }
 
 
