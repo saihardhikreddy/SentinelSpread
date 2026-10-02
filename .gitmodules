@@ -1,0 +1,3 @@
+[submodule "steganography-and-watermarking"]
+	path = steganography-and-watermarking
+	url = https://github.com/saihardhikreddy/steganography-and-watermarking.git
