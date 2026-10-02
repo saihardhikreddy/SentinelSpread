@@ -11,7 +11,14 @@ from sentinelspread.modem.sync import CostasLoop, SymbolTimingRecovery, resolve_
 class Modem:
     """Unified Baseband Modem supporting BPSK and QPSK schemes."""
 
-    def __init__(self, scheme: str = "BPSK", rrc_alpha: float = 0.35, sps: int = 4, span: int = 10, enable_costas: bool = False):
+    def __init__(
+        self,
+        scheme: str = "BPSK",
+        rrc_alpha: float = 0.35,
+        sps: int = 4,
+        span: int = 10,
+        enable_costas: bool = False,
+    ):
         self.scheme = scheme.upper()
         if self.scheme not in ("BPSK", "QPSK"):
             raise ValueError(f"Unsupported modulation scheme: {scheme}")
@@ -38,7 +45,12 @@ class Modem:
         iq_samples = self.rrc.shape_pulses(symbols)
         return iq_samples
 
-    def demodulate(self, iq_samples: np.ndarray, expected_num_bits: int = None, ref_bits: np.ndarray = None) -> np.ndarray:
+    def demodulate(
+        self,
+        iq_samples: np.ndarray,
+        expected_num_bits: int = None,
+        ref_bits: np.ndarray = None,
+    ) -> np.ndarray:
         """
         Receive Chain:
             IQ samples -> matched filter -> Costas loop phase recovery -> timing recovery -> phase ambiguity resolution -> symbol slicing -> bits.
@@ -52,11 +64,19 @@ class Modem:
         synced_samples = self.costas_loop.process(mf_output)
 
         # 3. Symbol Timing Recovery & Downsampling
-        expected_symbols = (expected_num_bits // 2) if (expected_num_bits and self.scheme == "QPSK") else expected_num_bits
-        recovered_symbols = self.timing_recovery.recover_symbols(synced_samples, expected_num_symbols=expected_symbols)
+        expected_symbols = (
+            (expected_num_bits // 2)
+            if (expected_num_bits and self.scheme == "QPSK")
+            else expected_num_bits
+        )
+        recovered_symbols = self.timing_recovery.recover_symbols(
+            synced_samples, expected_num_symbols=expected_symbols
+        )
 
         # 4. Resolve Phase Ambiguity using preamble ref_bits if supplied
-        resolved_symbols = resolve_phase_ambiguity(recovered_symbols, scheme=self.scheme, ref_bits=ref_bits)
+        resolved_symbols = resolve_phase_ambiguity(
+            recovered_symbols, scheme=self.scheme, ref_bits=ref_bits
+        )
 
         # 5. Symbol Slicing to Bits
         if self.scheme == "BPSK":
