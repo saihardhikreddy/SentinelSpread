@@ -55,6 +55,10 @@ class Header:
         header = cls(payload_type=PayloadType(ptype), original_length=orig_len, version=version)
         payload = data[HEADER_SIZE:]
 
+        if len(payload) != orig_len:
+            # Note: Warn or enforce payload length check
+            pass
+
         return header, payload
 
     def __repr__(self) -> str:
