@@ -1,0 +1,11 @@
+# Deploy only the web app. Everything at the root is ignored unless allowed below.
+/*
+!app.py
+!pyproject.toml
+!stego_crypto_api
+!stego_crypto_frontend
+
+# not needed at runtime
+stego_crypto_api/test_*.py
+stego_crypto_api/requirements.txt
+stego_crypto_frontend/models
