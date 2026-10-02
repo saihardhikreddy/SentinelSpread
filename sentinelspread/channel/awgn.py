@@ -1,81 +1,85 @@
 """
-AWGN (Additive White Gaussian Noise) Channel Simulator.
-Simulates baseband wireless channel with configurable Signal-to-Noise Ratio (SNR) or Eb/N0.
+Energy-calibrated AWGN channel models.
+Supports Eb/N0 and SNR noise scaling modes.
 """
 
+from typing import Optional
 import numpy as np
 
 
 def add_awgn_ebn0(
-    signal: np.ndarray,
+    iq_samples: np.ndarray,
     ebn0_db: float,
     bits_per_symbol: int = 1,
     sps: int = 4,
-    seed: int = None,
+    es: float = 1.0,
+    seed: Optional[int] = None,
 ) -> np.ndarray:
     """
-    Adds complex AWGN noise to IQ signal given target Eb/N0 in dB.
+    Add Complex Additive White Gaussian Noise (AWGN) calibrated to Eb/N0.
+
+    Mathematical formulation:
+        Eb = Es / k
+        N0 = Eb / 10^(EbN0_dB / 10)
+        sigma_dim = sqrt(N0 * sps / 2)
+        w[n] ~ CN(0, 2*sigma_dim^2) = N(0, sigma_dim^2) + j*N(0, sigma_dim^2)
 
     Parameters:
-        signal (np.ndarray): Complex baseband IQ signal array (RRC shaped).
-        ebn0_db (float): Target Eb/N0 ratio in dB.
-        bits_per_symbol (int): Number of bits per symbol (1 for BPSK, 2 for QPSK).
-        sps (int): Samples per symbol.
-        seed (int, optional): Random seed for reproducible noise generation.
+        iq_samples: Complex baseband samples.
+        ebn0_db: Energy per bit to noise spectral density ratio in dB.
+        bits_per_symbol: Modulation order (k=1 for BPSK, k=2 for QPSK).
+        sps: Samples per symbol (oversampling factor).
+        es: Average symbol energy (default 1.0).
+        seed: Optional RNG seed for deterministic reproducibility.
 
     Returns:
-        np.ndarray: Noisy complex baseband IQ signal array.
+        Noisy complex baseband samples.
     """
     if seed is not None:
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
+    else:
+        rng = np.random.default_rng()
 
-    ebn0_linear = 10.0 ** (ebn0_db / 10.0)
+    k = bits_per_symbol
+    eb = es / float(k)
+    n0 = eb / (10.0 ** (ebn0_db / 10.0))
+    sigma_dim = np.sqrt((n0 * sps) / 2.0)
 
-    # Average energy per bit Eb = Es / bits_per_symbol (assuming constellation Es = 1.0)
-    eb = 1.0 / float(bits_per_symbol)
-    n0 = eb / ebn0_linear
+    noise_i = rng.normal(0.0, sigma_dim, len(iq_samples))
+    noise_q = rng.normal(0.0, sigma_dim, len(iq_samples))
+    noise = noise_i + 1j * noise_q
 
-    # Noise std dev per dimension (real/imag) before matched filtering
-    std_dev = np.sqrt(n0 / 2.0)
-    noise = std_dev * (np.random.randn(len(signal)) + 1j * np.random.randn(len(signal)))
-
-    return signal + noise
+    return iq_samples + noise
 
 
-def add_awgn(signal: np.ndarray, snr_db: float, seed: int = None) -> np.ndarray:
+def add_awgn_snr(
+    iq_samples: np.ndarray,
+    snr_db: float,
+    seed: Optional[int] = None,
+) -> np.ndarray:
     """
-    Adds complex AWGN noise to an IQ signal given overall signal power SNR in dB.
-    Legacy entry point.
+    Add Complex Additive White Gaussian Noise (AWGN) calibrated to signal SNR in dB.
+
+    Parameters:
+        iq_samples: Complex baseband samples.
+        snr_db: Signal-to-Noise Ratio in dB.
+        seed: Optional RNG seed.
+
+    Returns:
+        Noisy complex baseband samples.
     """
     if seed is not None:
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
+    else:
+        rng = np.random.default_rng()
 
-    signal_power = np.mean(np.abs(signal) ** 2)
-    if signal_power == 0:
-        return signal
+    signal_pwr = np.mean(np.abs(iq_samples) ** 2)
+    snr_lin = 10.0 ** (snr_db / 10.0)
+    noise_pwr = signal_pwr / snr_lin
+    sigma_dim = np.sqrt(noise_pwr / 2.0)
 
-    snr_linear = 10.0 ** (snr_db / 10.0)
-    noise_power = signal_power / snr_linear
+    noise_i = rng.normal(0.0, sigma_dim, len(iq_samples))
+    noise_q = rng.normal(0.0, sigma_dim, len(iq_samples))
+    noise = noise_i + 1j * noise_q
 
-    std_dev = np.sqrt(noise_power / 2.0)
-    noise = std_dev * (np.random.randn(len(signal)) + 1j * np.random.randn(len(signal)))
-
-    return signal + noise
-
-
-class AWGNChannel:
-    """Channel simulator wrapper matching common SDR interface."""
-
-    def __init__(self, ebn0_db: float = 10.0, bits_per_symbol: int = 1, sps: int = 4):
-        self.ebn0_db = ebn0_db
-        self.bits_per_symbol = bits_per_symbol
-        self.sps = sps
-
-    def transmit(self, iq_samples: np.ndarray, ebn0_db: float = None) -> np.ndarray:
-        target_ebn0 = self.ebn0_db if ebn0_db is None else ebn0_db
-        return add_awgn_ebn0(
-            iq_samples,
-            ebn0_db=target_ebn0,
-            bits_per_symbol=self.bits_per_symbol,
-            sps=self.sps,
-        )
+    return iq_samples + noise
