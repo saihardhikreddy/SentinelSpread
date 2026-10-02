@@ -134,7 +134,7 @@
       <div class="copy">
         <p class="step"><span class="dot"></span>Chapter 04 — Comms module</p>
         <h2 id="h-audio">A voice <em>that carries more.</em></h2>
-        <p>For sound, the message is encrypted with AES-128-CBC under your password, tagged with an ASTG header, and written into the lowest bit of 16-bit PCM samples. The recording sounds the same; only the password brings the text back.</p>
+        <p>In sound, the message is first encrypted under your password, then written into the lowest bit of each 16-bit sample, a change of one part in 65,536. The recording plays exactly as before. Without the password, the hidden bits are indistinguishable from noise.</p>
         <dl class="spec">
           <div><dt>Cipher</dt><dd>AES-128-CBC, SHA-256 key</dd></div>
           <div><dt>Carrier</dt><dd>16-bit PCM WAV</dd></div>
