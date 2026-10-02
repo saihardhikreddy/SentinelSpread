@@ -92,10 +92,12 @@ body.no-webgl { background: radial-gradient(ellipse 70% 50% at 30% 0%, rgba(90, 
   height: var(--bar-h);
   display: flex; align-items: center; gap: 34px;
   padding: 0 var(--gutter);
-  border-bottom: 1px solid transparent;
-  transition: background 0.3s, border-color 0.3s;
+  /* frosted strip: the logo and nav never sit directly on a heading */
+  background: linear-gradient(180deg, rgba(4, 6, 13, 0.72), rgba(4, 6, 13, 0.35));
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid var(--glass-stroke-soft);
 }
-body.in-workbench .bar { background: rgba(4, 6, 13, 0.86); backdrop-filter: blur(10px); border-color: var(--line); }
 .brand { display: inline-flex; align-items: center; gap: 10px; font: 400 13px/1 var(--display); letter-spacing: 0.04em; text-decoration: none; }
 .brand svg { color: var(--signal); }
 .bar-nav { display: flex; gap: 28px; margin-right: auto; }
@@ -139,7 +141,7 @@ h2 { font-size: clamp(30px, 3.6vw, 54px); }
 h1 em, h2 em { font-style: normal; color: var(--signal); }
 h1, h2 { text-shadow: 0 2px 36px rgba(4, 6, 13, 0.7); }
 
-.copy p { color: var(--text-2); font-size: 16px; line-height: 1.65; margin: 0 0 18px; max-width: 30rem; text-shadow: 0 1px 12px rgba(4, 6, 13, 0.9); }
+.copy p { color: var(--text-2); font-size: 16px; line-height: 1.65; margin: 0 0 18px; max-width: 30rem; }
 .copy .lede { font-size: clamp(16px, 1.25vw, 18px); color: var(--text); opacity: 0.86; }
 .step {
   display: flex; align-items: center; gap: 12px;
@@ -155,6 +157,15 @@ h1, h2 { text-shadow: 0 2px 36px rgba(4, 6, 13, 0.7); }
 .spec dd { margin: 0; font: 500 13.5px/1.3 var(--mono); text-align: right; }
 .spec dd small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; margin-top: 3px; }
 .spec--readings dd { color: var(--signal); }
+
+/* Readability: text styling only. Nothing is drawn behind the copy (no fill, blur or box). */
+.copy p, .copy dd, .copy dt, .copy .step {
+  text-shadow:
+    0 1px 2px rgba(4, 6, 13, 0.85),
+    0 0 18px rgba(4, 6, 13, 0.75);
+}
+.copy dd { font-weight: 600; }
+.copy dt { color: var(--text-2); }
 
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
 
@@ -537,7 +548,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
    the beam stay visible through it. Never nested: controls inside get fills, not blur. */
 
 .bar { z-index: 40; }
-.chapter, .workbench { scroll-margin-top: var(--bar-h); }
+.workbench { scroll-margin-top: var(--bar-h); }
+[id^="h-"], .chapter { scroll-margin-top: calc(var(--bar-h) + 16px); }
 .status { max-width: 100%; }
 
 .console-nav, .console-stage .tool {
