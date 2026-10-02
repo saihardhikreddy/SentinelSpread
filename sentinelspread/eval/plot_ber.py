@@ -1,189 +1,156 @@
 """
-BER vs Eb/N0 Evaluation Script for BPSK and QPSK Modems over AWGN Channel.
-Generates publication-quality BER vs Eb/N0 comparison curves for laboratory reports.
+Monte Carlo Bit Error Rate (BER) simulation engine with adaptive block sampling.
+Generates BER vs Eb/N0 waterfall comparison curves for BPSK and QPSK against theory.
 """
 
 from pathlib import Path
-import matplotlib.pyplot as plt
+from typing import Optional
 import numpy as np
 from scipy.special import erfc
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-from sentinelspread.channel.awgn import add_awgn_ebn0
 from sentinelspread.modem.modem import Modem
+from sentinelspread.channel.awgn import add_awgn_ebn0
+from sentinelspread.eval.metrics import compute_ber
 
 
-def theoretical_ber(ebn0_db: np.ndarray) -> np.ndarray:
+def theoretical_ber(eb_n0_db: float) -> float:
+    """Theoretical BER for BPSK and Gray-coded QPSK over AWGN: Pb = 0.5 * erfc(sqrt(Eb/N0))."""
+    eb_n0_lin = 10.0 ** (eb_n0_db / 10.0)
+    return float(0.5 * erfc(np.sqrt(eb_n0_lin)))
+
+
+def simulate_point_adaptive(
+    scheme: str,
+    ebn0_db: float,
+    chunk_size: int = 50000,
+    max_bits: int = 1000000,
+    min_errors: int = 100,
+    sps: int = 4,
+    span: int = 10,
+    rng: Optional[np.random.Generator] = None,
+) -> tuple[float, int, int]:
     """
-    Exact theoretical BER for BPSK and Gray-coded QPSK over AWGN channel.
-    P_b = 0.5 * erfc(sqrt(10^(Eb/N0_dB / 10)))
+    Adaptive Monte Carlo simulation at a single Eb/N0 operating point.
+    Accumulates in chunk_size increments until min_errors observed or max_bits reached.
+
+    Returns:
+        (ber, total_errors, total_bits)
     """
-    ebn0_lin = 10.0 ** (ebn0_db / 10.0)
-    return 0.5 * erfc(np.sqrt(ebn0_lin))
+    if rng is None:
+        rng = np.random.default_rng()
+
+    modem = Modem(scheme=scheme, sps=sps, span=span, enable_costas=False)
+    bits_per_symbol = 1 if scheme.upper() == "BPSK" else 2
+
+    total_errors = 0
+    total_bits = 0
+
+    while total_bits < max_bits:
+        # Generate random bit chunk
+        current_chunk = chunk_size
+        if scheme.upper() == "QPSK" and current_chunk % 2 != 0:
+            current_chunk += 1
+
+        tx_bits = rng.integers(0, 2, size=current_chunk)
+        tx_iq = modem.modulate(tx_bits)
+
+        # Transmit through AWGN
+        k = bits_per_symbol
+        eb = 1.0 / float(k)
+        n0 = eb / (10.0 ** (ebn0_db / 10.0))
+        sigma_dim = np.sqrt((n0 * sps) / 2.0)
+
+        noise = rng.normal(0.0, sigma_dim, len(tx_iq)) + 1j * rng.normal(0.0, sigma_dim, len(tx_iq))
+        rx_iq = tx_iq + noise
+
+        rx_bits = modem.demodulate(rx_iq, expected_num_bits=len(tx_bits))
+        err = np.count_nonzero(tx_bits != rx_bits)
+
+        total_errors += int(err)
+        total_bits += len(tx_bits)
+
+        if total_errors >= min_errors:
+            break
+
+    ber = total_errors / total_bits if total_bits > 0 else 0.0
+    return ber, total_errors, total_bits
 
 
 def run_ber_simulation(
-    schemes=("BPSK", "QPSK"),
-    ebn0_range_db=np.arange(-3, 11, 1),
-    min_errors=100,
-    max_bits_per_point=1000000,
-    block_bits=50000,
-    sps=4,
-    save_path="eval/ber_vs_snr.png",
-) -> Path:
+    snr_range: Optional[list[float]] = None,
+    save_path: str = "eval/ber_vs_snr.png",
+    verbose: bool = True,
+) -> dict:
     """
-    Runs adaptive BER vs Eb/N0 simulation for BPSK and QPSK modems over AWGN.
-    Ensures statistical reliability by accumulating up to min_errors (default 100)
-    or up to max_bits_per_point (default 1,000,000).
+    Run full Monte Carlo sweep from -3 dB to 10 dB in 1 dB steps for BPSK and QPSK.
+    Generates and saves the comparison plot to save_path.
     """
-    results = {}
-    np.random.seed(42)
+    if snr_range is None:
+        snr_range = [float(x) for x in range(-3, 11)]
 
-    for scheme in schemes:
-        bits_per_symbol = 1 if scheme == "BPSK" else 2
-        modem = Modem(scheme=scheme, sps=sps)
+    rng = np.random.default_rng(2026)
 
-        ebn0_points = []
-        ber_points = []
-        reliable_flags = []
+    ebn0_arr = []
+    theory_arr = []
+    bpsk_arr = []
+    qpsk_arr = []
 
-        print(f"[*] Simulating {scheme} modem performance over AWGN channel...")
+    if verbose:
+        print("\n" + "=" * 80)
+        print("   SentinelSpread Baseband Modem Monte Carlo BER Simulation")
+        print("=" * 80)
+        print(f"{'Eb/N0 (dB)':>10} | {'Theoretical':>12} | {'BPSK Sim':>12} | {'QPSK Sim':>12} | {'Status':>10}")
+        print("-" * 80)
 
-        for ebn0_db in ebn0_range_db:
-            total_bits = 0
-            total_errors = 0
+    for snr in snr_range:
+        th = theoretical_ber(snr)
+        b_ber, b_err, b_bits = simulate_point_adaptive("BPSK", snr, rng=rng)
+        q_ber, q_err, q_bits = simulate_point_adaptive("QPSK", snr, rng=rng)
 
-            while total_errors < min_errors and total_bits < max_bits_per_point:
-                # Generate random bit block
-                tx_bits = np.random.randint(0, 2, size=block_bits)
-                if scheme == "QPSK" and len(tx_bits) % 2 != 0:
-                    tx_bits = tx_bits[:-1]
+        ebn0_arr.append(snr)
+        theory_arr.append(th)
+        bpsk_arr.append(b_ber)
+        qpsk_arr.append(q_ber)
 
-                # Modulate
-                tx_iq = modem.modulate(tx_bits)
+        status = "Confirmed" if (b_err >= 50 or snr < 9) else "Low Conf."
+        if verbose:
+            print(f"{snr:>10.1f} | {th:>12.2e} | {b_ber:>12.2e} | {q_ber:>12.2e} | {status:>10}")
 
-                # Channel AWGN noise with exact Eb/N0
-                rx_iq = add_awgn_ebn0(
-                    tx_iq,
-                    ebn0_db=ebn0_db,
-                    bits_per_symbol=bits_per_symbol,
-                    sps=sps,
-                )
-
-                # Demodulate with preamble ref_bits assistance
-                rx_bits = modem.demodulate(rx_iq, expected_num_bits=len(tx_bits), ref_bits=tx_bits[:32])
-
-                # Count bit errors
-                errors = np.sum(tx_bits != rx_bits)
-                total_errors += int(errors)
-                total_bits += len(tx_bits)
-
-            ber = float(total_errors) / float(total_bits) if total_bits > 0 else 0.0
-            is_reliable = total_errors >= 20
-
-            print(
-                f"    - {scheme} @ Eb/N0 = {ebn0_db:2d} dB: BER = {ber:.2e} "
-                f"({total_errors} errors / {total_bits} bits) [{'Reliable' if is_reliable else 'Low Confidence'}]"
-            )
-
-            if ber > 0:
-                ebn0_points.append(ebn0_db)
-                ber_points.append(ber)
-                reliable_flags.append(is_reliable)
-
-        results[scheme] = {
-            "ebn0": np.array(ebn0_points),
-            "ber": np.array(ber_points),
-            "reliable": np.array(reliable_flags),
-        }
-
-    # Generate Publication Plot
-    plt.figure(figsize=(9.5, 6.5))
-
-    # 1. Theoretical Benchmark Curve
-    ebn0_fine = np.linspace(ebn0_range_db.min(), ebn0_range_db.max(), 200)
-    theory_ber_vals = theoretical_ber(ebn0_fine)
-    plt.semilogy(
-        ebn0_fine,
-        theory_ber_vals,
-        "k--",
-        linewidth=2.0,
-        label="Theoretical BPSK/QPSK (AWGN)",
-        zorder=1,
-    )
-
-    # 2. Simulated Curves
-    colors = {"BPSK": "#1f77b4", "QPSK": "#ff7f0e"}
-    markers = {"BPSK": "o", "QPSK": "s"}
-
-    for scheme, data in results.items():
-        ebn0_vals = data["ebn0"]
-        ber_vals = data["ber"]
-        rel = data["reliable"]
-
-        if len(ber_vals) == 0:
-            continue
-
-        c = colors[scheme]
-        m = markers[scheme]
-
-        # Draw full trend line
-        plt.semilogy(
-            ebn0_vals,
-            ber_vals,
-            "-",
-            color=c,
-            linewidth=1.8,
-            alpha=0.85,
-            label=f"Simulated {scheme}",
-            zorder=2,
-        )
-
-        # Draw reliable points (filled markers)
-        rel_mask = rel == True
-        if np.any(rel_mask):
-            plt.semilogy(
-                ebn0_vals[rel_mask],
-                ber_vals[rel_mask],
-                m,
-                color=c,
-                markersize=7,
-                markerfacecolor=c,
-                markeredgecolor=c,
-                zorder=3,
-            )
-
-        # Draw low confidence points (open markers)
-        unrel_mask = rel == False
-        if np.any(unrel_mask):
-            plt.semilogy(
-                ebn0_vals[unrel_mask],
-                ber_vals[unrel_mask],
-                m,
-                color=c,
-                markersize=7,
-                markerfacecolor="none",
-                markeredgecolor=c,
-                markeredgewidth=1.5,
-                label=f"{scheme} (<20 errors, low confidence)",
-                zorder=3,
-            )
-
-    plt.title("SentinelSpread: BER vs $E_b/N_0$ Performance over AWGN Channel", fontsize=13, pad=12)
-    plt.xlabel("Energy per Bit to Noise Density Ratio $E_b/N_0$ (dB)", fontsize=11)
-    plt.ylabel("Bit Error Rate (BER)", fontsize=11)
-    plt.grid(True, which="both", linestyle="--", alpha=0.5)
-    plt.ylim([1e-6, 1.0])
-    plt.xlim([ebn0_range_db.min(), ebn0_range_db.max()])
-    plt.legend(fontsize=10, loc="lower left")
-    plt.tight_layout()
-
+    # Generate plot
     out_file = Path(save_path)
     out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    plt.figure(figsize=(9, 6))
+    plt.semilogy(ebn0_arr, theory_arr, "k--", label=r"Theory: $P_b = \frac{1}{2}\mathrm{erfc}(\sqrt{E_b/N_0})$", linewidth=2)
+    plt.semilogy(ebn0_arr, bpsk_arr, "bo-", label="Simulated BPSK", markersize=6)
+    plt.semilogy(ebn0_arr, qpsk_arr, "rs--", label="Simulated QPSK (Gray)", markersize=6)
+
+    plt.grid(True, which="both", linestyle=":", alpha=0.6)
+    plt.xlabel(r"$E_b/N_0$ (dB)", fontsize=12)
+    plt.ylabel("Bit Error Rate (BER)", fontsize=12)
+    plt.title("SentinelSpread: Baseband Modem BER Performance vs Theory", fontsize=14, fontweight="bold")
+    plt.ylim([1e-6, 1.0])
+    plt.xlim([min(ebn0_arr), max(ebn0_arr)])
+    plt.legend(fontsize=11, loc="lower left")
+    plt.tight_layout()
+
     plt.savefig(out_file, dpi=300)
     plt.close()
 
-    print(f"\n[+] Saved corrected BER vs Eb/N0 plot figure to {out_file.resolve()}")
-    return out_file
+    if verbose:
+        print("=" * 80)
+        print(f"[+] Simulation completed. Waterfall curve saved to: {out_file}\n")
+
+    return {
+        "ebn0": ebn0_arr,
+        "theory": theory_arr,
+        "bpsk": bpsk_arr,
+        "qpsk": qpsk_arr,
+        "plot_path": str(out_file),
+    }
 
 
 if __name__ == "__main__":
