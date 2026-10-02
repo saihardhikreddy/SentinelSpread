@@ -2,8 +2,6 @@
    Results are built with DOM nodes (never innerHTML) so payload text can't inject markup. */
 
 import { postJSON, postForm, fileToDataURL, fileToBase64, ApiError, MSG } from "./api.js?v=20261002b";
-import { radioStatus, estimate, snrDb, transmit, receive } from "./radio.js?v=20261002b";
-import { createFlow } from "./flow.js?v=20261002b";
 
 /* ─── tiny DOM helpers ─── */
 
@@ -472,15 +470,6 @@ const tools = {
     ];
   },
 
-  async transmit(f, _action, form) {
-    const message = need(f.get("message"), "Type a message to transmit.");
-    const status = await radioStatus();
-    if (!status.available) throw new UserError(status.detail || "The GNU Radio runtime isn’t available on this machine.");
-    const sf = Number(f.get("spreading_factor")), sigma = Number(f.get("noise_voltage"));
-    renderGate(form, { message, sf, sigma, est: estimate(message, sf), snr: snrDb(sigma, status.signal_power) });
-    return null;                       // the staged flow renders its own result
-  },
-
   async "compare-audio"(f) {
     const r = await postForm("/api/metrics/compare-audio", {
       original_file: need(f.get("original_file").size && f.get("original_file"), "Choose the original WAV."),
@@ -494,115 +483,6 @@ const tools = {
     ];
   },
 };
-
-/* ─── Transmit: confirm gate → transmit → receive, staged inside the result pane ─── */
-
-const busy = (text) => h("p", { class: "busy", role: "status" }, h("span", { class: "spin", "aria-hidden": "true" }), text);
-const stageLabel = (n, text) => h("p", { class: "stage-label" }, h("b", { text: n }), text);
-const consoleBlock = (text) => (text ? h("details", { class: "console-log" }, h("summary", { text: "GNU Radio console output" }), h("pre", { text })) : null);
-const driftText = (v) => (v == null ? "n/a" : `${v < 0 ? "−" : ""}${Math.abs(v).toFixed(5)} rad/symbol`);
-
-function renderGate(form, p) {
-  const e = p.est;
-  show(form,
-    stageLabel("1", "Review before sending"),
-    readings([
-      ["Encrypted bundle", `≈ ${e.bundleBytes} bytes`],
-      ["Chips on air", `≈ ${fmt(e.chips, 0)}`],
-      ["Processing gain", `${e.processingGainDb.toFixed(1)} dB · SF ${p.sf}`],
-      ["Air time", `≈ ${e.durationS.toFixed(2)} s`],
-      ["Channel SNR", Number.isFinite(p.snr) ? `${p.snr.toFixed(1)} dB per sample` : "noiseless"],
-    ]),
-    h("p", { class: "note", text: "Nothing has been sent. After you confirm, the message is encrypted with AES-256-GCM, spread across the chips above, pulse-shaped and passed through the noisy channel." }),
-    h("div", { class: "result-actions" },
-      h("button", { type: "button", class: "btn btn--primary", text: "Transmit", onclick: () => stageTransmit(form, p) }),
-      h("button", { type: "button", class: "btn", text: "Cancel", onclick: () => show(form, h("p", { class: "placeholder", text: "Cancelled. Nothing was transmitted." })) })));
-  form.querySelector(".result .btn--primary")?.focus();
-}
-
-async function stageTransmit(form, p) {
-  const flow = createFlow({ phase: "tx", sf: p.sf, sigma: p.sigma });
-  show(form, stageLabel("2", "Transmitting"), flow.el);
-  let tx;
-  try {
-    tx = await transmit({ message: p.message, spreadingFactor: p.sf, noiseVoltage: p.sigma });
-  } catch (err) {
-    flow.finish(false);
-    return show(form, stageLabel("2", "Transmission failed"), flow.el, h("p", { class: "error", role: "alert", text: err.message }),
-      h("div", { class: "result-actions" }, h("button", { type: "button", class: "btn", text: "Back", onclick: () => renderGate(form, p) })));
-  }
-  flow.finish(true);
-  show(form,
-    stageLabel("2", "Transmitted"),
-    flow.el,
-    readings([
-      ["Encrypted bundle", `${tx.bundle_bytes} bytes`],
-      ["Chips on air", fmt(tx.num_chips, 0)],
-      ["Processing gain", `${tx.processing_gain_db.toFixed(1)} dB`],
-      ["Air time", `${tx.duration_s.toFixed(2)} s`],
-      ["Channel SNR", tx.snr_db == null ? "noiseless" : `${tx.snr_db.toFixed(1)} dB per sample`],
-      ["Measured noise σ", tx.measured_noise_std.toFixed(4)],
-    ]),
-    player(tx.wav_url, "the rendered signal, slowed for listening"),
-    h("p", { class: "note", text: "The real part of the baseband signal, played about four times slower. Encrypted and spread, it sounds like static, which is the point." }),
-    h("div", { class: "result-actions" },
-      h("button", { type: "button", class: "btn btn--primary", text: "Despread & decrypt", onclick: () => stageReceive(form, p, tx) }),
-      download(tx.wav_url, `sentinel_${tx.transmission_id}.wav`, "Download WAV")));
-}
-
-async function stageReceive(form, p, tx) {
-  const flow = createFlow({ phase: "rx", sf: p.sf, sigma: p.sigma });
-  show(form, stageLabel("3", "Receiving"), flow.el);
-  const again = h("button", { type: "button", class: "btn", text: "Transmit again", onclick: () => renderGate(form, p) });
-  try {
-    const rx = await receive(tx);
-    flow.finish(true);
-    const exact = rx.recovered_text === p.message;
-    show(form,
-      stageLabel("3", "Received"),
-      flow.el,
-      verdict(exact ? "Exact match with the message you sent" : "Decoded, but it differs from the original", exact),
-      textOut(rx.recovered_text),
-      readings([
-        ["Bit errors", `${rx.bit_errors} / ${fmt(rx.total_bits, 0)}`],
-        ["BER", rx.ber.toFixed(4)],
-        ["EVM", `${rx.evm_db.toFixed(1)} dB`],
-        ["Residual drift", driftText(rx.residual_drift_rad)],
-      ]),
-      consoleBlock(rx.console),
-      h("div", { class: "result-actions" }, again));
-  } catch (err) {
-    flow.finish(false);
-    const d = err instanceof ApiError ? err.data : null;
-    show(form,
-      stageLabel("3", "Not decodable"),
-      flow.el,
-      verdict("Could not recover the message", false),
-      h("p", { class: "error", role: "alert", text: err.message }),
-      d && readings([["Bit errors", `${d.bit_errors} / ${fmt(d.total_bits, 0)}`], ["BER", d.ber.toFixed(4)], ["EVM", `${d.evm_db.toFixed(1)} dB`]]),
-      consoleBlock(d?.console),
-      h("div", { class: "result-actions" }, again));
-  }
-}
-
-async function initTransmit() {
-  const form = document.querySelector('form[data-tool="transmit"]');
-  if (!form) return;
-  const status = await radioStatus();
-  const slider = form.querySelector('[name="noise_voltage"]');
-  const hint = form.querySelector("[data-snr]");
-  const update = () => {
-    const sigma = Number(slider.value), snr = snrDb(sigma, status.signal_power);
-    const lock = sigma <= 0.3 ? "the receiver holds lock" : sigma <= 0.36 ? "right at the edge of lock" : "expect to lose lock";
-    hint.textContent = Number.isFinite(snr) ? `≈ ${snr.toFixed(1)} dB signal-to-noise per sample · ${lock}` : "Noiseless channel";
-  };
-  slider.addEventListener("input", update);
-  update();
-  if (!status.available) {
-    form.querySelector('button[type="submit"]').disabled = true;
-    show(form, h("p", { class: "error", role: "alert", text: status.detail || "The GNU Radio runtime isn’t available on this machine." }));
-  }
-}
 
 /* ─── wiring ─── */
 
@@ -692,7 +572,6 @@ function initRanges() {
 /* ─── Console: grouped, searchable tool list; one tool on stage at a time ─── */
 
 const ICONS = {
-  transmit: '<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/>',
   image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
   audio: '<path d="M3 12h2l2-6 3 12 3-9 2 6 2-3h4"/>',
   mark: '<path d="M12 3l7 4v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V7z"/><path d="m9 12 2 2 4-4"/>',
@@ -835,7 +714,6 @@ function initConsole() {
 
 export function initWorkbench() {
   initConsole();
-  initTransmit();
   initDropzones();
   initRanges();
   initForms();

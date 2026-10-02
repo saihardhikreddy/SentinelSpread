@@ -101,18 +101,13 @@
         <p class="step"><span class="dot"></span>Chapter 02 — High-gain antenna</p>
         <h2 id="h-transmit">Sixteen chips <em>per bit.</em></h2>
         <p>Every bit is multiplied by a pseudo-noise code running sixteen times faster, so the downlink looks and sounds like static to anyone without the code. The receiver is a real GNU Radio flowgraph: it recovers symbol timing, locks the drifting carrier with a Costas loop and collapses the code back into bits, cleanly up to a channel noise of σ ≈ 0.3.</p>
-        <dl class="spec spec--readings" id="live-readings">
+        <dl class="spec spec--readings">
           <div><dt>Spreading</dt><dd>SF 16 · BPSK · RRC α 0.35</dd></div>
-          <div><dt>Channel noise σ</dt><dd data-live="noise">0.0200 <small>Stage 4 snapshot · set 0.02</small></dd></div>
-          <div><dt>Residual drift after lock</dt><dd data-live="drift">−0.00002 rad/symbol <small>Stage 4 snapshot</small></dd></div>
-          <div><dt>Bit errors after despread</dt><dd data-live="ber">0 <small>Stage 4 snapshot</small></dd></div>
+          <div><dt>Channel noise σ</dt><dd>0.0200 <small>set 0.02</small></dd></div>
+          <div><dt>Residual drift after lock</dt><dd>−0.00002 rad/symbol</dd></div>
+          <div><dt>Bit errors after despread</dt><dd>0</dd></div>
         </dl>
-        <p class="source"><span class="live-badge" data-live="false">Stage 4 snapshot</span><span id="live-source">Run a live check to send a real transmission now and replace these.</span></p>
-        <span id="live-msg" hidden data-message="SentinelSpread live check"></span>
-        <div class="actions">
-          <button type="button" class="btn btn--primary" id="live-run">Run a live check</button>
-          <a class="btn" href="#workbench" data-open-tab="transmit">Open Transmit</a>
-        </div>
+        <p class="source">Measured in the Stage 4 GNU Radio verification run at SF 16.</p>
       </div>
     </section>
 
@@ -172,32 +167,6 @@
           <nav id="tool-nav"></nav>
         </aside>
         <div class="console-stage" id="tool-stage">
-      <!-- ─── Transmit ─── -->
-      <div class="tool-group" data-group="transmit" data-label="Transmit">
-        <article class="tool">
-          <header><h3>Transmit a message</h3><p>Encrypt, spread and send a message through the GNU Radio software radio, listen to the signal, then despread and decrypt it again.</p><code>POST /api/radio/transmit · receive</code></header>
-          <form data-tool="transmit" class="tool-body">
-            <div class="inputs">
-              <label class="field"><span>Message</span><textarea name="message" rows="4" required maxlength="1000">Meet at the north gate, 21:40.</textarea></label>
-              <label class="field"><span>Spreading factor</span>
-                <select name="spreading_factor">
-                  <option value="16" selected>16 · +12 dB processing gain</option>
-                  <option value="32">32 · +15 dB</option>
-                  <option value="64">64 · +18 dB</option>
-                  <option value="128">128 · +21 dB (slow)</option>
-                </select>
-              </label>
-              <label class="field"><span>Channel noise σ <output data-for="noise_voltage">0.02</output></span>
-                <input type="range" name="noise_voltage" min="0" max="0.6" step="0.02" value="0.02">
-                <small class="hint" data-snr></small>
-              </label>
-              <button class="btn btn--primary" type="submit">Review transmission</button>
-            </div>
-            <output class="result" aria-live="polite"><p class="placeholder">You review the numbers first. Nothing is sent until you press Transmit.</p></output>
-          </form>
-        </article>
-      </div>
-
       <!-- ─── Image ─── -->
       <div class="tool-group" data-group="image" data-label="Image">
         <article class="tool">
