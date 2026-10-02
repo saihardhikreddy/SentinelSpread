@@ -86,11 +86,11 @@
       <div class="copy">
         <p class="step"><span class="dot"></span>Chapter 01 — Command module</p>
         <h2 id="h-encrypt">Sealed <em>at the source.</em></h2>
-        <p>Behind the bay door of the command module, a fresh AES-256-GCM key locks the message and RSA-OAEP wraps that key for the receiver at home. What leaves the core cannot be told apart from random bits.</p>
+        <p>Every message gets its own AES-256-GCM key and a fresh 96-bit nonce, and that key travels wrapped with RSA-OAEP so only one receiver can open it. GCM checks as it decrypts: change a single bit on the way and the message is rejected outright, never quietly corrupted.</p>
         <dl class="spec">
           <div><dt>Cipher</dt><dd>AES-256-GCM</dd></div>
-          <div><dt>Nonce</dt><dd>96-bit, per message</dd></div>
           <div><dt>Key wrap</dt><dd>RSA-OAEP 2048</dd></div>
+          <div><dt>Integrity</dt><dd>128-bit auth tag</dd></div>
         </dl>
         <div class="actions"><a class="btn" href="#workbench" data-open-tab="encrypt">Encrypt a message</a></div>
       </div>
