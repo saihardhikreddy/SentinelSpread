@@ -136,7 +136,7 @@ export function createFlow({ phase = "tx", sf = 16, sigma = 0.02 } = {}) {
     }
     g.globalAlpha = 1;
     g.fillStyle = "rgba(255,255,255,0.45)";
-    g.font = "500 9.5px 'JetBrains Mono', monospace";
+    g.font = "500 9.5px 'Geist Mono', ui-monospace, monospace";
     g.fillText(`${Number.isFinite(snr) ? snr.toFixed(1) : "∞"} dB per sample`, 10, h - 8);
     g.textAlign = "right";
     g.fillText(phase === "tx" ? "I/Q after channel" : lockT >= 1 ? "locked" : "unlocked", w - 10, h - 8);
