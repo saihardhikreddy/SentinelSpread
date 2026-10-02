@@ -34,7 +34,8 @@ from pydantic import BaseModel, Field
 router = APIRouter(prefix="/api/radio", tags=["Software SDR"])
 
 RADIO_PYTHON = Path(os.environ.get("SENTINEL_RADIO_PYTHON", r"C:\Users\csaih\radioconda\python.exe"))
-PROJECT_ROOT = Path(os.environ.get("SENTINEL_PROJECT_ROOT", r"C:\Users\csaih\sentinelspread"))
+# The DSP package lives in this repository (../sentinelspread); override to use another checkout.
+PROJECT_ROOT = Path(os.environ.get("SENTINEL_PROJECT_ROOT", Path(__file__).resolve().parent.parent))
 WORKER = Path(__file__).with_name("radio_worker.py")
 STORE = Path(tempfile.gettempdir()) / "sentinelspread_radio"
 KEEP_SECONDS = 3600
