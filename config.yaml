@@ -1,0 +1,29 @@
+# SentinelSpread System Configuration
+
+system:
+  mode: "simulation"        # "simulation" or "hardware"
+  sample_rate: 1000000      # 1 MHz sample rate
+  carrier_freq: 915000000   # 915 MHz ISM band
+
+crypto:
+  aes_key_bits: 256         # AES-256
+  rsa_key_bits: 2048        # RSA 2048 key size
+  cipher_mode: "GCM"        # AES-GCM for authenticated encryption
+
+dsss:
+  spreading_factor: 16      # 16 chips per symbol
+  pn_seed: 42341            # Default/fallback seed for PN generator (when session key is not supplied)
+  derive_seed_from_key: true # Derive session-specific PN seed from negotiated AES key
+
+modem:
+  scheme: "BPSK"            # "BPSK" or "QPSK"
+  rrc_alpha: 0.35           # Roll-off factor
+  sps: 4                    # Samples per symbol
+  span: 10                  # Filter span in symbols
+
+channel:
+  snr_db: 10.0              # Default AWGN channel SNR in dB
+
+hardware:
+  tx_device: "plutosdr"     # Adalm Pluto TX
+  rx_device: "rtl"          # RTL-SDR RX

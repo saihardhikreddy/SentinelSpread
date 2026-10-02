@@ -1,9 +1,40 @@
 # Python bytecode and test caches
 __pycache__/
 *.py[cod]
+*$py.class
 .pytest_cache/
+
+# Keys and sensitive outputs
+keys/
+*.pem
+*.bin
+*.wav
 
 # GNU Radio output (the API writes these to the system temp folder; never commit them)
 *.c64
 *.iq
 sentinelspread_radio/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Local-only tooling and one-off scripts (kept on disk, not part of the project)
+.claude/
+sentinel_mid_review/
+noise_sphere.html
+adapt_sdc_ui.py
+add_metrics_js.py
+build_complete_app_js.py
+check_sections.py
+copy_math_ui.py
+extract_styles_full.py
+find_steps.py
+generate_full_sentinel_app_js.py
+generate_full_sentinel_ui.py
+recover_full.py
+restore_from_transcript.py
+restore_overview_page.py
+upgrade_metrics_lab.py
+verify_tabs.py
