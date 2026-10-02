@@ -645,7 +645,9 @@ body.signal-pulse .live-badge { animation: signalDot 1.7s var(--ease) 1; }
 
 /* result affordances */
 .out-block { position: relative; display: grid; gap: 8px; }
-.out-block .btn { justify-self: end; }
+.error-details { margin-top: 6px !important; font-size: 12.5px; color: var(--muted-glass); }
+.error-details summary { cursor: pointer; width: max-content; }
+.error-details code { display: block; margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.24); font: 400 12px/1.5 var(--mono); word-break: break-word; color: var(--text-2); }
 .result-meta { margin: 0 !important; font: 400 11px/1.4 var(--mono); color: var(--muted-glass); }
 .stage-label { display: flex; align-items: center; gap: 10px; margin: 0; font: 400 10px/1.4 var(--display); letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted-glass); }
 .stage-label b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--signal); color: var(--signal); font: 500 11px var(--mono); letter-spacing: 0; }
