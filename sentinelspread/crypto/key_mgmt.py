@@ -1,14 +1,27 @@
 """
-RSA Key Management & Key Derivation: generation, export, import of RSA keypairs,
-and per-session PN seed derivation using HKDF.
+RSA Key Management: generation, export, and import of RSA keypairs.
 """
 
 from pathlib import Path
-import struct
 from typing import Tuple, Union
+from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
 from Crypto.Protocol.KDF import HKDF
-from Crypto.PublicKey import RSA
+
+
+def derive_pn_seed(aes_key: bytes) -> int:
+    """Derive a session-unique DSSS PN seed from the ephemeral AES session key
+    via HKDF-SHA256, so the spreading sequence changes every session instead
+    of reusing a static seed from config.yaml."""
+    derived_bytes = HKDF(
+        master=aes_key,
+        key_len=4,
+        salt=b"",
+        hashmod=SHA256,
+        context=b"sentinelspread-dsss-pn-seed",
+    )
+    seed = int.from_bytes(derived_bytes, byteorder="big")
+    return seed if seed != 0 else 1
 
 
 def generate_rsa_keypair(key_bits: int = 2048) -> Tuple[RSA.RsaKey, RSA.RsaKey]:
@@ -32,19 +45,3 @@ def import_key(key_path: Union[str, Path]) -> RSA.RsaKey:
     path = Path(key_path)
     key_bytes = path.read_bytes()
     return RSA.import_key(key_bytes)
-
-
-def derive_pn_seed(aes_key: bytes, context_salt: bytes = b"SentinelSpreadPNSeed") -> int:
-    """
-    Derive a 32-bit PN sequence seed per-session from the negotiated AES session key
-    using HKDF-SHA256.
-    """
-    derived_bytes = HKDF(
-        master=aes_key,
-        key_len=4,
-        salt=context_salt,
-        hashmod=SHA256,
-        num_keys=1,
-    )
-    seed = struct.unpack(">I", derived_bytes)[0]
-    return seed
