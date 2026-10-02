@@ -56,6 +56,10 @@ async def revalidate_frontend(request, call_next):
     response = await call_next(request)
     if not request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-cache"
+        if request.method == "GET" and response.status_code == 200:
+            # Browsers still revalidate, but Vercel's CDN may keep the file at the edge. Its cache is
+            # scoped to one deployment, so a new deploy never serves stale modules. Ignored locally.
+            response.headers["Vercel-CDN-Cache-Control"] = "max-age=31536000"
     return response
 
 
