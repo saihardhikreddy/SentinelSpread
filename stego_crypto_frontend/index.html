@@ -1,621 +1,494 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SentinelSpread — Covert Communications & Stegocrypto Suite</title>
-  
-  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SentinelSpread</title>
+  <meta name="description" content="SENTINEL: encrypt a message, spread it below the noise floor, and hide it in images and audio. SentinelSpread steganography, watermarking and cryptography workbench.">
+  <meta name="color-scheme" content="dark">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            obsidian: '#0a0512',
-            surface: 'rgba(22, 12, 36, 0.76)',
-            'surface-hover': 'rgba(34, 18, 54, 0.88)',
-            accent: '#e040fb',
-            'accent-glow': 'rgba(224, 64, 251, 0.35)',
-            purple: '#6920df',
-            emerald: '#34d399',
-            'emerald-glow': 'rgba(52, 211, 153, 0.22)'
-          },
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          }
-        }
-      }
-    }
-  </script>
-  
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Unbounded:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+  <script type="module" src="js/main.js?v=20261002b"></script>
 </head>
 <body>
+  <a class="skip" href="#workbench">Skip to the workbench</a>
 
-  <!-- WebGL2 Liquid Noise-Displaced Sphere & Particle Canvas -->
-  <canvas id="gl"></canvas>
+  <canvas id="world" aria-hidden="true"></canvas>
+  <div class="scrim" aria-hidden="true"></div>
 
-  <!-- Top Navigation Bar with Sliding Glass Capsule Pill Dock -->
-  <nav class="navbar">
-    <!-- Brand -->
-    <div class="nav-brand" onclick="window.activateTab('tab-overview')">
-      <div class="brand-logo-dots">
-        <div class="brand-dot dot-pink"></div>
-        <div class="brand-dot dot-purple"></div>
-        <div class="brand-dot dot-teal"></div>
-      </div>
-      <div class="brand-name">sentinel.spread</div>
+  <!-- Preloader: removed once the world has compiled and drawn its first frame -->
+  <div class="boot" id="boot" aria-hidden="true">
+    <div class="boot-inner">
+      <p class="boot-mark">SENTINEL</p>
+      <p class="boot-sub">Acquiring signal</p>
+      <div class="boot-bar"><span id="boot-fill"></span></div>
+      <p class="boot-pct"><span id="boot-pct">0</span></p>
     </div>
-
-    <!-- Top Sliding Glass Capsule Pill Dock -->
-    <div class="top-dock-container">
-      <div class="nav-pill-sliding" id="nav-pill-active"></div>
-      <ul class="top-dock-menu">
-        <li class="dock-text-item active" data-tab="tab-overview">Overview</li>
-        <li class="dock-text-item" data-tab="tab-steganography">Steganography</li>
-        <li class="dock-text-item" data-tab="tab-watermarking">Watermarking</li>
-        <li class="dock-text-item" data-tab="tab-rsa-edu">RSA (Edu)</li>
-        <li class="dock-text-item" data-tab="tab-webcrypto">WebCrypto</li>
-        <li class="dock-text-item" data-tab="tab-metrics">Metrics</li>
-      </ul>
-    </div>
-
-    <div class="nav-status">
-      <div class="flex items-center gap-2 font-mono text-xs text-slate-400">
-        <div class="status-dot" id="api-status-dot"></div>
-        <span id="api-status-text">FastAPI Connected</span>
-      </div>
-      <a href="/docs" target="_blank" class="btn btn-secondary btn-sm">API Docs ⚡</a>
-    </div>
-  </nav>
-
-  <!-- Main Viewport Stage -->
-  <div class="app-viewport">
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW 1: OVERVIEW (HERO LANDING WITH 9000-PARTICLE REVOLUTION) -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view active" id="tab-overview">
-      
-      <!-- Long Scroll Stage with Sticky Centerpiece Pinning -->
-      <div class="hero-scroll-stage">
-        <div class="hero-sticky-pin">
-          
-          <!-- Stage 1: Initial Hero Title -->
-          <div class="hero-text-wrapper" id="hero-main-text">
-            <h1 class="hero-title text-reveal-blur revealed">Covert communications that<br><span class="text-shimmer">simply works.</span></h1>
-            <p class="hero-sub">Algorithmic execution of secret data payloads powered by DSSS Spread Spectrum, Hybrid RSA-OAEP + AES-256-GCM, and LSB Steganography.</p>
-            
-            <div class="flex items-center justify-center gap-3">
-              <button class="btn-pill-app magnetic-btn" id="btn-hero-start" onclick="window.activateTab('tab-steganography')">
-                <span>🛡️ Explore Stego Studio</span>
-              </button>
-              <button class="btn-pill-app magnetic-btn" onclick="window.activateTab('tab-webcrypto')">
-                <span>🔑 Open Hybrid Cryptography</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Stage 2: Revealed Centerpiece on Scroll (1:1 with Particle Sphere) -->
-          <div class="hero-scroll-revealer" id="hero-scroll-text">
-            <h2 class="revealer-title">Hello, I am SentinelSpread.<br><span class="text-shimmer">Your security, assistant</span></h2>
-            <p class="revealer-sub">
-              Grounded covert communications — from hybrid authenticated encryption envelopes to real-time 16-bit PCM audio & image steganography inspection.
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Live Metrics Stats Banner -->
-      <div class="stats-banner grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-slate-950/70 border border-white/10 rounded-2xl max-w-4xl mx-auto my-8 scroll-reveal">
-        <div class="stat-item text-center">
-          <div class="stat-num text-3xl font-bold font-mono text-accent" data-target="2048">2048</div>
-          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Bit RSA Keypair</div>
-        </div>
-        <div class="stat-item text-center">
-          <div class="stat-num text-3xl font-bold font-mono text-emerald-400" data-target="100">100%</div>
-          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">LSB Bit Accuracy</div>
-        </div>
-        <div class="stat-item text-center">
-          <div class="stat-num text-3xl font-bold font-mono text-cyan-400" data-target="52">52.4 dB</div>
-          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">Peak Signal-to-Noise</div>
-        </div>
-        <div class="stat-item text-center">
-          <div class="stat-num text-3xl font-bold font-mono text-purple-400" data-target="5">&lt; 5 ms</div>
-          <div class="stat-label text-xs uppercase tracking-wider text-slate-400 mt-1">API Processing</div>
-        </div>
-      </div>
-
-      <!-- Feature Cards Grid (Spotlight Hover + 3D Tilt + Scroll Reveal) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 scroll-reveal mt-12">
-        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-steganography')">
-          <div class="card-icon text-3xl mb-3">🛡️</div>
-          <h3 class="card-title text-base font-bold text-white mb-2">Image & Audio Steganography</h3>
-          <p class="card-desc text-xs text-slate-400 leading-relaxed">Embed encrypted secret payloads into 16-bit PCM WAV audio and PNG images with real-time waveform comparison and LSB residual difference plots.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-watermarking')">
-          <div class="card-icon text-3xl mb-3">💧</div>
-          <h3 class="card-title text-base font-bold text-white mb-2">Digital Watermarking</h3>
-          <p class="card-desc text-xs text-slate-400 leading-relaxed">Apply visible text/logo overlays and 8x8 block Discrete Cosine Transform (DCT) frequency domain invisible watermarks.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-rsa-edu')">
-          <div class="card-icon text-3xl mb-3">🧮</div>
-          <h3 class="card-title text-base font-bold text-white mb-2">Educational RSA Sandbox</h3>
-          <p class="card-desc text-xs text-slate-400 leading-relaxed">Explore BigInt modular exponentiation cryptography, Miller-Rabin probabilistic primality testing, and public/private key derivation.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-webcrypto')">
-          <div class="card-icon text-3xl mb-3">🔐</div>
-          <h3 class="card-title text-base font-bold text-white mb-2">WebCrypto Hybrid Suite</h3>
-          <p class="card-desc text-xs text-slate-400 leading-relaxed">Production hybrid RSA-OAEP + AES-256-GCM encryption, PKCS8 key generation, and RSA-PSS digital signatures.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.activateTab('tab-metrics')">
-          <div class="card-icon text-3xl mb-3">📊</div>
-          <h3 class="card-title text-base font-bold text-white mb-2">Signal Metrics Lab</h3>
-          <p class="card-desc text-xs text-slate-400 leading-relaxed">Evaluate image and PCM audio signal quality with MSE, PSNR, SNR calculators and an interactive split slider.</p>
-        </div>
-
-        <div class="glass-card cursor-pointer tilt-card p-6" onclick="window.open('/docs', '_blank')">
-          <div class="card-icon text-3xl mb-3">📖</div>
-          <h3 class="card-title text-base font-bold text-white mb-2">OpenAPI Documentation</h3>
-          <p class="card-desc text-xs text-slate-400 leading-relaxed">Complete REST API endpoints for steganography embedding/extraction, watermarking, cryptography, and quality metrics.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 2: STEGANOGRAPHY -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-steganography">
-      <div class="sub-dock-wrapper flex justify-center mb-6">
-        <div class="sub-dock-nav inline-flex gap-2 bg-white/5 backdrop-blur-xl p-1.5 rounded-full border border-white/10">
-          <div class="sub-dock-item active px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="steg-subtab-audio">🎵 Audio & Media Stego</div>
-          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="steg-subtab-image">🖼️ Image Steganography</div>
-          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="steg-subtab-keys">🔑 RSA Key Generator</div>
-        </div>
-      </div>
-
-      <!-- SUB-TAB 1: AUDIO STEGANOGRAPHY -->
-      <div class="subtab-panel active" id="steg-subtab-audio">
-        <div class="glass-card p-6 rounded-2xl mb-6">
-          <div class="card-title text-lg font-bold text-white mb-2">Sentinel Audio Stegocrypto Engine (16-bit PCM WAV / MP4)</div>
-          <p class="text-xs text-slate-400 mb-6">Embed encrypted data into audio LSBs with AES-128-CBC authenticated envelope & ASTG header.</p>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-audio-embed">
-                <div class="dropzone-icon text-4xl mb-2">🎵</div>
-                <div class="dropzone-title text-sm font-semibold text-white">Upload 16-bit PCM WAV File</div>
-                <div class="dropzone-sub text-xs text-slate-400">Click or drag WAV carrier audio</div>
-                <input type="file" id="file-audio-embed" accept="audio/wav, .wav" style="display: none;">
-              </div>
-              <div id="audio-embed-file-badge" class="badge badge-info mt-2" style="display: none;">No File Selected</div>
-              
-              <div class="form-group mt-4">
-                <label for="input-audio-embed-text" class="text-xs font-semibold text-slate-300">Confidential Secret Payload</label>
-                <textarea id="input-audio-embed-text" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</textarea>
-              </div>
-              <div class="form-group">
-                <label for="input-audio-embed-pwd" class="text-xs font-semibold text-slate-300">Encryption Password (AES-128 Key Derivation)</label>
-                <input type="password" id="input-audio-embed-pwd" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="SentinelSecretKey2026" placeholder="Enter password">
-              </div>
-              <button class="btn btn-primary w-full py-3 mt-2" id="btn-audio-embed-act">
-                <span>🔒 Encrypt & Download Stego Audio (.wav)</span>
-              </button>
-            </div>
-
-            <div>
-              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-audio-extract">
-                <div class="dropzone-icon text-4xl mb-2">🎧</div>
-                <div class="dropzone-title text-sm font-semibold text-white">Upload Stego Audio File</div>
-                <div class="dropzone-sub text-xs text-slate-400">Click or drag WAV file to extract</div>
-                <input type="file" id="file-audio-extract" accept="audio/wav, .wav" style="display: none;">
-              </div>
-              <div id="audio-extract-file-badge" class="badge badge-info mt-2" style="display: none;">No File Selected</div>
-
-              <div class="form-group mt-4">
-                <label for="input-audio-extract-pwd" class="text-xs font-semibold text-slate-300">Decryption Password</label>
-                <input type="password" id="input-audio-extract-pwd" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="SentinelSecretKey2026" placeholder="Enter encryption passkey">
-              </div>
-              <button class="btn btn-secondary w-full py-3 mt-2" id="btn-audio-extract-act">
-                <span>🔓 Extract & Decrypt Secret Payload</span>
-              </button>
-              <div class="code-container mt-4">
-                <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-audio-recovered">Extracted payload string will appear here...</pre>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Visual Proof & Acoustic Payload Metrics Panel -->
-        <div class="glass-card p-6 rounded-2xl" id="card-audio-proof">
-          <div class="text-xs font-mono text-accent mb-4">
-            Visual proof of <strong>Application-Layer Audio Stegocrypto Engine (audio_stego.py)</strong>:
-          </div>
-
-          <!-- Plot 1: Audio Waveform Comparison Canvas -->
-          <div class="plot-box-card mb-5">
-            <div class="plot-header-bar flex justify-between items-center mb-3">
-              <span class="plot-title-text font-mono text-xs font-bold text-white">📊 Audio Waveform Comparison (Acoustic Payload Imperceptibility)</span>
-              <div class="plot-legend-group flex items-center gap-4 text-xs font-mono">
-                <span class="legend-chip flex items-center gap-1.5"><span class="chip-color chip-cyan"></span> Original Carrier PCM</span>
-                <span class="legend-chip flex items-center gap-1.5"><span class="chip-color chip-pink"></span> Stego Audio (AES-128 LSB Embedded)</span>
-              </div>
-            </div>
-            <div class="canvas-wrapper">
-              <canvas id="canvas-audio-waveform" height="180" class="w-full rounded-lg bg-slate-950 border border-white/10"></canvas>
-            </div>
-          </div>
-
-          <!-- Plot 2: LSB Sample Residual Difference Canvas -->
-          <div class="plot-box-card mb-6">
-            <div class="plot-header-bar flex justify-between items-center mb-3">
-              <span class="plot-title-text font-mono text-xs font-bold text-white">📊 LSB Sample Residual Difference (Strictly bounded to ±1 LSB bit modification)</span>
-              <div class="plot-legend-group flex items-center gap-4 text-xs font-mono">
-                <span class="legend-chip flex items-center gap-1.5"><span class="chip-color chip-green"></span> LSB Delta (|Stego - Original|)</span>
-              </div>
-            </div>
-            <div class="canvas-wrapper">
-              <canvas id="canvas-audio-residual" height="150" class="w-full rounded-lg bg-slate-950 border border-white/10"></canvas>
-            </div>
-          </div>
-
-          <!-- Green Neon Encrypted Envelope Metadata Box -->
-          <div class="terminal-envelope-box">
-            <div class="term-section-title">🔒 ENCRYPTED ENVELOPE METADATA:</div>
-            <div class="term-row">• Magic Header: <span id="meta-magic" class="term-val">ASTG (4 Bytes)</span> | Payload Length Indicator: <span id="meta-length" class="term-val">96 Bytes</span></div>
-            <div class="term-row">• Cipher Algorithm: <span id="meta-cipher" class="term-val">AES-128-CBC (PKCS7 Padded)</span> | Derived Key: <span id="meta-key" class="term-val">SHA-256(...)[:16]</span></div>
-            <div class="term-row">• Total LSB Bits Embedded: <span id="meta-bits" class="term-val">832 bits</span> | Carrier Capacity Used: <span id="meta-cap" class="term-val">0.94%</span></div>
-            <div class="term-section-title mt-3">🔓 RECOVERED PLAINTEXT EXTRACTED FROM LSB BITSTREAM:</div>
-            <div class="term-quote">&gt; "<span id="meta-plaintext">CONFIDENTIAL SENTINEL-SPREAD COMMUNICATE: LAT=37.7749 LONG=-122.4194 KEY=0x9F42</span>"</div>
-            <div class="term-status-line" id="meta-status">✓ STATUS: 100% ACOUSTIC-LAYER PAYLOAD RECOVERY VERIFIED</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUB-TAB 2: IMAGE STEGANOGRAPHY -->
-      <div class="subtab-panel" id="steg-subtab-image" style="display: none;">
-        <div class="glass-card p-6 rounded-2xl">
-          <div class="card-title text-lg font-bold text-white mb-2">Image LSB Steganography Studio</div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            <div>
-              <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-steg-carrier">
-                <div class="dropzone-icon text-4xl mb-2">📷</div>
-                <div class="dropzone-title text-sm font-semibold text-white">Upload Carrier Image (PNG/JPEG)</div>
-                <input type="file" id="file-steg-carrier" accept="image/png, image/jpeg" style="display: none;">
-              </div>
-              <div class="preview-box mt-4 rounded-xl overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center min-h-[160px]" id="prev-steg-carrier" style="display: none;">
-                <img id="img-steg-carrier" src="" alt="Carrier Preview" class="max-h-[220px] object-contain">
-              </div>
-              <div class="form-group mt-4">
-                <label for="input-steg-msg" class="text-xs font-semibold text-slate-300">Secret Message Payload</label>
-                <textarea id="input-steg-msg" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter confidential text payload..."></textarea>
-              </div>
-              <button class="btn btn-primary w-full py-3" id="btn-steg-embed-act">
-                <span>🛡️ Embed Message into Image</span>
-              </button>
-            </div>
-
-            <div>
-              <div class="text-sm font-bold text-white mb-3">Stego Image Output</div>
-              <div id="box-steg-out-res" style="display: none;">
-                <div class="preview-box rounded-xl overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center min-h-[160px]">
-                  <img id="img-steg-out" src="" alt="Stego Output" class="max-h-[220px] object-contain">
-                </div>
-                <div class="grid grid-cols-3 gap-3 mt-4">
-                  <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center"><span class="metric-lbl text-[10px] uppercase text-slate-400">Bits Used</span><span class="metric-val text-lg font-bold font-mono text-accent" id="res-steg-bits">0</span></div>
-                  <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center"><span class="metric-lbl text-[10px] uppercase text-slate-400">PSNR</span><span class="metric-val text-lg font-bold font-mono text-emerald-400" id="res-steg-psnr">0 dB</span></div>
-                  <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center"><span class="metric-lbl text-[10px] uppercase text-slate-400">MSE</span><span class="metric-val text-lg font-bold font-mono text-cyan-400" id="res-steg-mse">0</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 3: WATERMARKING -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-watermarking">
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="card-title text-lg font-bold text-white mb-2">Digital Watermarking Studio</div>
-        <p class="text-xs text-slate-400 mb-6">Visible text/logo overlay watermarking and invisible 8x8 DCT frequency domain embedding.</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <div class="dropzone p-8 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-wm-input">
-              <div class="dropzone-icon text-4xl mb-2">💧</div>
-              <div class="dropzone-title text-sm font-semibold text-white">Upload Base Image</div>
-              <input type="file" id="file-wm-input" accept="image/png, image/jpeg" style="display: none;">
-            </div>
-            <div class="form-group mt-4">
-              <label for="input-wm-text" class="text-xs font-semibold text-slate-300">Watermark Text / Signature</label>
-              <input type="text" id="input-wm-text" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="CONFIDENTIAL — SENTINEL SDC">
-            </div>
-            <button class="btn btn-primary w-full py-3" id="btn-wm-dct-embed">
-              <span>💧 Embed Invisible DCT Watermark</span>
-            </button>
-          </div>
-
-          <div>
-            <div class="text-sm font-bold text-white mb-3">Extracted Watermark Data</div>
-            <div class="code-container">
-              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-wm-extracted">Extracted watermark payload will appear here...</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 4: RSA (EDU) -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-rsa-edu">
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="card-title text-lg font-bold text-white mb-2">Educational BigInt RSA & Miller-Rabin Sandbox</div>
-        <p class="text-xs text-slate-400 mb-6">Inspect modular exponentiation cryptography (m^e mod n) and prime candidate verification.</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <div class="form-group">
-              <label for="input-rsa-candidate" class="text-xs font-semibold text-slate-300">Prime Candidate Number (n)</label>
-              <input type="text" id="input-rsa-candidate" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" value="104729">
-            </div>
-            <button class="btn btn-secondary w-full py-3" id="btn-miller-rabin-check">
-              <span>🔍 Run Miller-Rabin Primality Test</span>
-            </button>
-          </div>
-
-          <div>
-            <div class="text-sm font-bold text-white mb-3">Primality Result</div>
-            <div class="code-container">
-              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-emerald-400" id="output-miller-rabin">Primality test results will appear here...</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 5: WEBCRYPTO -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-webcrypto">
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="card-title text-lg font-bold text-white mb-2">WebCrypto Hybrid Cryptography Suite</div>
-        <p class="text-xs text-slate-400 mb-6">Production-grade hybrid RSA-OAEP 2048 + AES-256-GCM encryption and RSA-PSS signatures.</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <div class="form-group">
-              <label for="input-crypto-plain" class="text-xs font-semibold text-slate-300">Message to Encrypt</label>
-              <textarea id="input-crypto-plain" class="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-xs font-mono text-white" placeholder="Enter message...">SentinelSpread Covert Channel Authenticated Data</textarea>
-            </div>
-            <button class="btn btn-primary w-full py-3" id="btn-crypto-encrypt">
-              <span>🔐 Encrypt Hybrid Packet</span>
-            </button>
-          </div>
-
-          <div>
-            <div class="text-sm font-bold text-white mb-3">Hybrid Ciphertext Package</div>
-            <div class="code-container">
-              <pre class="code-block bg-slate-950 border border-white/10 p-4 rounded-xl text-xs font-mono text-accent" id="output-crypto-cipher">Encrypted JSON payload will appear here...</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- TAB 6: METRICS & SIGNAL DISTORTION ANALYSIS LAB -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <section class="tab-view" id="tab-metrics">
-      <div class="sub-dock-wrapper flex justify-center mb-6">
-        <div class="sub-dock-nav inline-flex gap-2 bg-white/5 backdrop-blur-xl p-1.5 rounded-full border border-white/10">
-          <div class="sub-dock-item active px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="metrics-subtab-image">🖼️ Image Quality & Split Slider</div>
-          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="metrics-subtab-audio">🎵 Audio Quality & Noise Lab</div>
-          <div class="sub-dock-item px-5 py-2 rounded-full text-xs font-semibold cursor-pointer" data-subtab="metrics-subtab-presets">⚡ One-Click Benchmarks</div>
-        </div>
-      </div>
-
-      <!-- SUB-TAB 1: IMAGE QUALITY & SPLIT COMPARATOR -->
-      <div class="subtab-panel active" id="metrics-subtab-image">
-        <div class="glass-card p-6 rounded-2xl mb-6">
-          <div class="card-title text-lg font-bold text-white mb-2">Image Distortion & Quality Assessment Lab</div>
-          <p class="text-xs text-slate-400 mb-6">Upload original carrier and encoded/stego images to compute MSE, PSNR (dB), and render amplified pixel-difference heatmaps.</p>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all mb-4" id="dz-metric-img-orig">
-                <div class="dropzone-icon text-3xl mb-1">📷</div>
-                <div class="dropzone-title text-xs font-semibold text-white">Upload Original Image</div>
-                <input type="file" id="file-metric-img-orig" accept="image/png, image/jpeg" style="display: none;">
-              </div>
-              <div id="badge-metric-orig" class="badge badge-info mb-4" style="display: none;">Original Loaded</div>
-
-              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-metric-img-mod">
-                <div class="dropzone-icon text-3xl mb-1">🧪</div>
-                <div class="dropzone-title text-xs font-semibold text-white">Upload Modified / Stego Image</div>
-                <input type="file" id="file-metric-img-mod" accept="image/png, image/jpeg" style="display: none;">
-              </div>
-              <div id="badge-metric-mod" class="badge badge-info mt-2 mb-4" style="display: none;">Modified Loaded</div>
-
-              <button class="btn btn-primary w-full py-3" id="btn-run-image-metrics">
-                <span>📊 Compute Image Metrics & Heatmap</span>
-              </button>
-            </div>
-
-            <div>
-              <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">Quantitative Quality Results</div>
-              
-              <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="metric-card bg-slate-950/80 p-4 rounded-xl border border-white/10 text-center">
-                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Peak PSNR</span>
-                  <span class="metric-val text-2xl font-bold font-mono text-emerald-400 mt-1 block" id="val-img-psnr">-- dB</span>
-                </div>
-                <div class="metric-card bg-slate-950/80 p-4 rounded-xl border border-white/10 text-center">
-                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Mean Squared Error</span>
-                  <span class="metric-val text-2xl font-bold font-mono text-accent mt-1 block" id="val-img-mse">--</span>
-                </div>
-              </div>
-
-              <div class="p-4 bg-slate-950/80 border border-white/10 rounded-xl mb-4">
-                <div class="text-xs font-semibold text-slate-300 mb-1">Imperceptibility Verdict:</div>
-                <div class="text-sm font-bold font-mono text-emerald-400" id="val-img-verdict">Upload 2 images to evaluate imperceptibility</div>
-              </div>
-
-              <!-- Interactive Image Split Slider Comparator -->
-              <div class="text-xs font-semibold text-slate-300 mb-2">Interactive Image Split Comparator (Drag Handle):</div>
-              <div class="relative w-full h-[220px] rounded-xl overflow-hidden border border-white/10 bg-slate-950 cursor-ew-resize select-none" id="box-img-split-comparator">
-                <img id="img-split-orig" class="absolute top-0 left-0 w-full h-full object-contain" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%2394a3b8' font-size='12'%3EOriginal Image%3C/text%3E%3C/svg%3E">
-                <div class="absolute top-0 left-0 w-1/2 h-full overflow-hidden border-r-2 border-accent" id="wrap-split-mod">
-                  <img id="img-split-mod" class="absolute top-0 left-0 w-full h-full object-contain" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231e1b4b'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23e040fb' font-size='12'%3EModified Image%3C/text%3E%3C/svg%3E">
-                </div>
-                <div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-emerald-400">ORIGINAL</div>
-                <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-accent">MODIFIED</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Amplified Difference Heatmap -->
-          <div class="mt-6 pt-6 border-t border-white/10">
-            <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">🔍 Amplified Pixel Difference Heatmap (|Modified - Original| × 10)</div>
-            <div class="p-4 bg-slate-950 border border-white/10 rounded-xl">
-              <canvas id="canvas-img-diff-heatmap" height="160" class="w-full rounded-lg bg-black"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUB-TAB 2: AUDIO QUALITY & NOISE LAB -->
-      <div class="subtab-panel" id="metrics-subtab-audio" style="display: none;">
-        <div class="glass-card p-6 rounded-2xl mb-6">
-          <div class="card-title text-lg font-bold text-white mb-2">Audio Signal & Acoustic Noise Floor Assessment Lab</div>
-          <p class="text-xs text-slate-400 mb-6">Compare original 16-bit PCM WAV audio with stego audio to measure MSE, PSNR, SNR, and plot acoustic noise floor.</p>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all mb-4" id="dz-metric-aud-orig">
-                <div class="dropzone-icon text-3xl mb-1">🎵</div>
-                <div class="dropzone-title text-xs font-semibold text-white">Upload Original Audio (.wav)</div>
-                <input type="file" id="file-metric-aud-orig" accept="audio/wav, .wav" style="display: none;">
-              </div>
-              <div id="badge-aud-orig" class="badge badge-info mb-4" style="display: none;">Original Audio Loaded</div>
-
-              <div class="dropzone p-6 text-center border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-accent transition-all" id="dz-metric-aud-mod">
-                <div class="dropzone-icon text-3xl mb-1">🎧</div>
-                <div class="dropzone-title text-xs font-semibold text-white">Upload Modified Stego Audio (.wav)</div>
-                <input type="file" id="file-metric-aud-mod" accept="audio/wav, .wav" style="display: none;">
-              </div>
-              <div id="badge-aud-mod" class="badge badge-info mt-2 mb-4" style="display: none;">Stego Audio Loaded</div>
-
-              <button class="btn btn-primary w-full py-3" id="btn-run-audio-metrics">
-                <span>🎧 Compute Audio Metrics & Noise Signal</span>
-              </button>
-            </div>
-
-            <div>
-              <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">Acoustic Signal Metrics</div>
-              
-              <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center">
-                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Peak PSNR</span>
-                  <span class="metric-val text-xl font-bold font-mono text-emerald-400 mt-1 block" id="val-aud-psnr">-- dB</span>
-                </div>
-                <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center">
-                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Signal-to-Noise</span>
-                  <span class="metric-val text-xl font-bold font-mono text-cyan-400 mt-1 block" id="val-aud-snr">-- dB</span>
-                </div>
-                <div class="metric-card bg-slate-950/80 p-3 rounded-xl border border-white/10 text-center">
-                  <span class="metric-lbl text-[10px] uppercase text-slate-400">Mean Sq Error</span>
-                  <span class="metric-val text-xl font-bold font-mono text-accent mt-1 block" id="val-aud-mse">--</span>
-                </div>
-              </div>
-
-              <div class="p-4 bg-slate-950/80 border border-white/10 rounded-xl mb-4">
-                <div class="text-xs font-semibold text-slate-300 mb-1">Acoustic Quality Verdict:</div>
-                <div class="text-sm font-bold font-mono text-emerald-400" id="val-aud-verdict">Upload 2 WAV files to evaluate acoustic noise</div>
-              </div>
-
-              <!-- Synchronized Audio Players for Listening Tests -->
-              <div class="space-y-2">
-                <div class="text-xs font-semibold text-slate-300">Original Carrier Audio Player:</div>
-                <audio id="player-metric-orig" controls class="w-full h-8 rounded-lg bg-slate-950 border border-white/10"></audio>
-
-                <div class="text-xs font-semibold text-slate-300 pt-2">Stego Audio Player:</div>
-                <audio id="player-metric-mod" controls class="w-full h-8 rounded-lg bg-slate-950 border border-white/10"></audio>
-              </div>
-            </div>
-          </div>
-
-          <!-- Acoustic Residual Noise Waveform Plot -->
-          <div class="mt-6 pt-6 border-t border-white/10">
-            <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">📊 Acoustic Residual Difference Signal (|Stego PCM - Original PCM|)</div>
-            <div class="p-4 bg-slate-950 border border-white/10 rounded-xl">
-              <canvas id="canvas-audio-metric-noise" height="150" class="w-full rounded-lg bg-black"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUB-TAB 3: ONE-CLICK BENCHMARKS -->
-      <div class="subtab-panel" id="metrics-subtab-presets" style="display: none;">
-        <div class="glass-card p-6 rounded-2xl">
-          <div class="card-title text-lg font-bold text-white mb-2">Synthetic Signal Quality Benchmark Presets</div>
-          <p class="text-xs text-slate-400 mb-6">Test the metrics lab instantly with one-click precomputed synthetic benchmark samples.</p>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-1bit-audio">
-              <div class="text-sm font-bold text-white flex items-center justify-between">
-                <span>🎵 1-Bit Audio LSB Stego Benchmark</span>
-                <span class="badge badge-success">60.2 dB PSNR</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Simulates 16-bit PCM WAV audio with 1-bit LSB steganography payload embedding.</p>
-            </button>
-
-            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-1bit-image">
-              <div class="text-sm font-bold text-white flex items-center justify-between">
-                <span>🖼️ 1-Bit Image LSB Stego Benchmark</span>
-                <span class="badge badge-success">51.1 dB PSNR</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Simulates RGBA image with 1-bit LSB steganography across pixel channels.</p>
-            </button>
-
-            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-dct-watermark">
-              <div class="text-sm font-bold text-white flex items-center justify-between">
-                <span>💧 8x8 Block DCT Watermark Benchmark</span>
-                <span class="badge badge-warning">42.8 dB PSNR</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Simulates Discrete Cosine Transform (DCT) mid-frequency coefficient watermarking.</p>
-            </button>
-
-            <button class="p-5 bg-slate-950/80 border border-white/10 hover:border-accent rounded-xl text-left transition-all" id="btn-benchmark-heavy-noise">
-              <div class="text-sm font-bold text-white flex items-center justify-between">
-                <span>⚠️ Heavy Compression Noise Distortion</span>
-                <span class="badge badge-danger">28.4 dB PSNR</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">Simulates additive Gaussian noise and lossy compression degradation.</p>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </div>
 
-  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
-  <script src="app.js"></script>
+  <!-- Annotation tags pinned to satellite parts (positions set every frame) -->
+  <div class="tags" aria-hidden="true">
+    <p class="tag" data-part="core"><i></i><span><b>Command module</b>Cipher core · AES-256-GCM</span></p>
+    <p class="tag" data-part="hga"><i></i><span><b>High-gain antenna</b>DSSS downlink</span></p>
+    <p class="tag" data-part="lens"><i></i><span><b>Imaging module</b>LSB · DCT mark</span></p>
+    <p class="tag" data-part="audio"><i></i><span><b>Comms module</b>PCM16 LSB</span></p>
+    <p class="tag" data-part="lander"><i></i><span><b>Lander</b>Docked</span></p>
+  </div>
+  <div class="cursor" id="cursor" aria-hidden="true"><span></span></div>
+
+  <header class="bar">
+    <a class="brand" href="#top" aria-label="SentinelSpread, back to top">
+      <svg viewBox="0 0 28 12" width="28" height="12" aria-hidden="true"><path d="M1 6h4l2-4 3 8 3-8 3 8 3-8 2 4h6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      SentinelSpread
+    </a>
+    <nav class="bar-nav" aria-label="Primary">
+      <a href="#top">Mission</a>
+      <a href="#workbench">Workbench</a>
+      <a href="/docs" target="_blank" rel="noopener">API reference</a>
+    </nav>
+    <p class="status" id="api-status" data-state="checking" role="status"><span class="dot" aria-hidden="true"></span><span class="label">Checking API</span></p>
+  </header>
+
+  <nav class="rail" aria-label="Mission chapters">
+    <ol>
+      <li><button type="button" data-goto="0"><span>Approach</span></button></li>
+      <li><button type="button" data-goto="1"><span>Encrypt</span></button></li>
+      <li><button type="button" data-goto="2"><span>Transmit</span></button></li>
+      <li><button type="button" data-goto="3"><span>Image</span></button></li>
+      <li><button type="button" data-goto="4"><span>Audio</span></button></li>
+      <li><button type="button" data-goto="5"><span>Afterlight</span></button></li>
+      <li><button type="button" data-goto="6"><span>Workbench</span></button></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section class="chapter chapter--hero" id="top" data-chapter="0" aria-labelledby="h-hero">
+      <div class="copy">
+        <p class="step"><span class="dot"></span>Chapter 00 — Deep space relay</p>
+        <h1 id="h-hero">Hidden in <em>the noise.</em></h1>
+        <p class="lede">SENTINEL carries one message across the dark: sealed in the command module, spread below the noise floor on the long downlink home, and folded into ordinary pictures and sound.</p>
+      </div>
+      <div class="hero-foot">
+        <p class="hero-cue"><span>Drag to rotate · Scroll to fly</span><span class="track"><i></i></span></p>
+        <ol class="chips">
+          <li><button type="button" data-goto="1"><span class="num">01</span><span class="tx"><b>Encrypt</b>The secure core seals every payload.</span></button></li>
+          <li><button type="button" data-goto="2"><span class="num">02</span><span class="tx"><b>Transmit</b>Sixteen chips per bit, below the floor.</span></button></li>
+          <li><button type="button" data-goto="3"><span class="num">03</span><span class="tx"><b>Image</b>Messages written into pixel LSBs.</span></button></li>
+          <li><button type="button" data-goto="4"><span class="num">04</span><span class="tx"><b>Audio</b>Messages written into sound samples.</span></button></li>
+        </ol>
+      </div>
+      <p class="wordmark" aria-hidden="true">SENTINEL</p>
+    </section>
+
+    <section class="chapter" data-chapter="1" aria-labelledby="h-encrypt">
+      <div class="copy">
+        <p class="step"><span class="dot"></span>Chapter 01 — Command module</p>
+        <h2 id="h-encrypt">Sealed <em>at the source.</em></h2>
+        <p>Behind the bay door of the command module, a fresh AES-256-GCM key locks the message and RSA-OAEP wraps that key for the receiver at home. What leaves the core cannot be told apart from random bits.</p>
+        <dl class="spec">
+          <div><dt>Cipher</dt><dd>AES-256-GCM</dd></div>
+          <div><dt>Nonce</dt><dd>96-bit, per message</dd></div>
+          <div><dt>Key wrap</dt><dd>RSA-OAEP 2048</dd></div>
+        </dl>
+        <div class="actions"><a class="btn" href="#workbench" data-open-tab="encrypt">Encrypt a message</a></div>
+      </div>
+    </section>
+
+    <section class="chapter" data-chapter="2" aria-labelledby="h-transmit">
+      <div class="copy">
+        <p class="step"><span class="dot"></span>Chapter 02 — High-gain antenna</p>
+        <h2 id="h-transmit">Sixteen chips <em>per bit.</em></h2>
+        <p>The downlink multiplies every bit by a pseudo-noise code running sixteen times faster, smearing its energy below the noise floor. On the ground, a Costas loop cancels the drift and the same code collapses it back into bits.</p>
+        <dl class="spec spec--readings" id="live-readings">
+          <div><dt>Spreading</dt><dd>SF 16 · BPSK · RRC α 0.35</dd></div>
+          <div><dt>Channel noise σ</dt><dd data-live="noise">0.0200 <small>Stage 4 snapshot · set 0.02</small></dd></div>
+          <div><dt>Residual drift after lock</dt><dd data-live="drift">−0.00002 rad/symbol <small>Stage 4 snapshot</small></dd></div>
+          <div><dt>Bit errors after despread</dt><dd data-live="ber">0 <small>Stage 4 snapshot</small></dd></div>
+        </dl>
+        <p class="source"><span class="live-badge" data-live="false">Stage 4 snapshot</span><span id="live-source">Run a live check to replace these with a real transmission.</span></p>
+        <span id="live-msg" hidden data-message="SentinelSpread live check"></span>
+        <div class="actions">
+          <button type="button" class="btn btn--primary" id="live-run">Run a live check</button>
+          <a class="btn" href="#workbench" data-open-tab="transmit">Open Transmit</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" data-chapter="3" aria-labelledby="h-image">
+      <div class="copy">
+        <p class="step"><span class="dot"></span>Chapter 03 — Imaging module</p>
+        <h2 id="h-image">A picture <em>that carries more.</em></h2>
+        <p>The payload is written into the least significant bit of each pixel, a change of one level in 255 that the eye cannot see. A watermark can be stamped on top, visibly or hidden in the image's DCT coefficients.</p>
+        <dl class="spec">
+          <div><dt>Hiding</dt><dd>LSB, RGBA channels</dd></div>
+          <div><dt>Marking</dt><dd>Visible text/logo · invisible DCT</dd></div>
+          <div><dt>Check</dt><dd>PSNR and MSE per image</dd></div>
+        </dl>
+        <div class="actions"><a class="btn btn--primary" href="#workbench" data-open-tab="image">Hide text in an image</a><a class="btn" href="#workbench" data-open-tab="mark">Watermark</a></div>
+      </div>
+    </section>
+
+    <section class="chapter chapter--right" data-chapter="4" aria-labelledby="h-audio">
+      <div class="copy">
+        <p class="step"><span class="dot"></span>Chapter 04 — Comms module</p>
+        <h2 id="h-audio">A voice <em>that carries more.</em></h2>
+        <p>For sound, the message is encrypted with AES-128-CBC under your password, tagged with an ASTG header, and written into the lowest bit of 16-bit PCM samples. The recording sounds the same; only the password brings the text back.</p>
+        <dl class="spec">
+          <div><dt>Cipher</dt><dd>AES-128-CBC, SHA-256 key</dd></div>
+          <div><dt>Carrier</dt><dd>16-bit PCM WAV</dd></div>
+          <div><dt>Check</dt><dd>PSNR and SNR per file</dd></div>
+        </dl>
+        <div class="actions"><a class="btn btn--primary" href="#workbench" data-open-tab="audio">Hide text in audio</a></div>
+      </div>
+    </section>
+
+    <section class="chapter" data-chapter="5" aria-labelledby="h-orbit">
+      <div class="copy">
+        <p class="step"><span class="dot"></span>Chapter 05 — Afterlight</p>
+        <h2 id="h-orbit">Every tool, <em>on the ground.</em></h2>
+        <p>Everything SENTINEL does runs in the workbench below, against your local SentinelSpread API.</p>
+        <div class="actions"><a class="btn btn--primary" href="#workbench">Open the workbench</a></div>
+      </div>
+    </section>
+
+    <!-- ═════════════ Workbench ═════════════ -->
+    <section class="workbench" id="workbench" data-chapter="6" aria-labelledby="h-workbench">
+      <div class="wb-head">
+        <h2 id="h-workbench">Workbench</h2>
+        <p>Twenty tools, one at a time. Everything runs against your local SentinelSpread API, and files never leave this machine.</p>
+      </div>
+
+
+      <div class="console">
+        <aside class="console-nav" aria-label="Workbench tools">
+          <label class="console-search"><span class="sr-only">Find a tool</span><input type="search" id="tool-search" placeholder="Find a tool" autocomplete="off"></label>
+          <nav id="tool-nav"></nav>
+        </aside>
+        <div class="console-stage" id="tool-stage">
+      <!-- ─── Transmit ─── -->
+      <div class="tool-group" data-group="transmit" data-label="Transmit">
+        <article class="tool">
+          <header><h3>Transmit a message</h3><p>Encrypt, spread and send a message through the GNU Radio software radio, listen to the signal, then despread and decrypt it again.</p><code>POST /api/radio/transmit · receive</code></header>
+          <form data-tool="transmit" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Message</span><textarea name="message" rows="4" required maxlength="1000">Meet at the north gate, 21:40.</textarea></label>
+              <label class="field"><span>Spreading factor</span>
+                <select name="spreading_factor">
+                  <option value="16" selected>16 · +12 dB processing gain</option>
+                  <option value="32">32 · +15 dB</option>
+                  <option value="64">64 · +18 dB</option>
+                  <option value="128">128 · +21 dB (slow)</option>
+                </select>
+              </label>
+              <label class="field"><span>Channel noise σ <output data-for="noise_voltage">0.02</output></span>
+                <input type="range" name="noise_voltage" min="0" max="0.6" step="0.02" value="0.02">
+                <small class="hint" data-snr></small>
+              </label>
+              <button class="btn btn--primary" type="submit">Review transmission</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">You review the numbers first. Nothing is sent until you press Transmit.</p></output>
+          </form>
+        </article>
+      </div>
+
+      <!-- ─── Image ─── -->
+      <div class="tool-group" data-group="image" data-label="Image">
+        <article class="tool">
+          <header><h3>Hide text in an image</h3><p>Writes the payload into pixel least significant bits. Output is always PNG.</p><code>POST /api/stego/embed</code></header>
+          <form data-tool="stego-embed" class="tool-body">
+            <div class="inputs">
+              <label class="drop" data-preview><input type="file" name="image" accept="image/png,image/jpeg,image/bmp,image/webp" required><span class="drop-text"><b>Carrier image</b>PNG, JPEG, BMP or WebP</span></label>
+              <p class="hint" data-capacity hidden></p>
+              <label class="field"><span>Secret text</span><textarea name="payload" rows="4" required placeholder="Meet at the north gate, 21:40."></textarea></label>
+              <button class="btn btn--primary" type="submit">Hide text</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The stego image and its distortion readings appear here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Read text from an image</h3><p>Recovers a payload written by the tool above.</p><code>POST /api/stego/extract</code></header>
+          <form data-tool="stego-extract" class="tool-body">
+            <div class="inputs">
+              <label class="drop" data-preview><input type="file" name="image" accept="image/png" required><span class="drop-text"><b>Stego image</b>The PNG produced above</span></label>
+              <button class="btn btn--primary" type="submit">Read text</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">Recovered text appears here.</p></output>
+          </form>
+        </article>
+
+      </div>
+
+      <!-- ─── Audio ─── -->
+      <div class="tool-group" data-group="audio" data-label="Audio">
+        <article class="tool">
+          <header><h3>Hide text in audio</h3><p>Encrypts with AES-128-CBC, then writes the ciphertext into 16-bit PCM sample LSBs.</p><code>POST /api/stego/audio/embed-details</code></header>
+          <form data-tool="audio-embed" class="tool-body">
+            <div class="inputs">
+              <label class="drop"><input type="file" name="file" accept=".wav,audio/wav" required><span class="drop-text"><b>Carrier audio</b>16-bit PCM WAV</span></label>
+              <label class="field"><span>Secret text</span><textarea name="text" rows="3" required></textarea></label>
+              <label class="field"><span>Password</span><input type="password" name="password" required autocomplete="new-password"></label>
+              <button class="btn btn--primary" type="submit">Hide text</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The stego WAV, a waveform comparison and the LSB changes appear here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Read text from audio</h3><p>Needs the same password used to hide it.</p><code>POST /api/stego/audio/extract</code></header>
+          <form data-tool="audio-extract" class="tool-body">
+            <div class="inputs">
+              <label class="drop"><input type="file" name="file" accept=".wav,audio/wav" required><span class="drop-text"><b>Stego audio</b>The WAV produced above</span></label>
+              <label class="field"><span>Password</span><input type="password" name="password" required autocomplete="current-password"></label>
+              <button class="btn btn--primary" type="submit">Read text</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">Recovered text appears here.</p></output>
+          </form>
+        </article>
+      </div>
+
+      <!-- ─── Watermark ─── -->
+      <div class="tool-group" data-group="mark" data-label="Watermark">
+        <article class="tool">
+          <header><h3>Visible text mark</h3><p>Stamps a semi-transparent caption onto the image.</p><code>POST /api/watermark/visible-text</code></header>
+          <form data-tool="wm-text" class="tool-body">
+            <div class="inputs">
+              <label class="drop" data-preview><input type="file" name="image" accept="image/*" required><span class="drop-text"><b>Image</b>Any common format</span></label>
+              <label class="field"><span>Text</span><input type="text" name="text" required value="© SentinelSpread"></label>
+              <div class="row">
+                <label class="field"><span>Font size</span><input type="number" name="font_size" min="8" max="200" value="28"></label>
+                <label class="field"><span>Colour</span><input type="color" name="color_hex" value="#ffffff"></label>
+              </div>
+              <label class="field"><span>Opacity <output data-for="opacity">0.40</output></span><input type="range" name="opacity" min="0.05" max="1" step="0.05" value="0.4"></label>
+              <label class="field"><span>Position</span>
+                <select name="position"><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option><option value="top-right">Top right</option><option value="top-left">Top left</option><option value="center">Centre</option></select>
+              </label>
+              <button class="btn btn--primary" type="submit">Apply mark</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The marked image appears here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Visible logo mark</h3><p>Overlays a scaled logo with transparency.</p><code>POST /api/watermark/visible-logo</code></header>
+          <form data-tool="wm-logo" class="tool-body">
+            <div class="inputs">
+              <div class="row">
+                <label class="drop drop--small" data-preview><input type="file" name="base" accept="image/*" required><span class="drop-text"><b>Image</b>Base picture</span></label>
+                <label class="drop drop--small" data-preview><input type="file" name="logo" accept="image/png,image/*" required><span class="drop-text"><b>Logo</b>PNG with alpha</span></label>
+              </div>
+              <label class="field"><span>Opacity <output data-for="opacity">0.40</output></span><input type="range" name="opacity" min="0.05" max="1" step="0.05" value="0.4"></label>
+              <label class="field"><span>Scale <output data-for="scale">0.20</output></span><input type="range" name="scale" min="0.05" max="0.8" step="0.05" value="0.2"></label>
+              <label class="field"><span>Position</span>
+                <select name="position"><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option><option value="top-right">Top right</option><option value="top-left">Top left</option><option value="center">Centre</option></select>
+              </label>
+              <button class="btn btn--primary" type="submit">Apply logo</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The marked image appears here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Invisible DCT mark</h3><p>Embeds text in mid-frequency DCT coefficients of the luminance channel.</p><code>POST /api/watermark/invisible-dct-embed</code></header>
+          <form data-tool="wm-dct-embed" class="tool-body">
+            <div class="inputs">
+              <label class="drop" data-preview><input type="file" name="image" accept="image/*" required><span class="drop-text"><b>Image</b>Larger images hold longer marks</span></label>
+              <label class="field"><span>Mark text</span><input type="text" name="watermark_text" required value="SENTINEL"></label>
+              <label class="field"><span>Strength <output data-for="strength">20</output></span><input type="range" name="strength" min="5" max="60" step="1" value="20"></label>
+              <button class="btn btn--primary" type="submit">Embed mark</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The marked image and its bit length appear here. Keep the bit length: reading the mark needs it.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Read an invisible mark</h3><p>Use the bit length and strength from embedding.</p><code>POST /api/watermark/invisible-dct-extract</code></header>
+          <form data-tool="wm-dct-extract" class="tool-body">
+            <div class="inputs">
+              <label class="drop" data-preview><input type="file" name="image" accept="image/png" required><span class="drop-text"><b>Marked image</b>The PNG produced above</span></label>
+              <div class="row">
+                <label class="field"><span>Bit length</span><input type="number" name="watermark_bit_length" id="dct-bits" min="8" step="8" required></label>
+                <label class="field"><span>Strength</span><input type="number" name="strength" id="dct-strength" min="1" step="1" value="20"></label>
+              </div>
+              <button class="btn btn--primary" type="submit">Read mark</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The recovered mark appears here.</p></output>
+          </form>
+        </article>
+      </div>
+
+      <!-- ─── Encrypt ─── -->
+      <div class="tool-group" data-group="encrypt" data-label="Encrypt">
+        <article class="tool tool--wide">
+          <header><h3>RSA key pair</h3><p>Used by hybrid encryption, file encryption and signatures below. Paste your own PEM keys if you have them.</p><code>POST /api/crypto/generate-rsa-keys</code></header>
+          <form data-tool="rsa-keys" class="tool-body tool-body--keys">
+            <div class="inputs">
+              <label class="field"><span>Key size</span><select name="key_size"><option value="2048" selected>2048 bits</option><option value="3072">3072 bits</option><option value="4096">4096 bits (slow)</option></select></label>
+              <button class="btn btn--primary" type="submit">Generate pair</button>
+            </div>
+            <label class="field"><span>Public key</span><textarea id="pub-pem" rows="7" class="mono" spellcheck="false" placeholder="-----BEGIN PUBLIC KEY-----"></textarea></label>
+            <label class="field"><span>Private key</span><textarea id="priv-pem" rows="7" class="mono" spellcheck="false" placeholder="-----BEGIN PRIVATE KEY-----"></textarea></label>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Hybrid encrypt</h3><p>AES-256-GCM for the text, RSA-OAEP for the AES key.</p><code>POST /api/crypto/encrypt-hybrid</code></header>
+          <form data-tool="hybrid-encrypt" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Plaintext</span><textarea name="plaintext" rows="4" required></textarea></label>
+              <button class="btn btn--primary" type="submit">Encrypt</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The encrypted JSON envelope appears here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Hybrid decrypt</h3><p>Paste the JSON envelope; uses the private key above.</p><code>POST /api/crypto/decrypt-hybrid</code></header>
+          <form data-tool="hybrid-decrypt" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Envelope JSON</span><textarea name="payload" id="hybrid-envelope" rows="4" class="mono" required spellcheck="false"></textarea></label>
+              <button class="btn btn--primary" type="submit">Decrypt</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The plaintext appears here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Encrypt or decrypt a file</h3><p>Same hybrid scheme, for any file. Decrypting expects a <code>.enc</code> package.</p><code>POST /api/crypto/encrypt-file · decrypt-file</code></header>
+          <form data-tool="file-crypt" class="tool-body">
+            <div class="inputs">
+              <label class="drop"><input type="file" name="file" required><span class="drop-text"><b>File</b>Anything up to a few hundred MB</span></label>
+              <fieldset class="seg"><legend>Direction</legend>
+                <label><input type="radio" name="direction" value="encrypt" checked><span>Encrypt</span></label>
+                <label><input type="radio" name="direction" value="decrypt"><span>Decrypt</span></label>
+              </fieldset>
+              <button class="btn btn--primary" type="submit">Run</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">A download link appears here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Sign and verify</h3><p>RSA-PSS signatures with the key pair above.</p><code>POST /api/crypto/sign · verify</code></header>
+          <form data-tool="sign-verify" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Message</span><textarea name="message" rows="3" required></textarea></label>
+              <label class="field"><span>Signature (base64)</span><textarea name="signature" id="sig-b64" rows="3" class="mono" spellcheck="false" placeholder="Filled in when you sign"></textarea></label>
+              <div class="row">
+                <button class="btn btn--primary" type="submit" name="action" value="sign">Sign</button>
+                <button class="btn" type="submit" name="action" value="verify">Verify</button>
+              </div>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The signature or the verification verdict appears here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Password encryption</h3><p>AES-256-GCM with a key derived from your password.</p><code>POST /api/crypto/encrypt-aes · decrypt-aes</code></header>
+          <form data-tool="aes" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Plaintext, or ciphertext JSON to decrypt</span><textarea name="text" rows="4" required></textarea></label>
+              <label class="field"><span>Password</span><input type="password" name="password" required autocomplete="new-password"></label>
+              <div class="row">
+                <button class="btn btn--primary" type="submit" name="action" value="encrypt">Encrypt</button>
+                <button class="btn" type="submit" name="action" value="decrypt">Decrypt</button>
+              </div>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The result appears here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>SHA-256</h3><p>Hash text, or a file if one is chosen.</p><code>POST /api/crypto/hash</code></header>
+          <form data-tool="hash" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Text</span><textarea name="text" rows="2"></textarea></label>
+              <label class="drop drop--small"><input type="file" name="file"><span class="drop-text"><b>Or a file</b>Takes priority over text</span></label>
+              <button class="btn btn--primary" type="submit">Hash</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The digest appears here.</p></output>
+          </form>
+        </article>
+      </div>
+
+      <!-- ─── Learn RSA ─── -->
+      <div class="tool-group" data-group="learn" data-label="Learn RSA">
+        <article class="tool tool--wide">
+          <header><h3>Textbook RSA, step by step</h3><p>Generates real primes and shows every number. No padding: for learning only, never for real secrets.</p><code>POST /api/crypto-edu/generate-keys</code></header>
+          <form data-tool="edu-keys" class="tool-body tool-body--keys">
+            <div class="inputs">
+              <label class="field"><span>Modulus size</span><select name="bits"><option value="512">512 bits</option><option value="1024" selected>1024 bits</option><option value="2048">2048 bits (slow)</option></select></label>
+              <button class="btn btn--primary" type="submit">Generate primes</button>
+            </div>
+            <output class="result result--numbers" id="edu-numbers" aria-live="polite"><p class="placeholder">p, q, n, &phi;(n), e and d appear here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Encrypt and decrypt</h3><p>c = m<sup>e</sup> mod n, then m = c<sup>d</sup> mod n, with the numbers above.</p><code>POST /api/crypto-edu/encrypt · decrypt</code></header>
+          <form data-tool="edu-crypt" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Message</span><input type="text" name="plaintext" required value="hello"></label>
+              <button class="btn btn--primary" type="submit">Encrypt, then decrypt</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">Generate primes first, then run.</p></output>
+          </form>
+        </article>
+
+        <article class="tool">
+          <header><h3>Miller–Rabin primality test</h3><p>Probabilistic test with random witnesses. Try 561, a Carmichael number.</p><code>POST /api/crypto-edu/miller-rabin</code></header>
+          <form data-tool="miller-rabin" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Candidate</span><input type="text" name="n" inputmode="numeric" pattern="[0-9]+" required value="561"></label>
+              <label class="field"><span>Rounds</span><input type="number" name="rounds" min="1" max="200" value="20"></label>
+              <button class="btn btn--primary" type="submit">Test</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The verdict appears here.</p></output>
+          </form>
+        </article>
+      </div>
+
+      <!-- ─── Measure ─── -->
+      <div class="tool-group" data-group="measure" data-label="Measure">
+        <article class="tool tool--wide">
+          <header><h3>Compare two images</h3><p>MSE and PSNR from the API, plus a side-by-side slider and an amplified difference map computed here.</p><code>POST /api/metrics/compare</code></header>
+          <form data-tool="compare-images" class="tool-body">
+            <div class="inputs">
+              <div class="row">
+                <label class="drop drop--small" data-preview><input type="file" name="original" accept="image/*" required><span class="drop-text"><b>Original</b></span></label>
+                <label class="drop drop--small" data-preview><input type="file" name="modified" accept="image/*" required><span class="drop-text"><b>Modified</b></span></label>
+              </div>
+              <button class="btn btn--primary" type="submit">Compare</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">Readings, the comparison slider and the difference map appear here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool tool--wide">
+          <header><h3>Compare two WAV files</h3><p>MSE, PSNR and SNR between an original and a modified recording.</p><code>POST /api/metrics/compare-audio</code></header>
+          <form data-tool="compare-audio" class="tool-body">
+            <div class="inputs">
+              <div class="row">
+                <label class="drop drop--small"><input type="file" name="original_file" accept=".wav,audio/wav" required><span class="drop-text"><b>Original</b>WAV</span></label>
+                <label class="drop drop--small"><input type="file" name="modified_file" accept=".wav,audio/wav" required><span class="drop-text"><b>Modified</b>WAV</span></label>
+              </div>
+              <button class="btn btn--primary" type="submit">Compare</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">Readings appear here.</p></output>
+          </form>
+        </article>
+      </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>SentinelSpread &middot; steganography, watermarking and cryptography suite</p>
+    <p><a href="/docs" target="_blank" rel="noopener">OpenAPI reference</a> &middot; <a href="/redoc" target="_blank" rel="noopener">ReDoc</a> &middot; 3D rendering by <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> (MIT)</p>
+  </footer>
 </body>
 </html>
