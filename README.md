@@ -2,14 +2,14 @@
 
 **SentinelSpread** is a software-defined communication system featuring Direct Sequence Spread Spectrum (DSSS) covert transmission, an independent statistical/ML detector suite, and dynamic hardening mechanisms.
 
-Encryption hides what a message says. SentinelSpread also hides that it was sent: the payload is sealed with AES-256-GCM, spread with a pseudo-noise code and carried through a real GNU Radio flowgraph, and can be folded into ordinary images and audio. The repository holds the DSP pipeline and a web app that runs all of it.
+Encryption hides what a message says. SentinelSpread also hides that it was sent: the payload is sealed with AES-256-GCM, spread with a pseudo-noise code and carried through a real GNU Radio flowgraph, and can be folded into ordinary images and audio. The repository holds the DSP pipeline and a web app built on it.
 
 ## Repository layout
 - `sentinelspread/`: the DSP pipeline (Python package).
 - `tests/`: pytest suite for the pipeline.
 - `cli.py`: command line tool for stage testing and execution.
-- `stego_crypto_api/`: FastAPI backend for the web app (steganography, watermarking, cryptography, and the `/api/radio` transmitter that drives the GNU Radio flowgraph).
-- `stego_crypto_frontend/`: the web app (Three.js scroll story plus a 21-tool workbench), served by the API.
+- `stego_crypto_api/`: FastAPI backend for the web app (steganography, watermarking, cryptography). It also keeps an `/api/radio` transmitter that drives the GNU Radio flowgraph; the page does not use it.
+- `stego_crypto_frontend/`: the web app (Three.js scroll story plus a 20-tool workbench), served by the API.
 - `steganography-and-watermarking/`: submodule with the earlier steganography and watermarking client apps.
 
 ## Pipeline modules
@@ -56,11 +56,11 @@ python -m uvicorn main:app --app-dir stego_crypto_api --port 8001
 ```
 Then open http://localhost:8001. The API serves the frontend from `stego_crypto_frontend/`.
 
-The Transmit tool and the live check in chapter 02 run the GNU Radio flowgraph in a separate process. Two environment variables control it:
+The page needs no GNU Radio: its 20 tools cover steganography, watermarking, encryption and measurement. Images, audio and keys are processed per request and not stored. Chapter 02 shows readings recorded in the Stage 4 GNU Radio verification run.
+
+The backend still has `/api/radio` (transmit, receive, WAV) for running the flowgraph locally. It runs GNU Radio in a separate process, controlled by two environment variables:
 - `SENTINEL_RADIO_PYTHON`: the Python with GNU Radio (default `C:\Users\csaih\radioconda\python.exe`).
 - `SENTINEL_PROJECT_ROOT`: where the `sentinelspread` package lives (default: this repository).
-
-Without GNU Radio the site still works: Transmit reports that the radio is unavailable, and the other 20 tools are unaffected. Images, audio and keys are processed per request and not stored; radio transmissions are kept in the system temp folder for an hour.
 
 ## Tests
 ```bash
