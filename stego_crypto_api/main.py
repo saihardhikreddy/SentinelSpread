@@ -25,6 +25,7 @@ import stego_engine
 import audio_stego_engine
 import watermark_engine
 import metrics
+import radio
 
 
 app = FastAPI(
@@ -43,6 +44,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(radio.router)
+
+
+@app.middleware("http")
+async def revalidate_frontend(request, call_next):
+    """The frontend is a set of ES modules that must stay in step with each other. Without a cache
+    header, browsers heuristically reuse an old module next to a new one and the page breaks.
+    `no-cache` still allows 304 responses, so this costs a cheap revalidation, not a download."""
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 

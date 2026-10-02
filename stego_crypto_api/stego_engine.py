@@ -46,7 +46,8 @@ def embed_data(image_bytes: bytes, payload_text: str) -> Dict[str, Any]:
         
     flat_array = img_array.flatten().copy()
     for i in range(total_bits):
-        flat_array[i] = (flat_array[i] & ~1) | bits[i]
+        # 0xFE, not ~1: ~1 is the Python int -2, which NumPy 2 refuses to cast to uint8
+        flat_array[i] = (flat_array[i] & 0xFE) | bits[i]
         
     stego_array = flat_array.reshape(img_array.shape)
     stego_img = Image.fromarray(stego_array, 'RGBA')

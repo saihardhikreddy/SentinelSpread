@@ -144,13 +144,13 @@ def embed_invisible_dct_watermark(
             dct_block = scipy.fftpack.dct(scipy.fftpack.dct(block.T, norm='ortho').T, norm='ortho')
             
             bit = bits[block_idx]
-            # Embed into mid-frequency coefficient (4, 3) vs (3, 4)
-            if bit == 1:
-                if dct_block[4, 3] <= dct_block[3, 4]:
-                    dct_block[4, 3] = dct_block[3, 4] + strength
-            else:
-                if dct_block[4, 3] >= dct_block[3, 4]:
-                    dct_block[3, 4] = dct_block[4, 3] + strength
+            # Embed into mid-frequency coefficient (4, 3) vs (3, 4). Always force a gap of
+            # `strength` around their midpoint: a pair that is already ordered but only
+            # barely apart would otherwise flip after uint8 rounding and the RGB round trip.
+            mid = (dct_block[4, 3] + dct_block[3, 4]) / 2
+            sign = 1 if bit == 1 else -1
+            dct_block[4, 3] = mid + sign * strength / 2
+            dct_block[3, 4] = mid - sign * strength / 2
                     
             idct_block = scipy.fftpack.idct(scipy.fftpack.idct(dct_block.T, norm='ortho').T, norm='ortho')
             y_arr[i:i+8, j:j+8] = idct_block
