@@ -54,6 +54,55 @@ function textOut(text, mono = false) {
     copyButton(() => text, "Copy"));
 }
 
+const clock = (t) => (Number.isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "–:––");
+
+/** Small glass audio player. A hidden <audio> element underneath is the actual source. */
+function player(src, label) {
+  const audio = h("audio", { preload: "metadata", src, hidden: true });
+  const toggle = h("button", { type: "button", class: "btn btn--small player-toggle", "aria-label": `Play: ${label}` },
+    h("span", { class: "player-icon", "aria-hidden": "true" }), h("span", { class: "player-label", text: "Play" }));
+  const fill = h("i", { class: "player-fill" });
+  const track = h("div", { class: "player-track", role: "slider", tabindex: "0", "aria-label": `Seek: ${label}`, "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": "0" }, fill);
+  const time = h("span", { class: "player-time", text: "0:00 / –:––" });
+  const el = h("div", { class: "player", "data-state": "paused" }, toggle, track, time, audio);
+
+  const paint = () => {
+    const d = audio.duration, t = audio.currentTime, pct = d ? (t / d) * 100 : 0;
+    fill.style.width = `${pct}%`;
+    track.setAttribute("aria-valuenow", String(Math.round(pct)));
+    track.setAttribute("aria-valuetext", `${clock(t)} of ${clock(d)}`);
+    time.textContent = `${clock(t)} / ${clock(d)}`;
+  };
+  const setState = (playing) => {
+    el.dataset.state = playing ? "playing" : "paused";
+    toggle.querySelector(".player-label").textContent = playing ? "Pause" : "Play";
+    toggle.setAttribute("aria-label", `${playing ? "Pause" : "Play"}: ${label}`);
+    paint();
+  };
+  const seek = (frac) => { if (audio.duration) { audio.currentTime = Math.min(1, Math.max(0, frac)) * audio.duration; paint(); } };
+
+  toggle.addEventListener("click", () => (audio.paused ? audio.play().catch(() => {}) : audio.pause()));
+  audio.addEventListener("play", () => setState(true));
+  audio.addEventListener("pause", () => setState(false));
+  audio.addEventListener("ended", () => { setState(false); paint(); });
+  audio.addEventListener("timeupdate", paint);
+  audio.addEventListener("loadedmetadata", paint);
+  track.addEventListener("pointerdown", (e) => {
+    const r = track.getBoundingClientRect();
+    const move = (ev) => seek((ev.clientX - r.left) / r.width);
+    move(e);
+    track.setPointerCapture(e.pointerId);
+    track.addEventListener("pointermove", move);
+    track.addEventListener("pointerup", () => track.removeEventListener("pointermove", move), { once: true });
+  });
+  track.addEventListener("keydown", (e) => {
+    const step = { ArrowRight: 0.05, ArrowUp: 0.05, ArrowLeft: -0.05, ArrowDown: -0.05 }[e.key];
+    if (step != null && audio.duration) { e.preventDefault(); seek(audio.currentTime / audio.duration + step); }
+    else if (e.key === "Home" || e.key === "End") { e.preventDefault(); seek(e.key === "Home" ? 0 : 1); }
+  });
+  return el;
+}
+
 function show(form, ...nodes) {
   const out = form.querySelector(".result");
   out.replaceChildren(...nodes.flat(Infinity).filter(Boolean));
@@ -214,7 +263,7 @@ const tools = {
     const r = await postForm("/api/stego/audio/embed-details", { text: f.get("text"), password: f.get("password"), file });
     const pd = r.plot_data || {};
     return [
-      h("audio", { controls: true, src: r.stego_audio_b64, "aria-label": "Stego audio preview" }),
+      player(r.stego_audio_b64, "stego audio preview"),
       readings([
         ["Encrypted payload", `${fmt(r.payload_bytes, 0)} bytes`],
         ["Capacity used", `${fmt(r.capacity_used_pct)} %`],
@@ -480,7 +529,7 @@ async function stageTransmit(form, p) {
       ["Channel SNR", tx.snr_db == null ? "noiseless" : `${tx.snr_db.toFixed(1)} dB per sample`],
       ["Measured noise σ", tx.measured_noise_std.toFixed(4)],
     ]),
-    h("audio", { controls: true, preload: "metadata", src: tx.wav_url, "aria-label": "The rendered signal, slowed for listening" }),
+    player(tx.wav_url, "the rendered signal, slowed for listening"),
     h("p", { class: "note", text: "The real part of the baseband signal, played about four times slower. Encrypted and spread, it sounds like static, which is the point." }),
     h("div", { class: "result-actions" },
       h("button", { type: "button", class: "btn btn--primary", text: "Despread & decrypt", onclick: () => stageReceive(form, p, tx) }),
