@@ -13,6 +13,8 @@ from sentinelspread.crypto.key_mgmt import generate_rsa_keypair, export_key, imp
 from sentinelspread.crypto.encryptor import encrypt_payload, CryptoBundle
 from sentinelspread.crypto.decryptor import decrypt_payload
 from sentinelspread.eval.plot_ber import run_ber_simulation
+from sentinelspread.eval.processing_gain import run_processing_gain_benchmark
+from sentinelspread.eval.plot_psd import compute_and_plot_psd
 
 
 def run_stage_tests(stage_name: str) -> int:
@@ -34,13 +36,23 @@ def run_stage_tests(stage_name: str) -> int:
             "-v",
             "tests/test_modem.py",
         ]
+    elif stage_lower in ("dsss", "stage3", "3"):
+        test_args = [
+            "-v",
+            "tests/test_dsss.py",
+        ]
+    elif stage_lower in ("gnuradio", "stage4", "4", "sdr"):
+        test_args = [
+            "-v",
+            "tests/test_gnuradio.py",
+        ]
     elif stage_lower in ("all", "full"):
         test_args = [
             "-v",
             "tests/",
         ]
     else:
-        print(f"[!] Unknown stage '{stage_name}'. Available stage tests: 'crypto', 'input', 'stage1', 'modem', 'stage2', 'all'")
+        print(f"[!] Unknown stage '{stage_name}'. Available: 'stage1', 'stage2', 'stage3', 'stage4', 'all'")
         return 1
 
     return pytest.main(test_args)
@@ -49,7 +61,8 @@ def run_stage_tests(stage_name: str) -> int:
 def handle_encrypt(args):
     """CLI handler for encrypting input payloads."""
     input_path = Path(args.input)
-
+    
+    # Generate temporary or specified RSA keypair
     if args.key and Path(args.key).is_file():
         pub_key = import_key(args.key)
         print(f"[*] Loaded public key from {args.key}")
@@ -104,6 +117,33 @@ def handle_decrypt(args):
     print(f"[+] Saved recovered payload to {output_path}")
 
 
+def handle_sdr_loopback(args):
+    """CLI handler for running GNU Radio SDR software loopback."""
+    radioconda_python = Path(r"C:\Users\csaih\radioconda\python.exe")
+    repo_root = Path(__file__).resolve().parent
+    if not radioconda_python.is_file():
+        print(f"[!] Error: radioconda python not found at {radioconda_python}")
+        sys.exit(1)
+
+    import subprocess
+    import os
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = f"{repo_root};{repo_root / 'sentinelspread' / 'gnuradio'}"
+
+    cmd = [
+        str(radioconda_python),
+        "-m", "sentinelspread.gnuradio.runner",
+        "--message", args.message,
+        "--sf", str(args.sf),
+        "--noise", str(args.noise),
+        "--freq-offset", str(args.freq_offset),
+    ]
+
+    proc = subprocess.run(cmd, cwd=str(repo_root), env=env)
+    sys.exit(proc.returncode)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="SentinelSpread: DSSS Covert Communication System & Detector Suite"
@@ -115,12 +155,27 @@ def main():
     test_parser.add_argument(
         "stage",
         type=str,
-        help="Stage name to test (e.g. 'crypto', 'modem', 'stage1', 'stage2')",
+        help="Stage name to test (e.g. 'crypto', 'input', 'stage1', 'stage4', 'all')",
     )
+
+    # Command: sdr-loopback
+    sdr_parser = subparsers.add_parser("sdr-loopback", help="Run GNU Radio Software SDR loopback transceiver")
+    sdr_parser.add_argument("--message", "-m", default="SentinelSpread GNU Radio SDR Software Loopback Verification 2026", help="Test message")
+    sdr_parser.add_argument("--sf", type=int, default=16, help="Spreading factor (default: 16)")
+    sdr_parser.add_argument("--noise", type=float, default=0.02, help="Channel AWGN noise voltage (default: 0.02)")
+    sdr_parser.add_argument("--freq-offset", type=float, default=0.0, help="Channel carrier frequency offset (default: 0.0)")
 
     # Command: plot-ber
     plot_parser = subparsers.add_parser("plot-ber", help="Simulate modem BER vs SNR and save plot figure")
     plot_parser.add_argument("--out", "-o", default="eval/ber_vs_snr.png", help="Output PNG path for plot")
+
+    # Command: plot-psd
+    psd_parser = subparsers.add_parser("plot-psd", help="Compute PSD flattening comparison and save plot figure")
+    psd_parser.add_argument("--sf", type=int, default=16, help="Spreading factor to analyze (default: 16)")
+    psd_parser.add_argument("--out", "-o", default="eval/psd_flattening.png", help="Output PNG path for plot")
+
+    # Command: benchmark-gain
+    subparsers.add_parser("benchmark-gain", help="Empirically verify processing gain Gp across spreading factors")
 
     # Command: encrypt
     enc_parser = subparsers.add_parser("encrypt", help="Prepare & Encrypt a text or audio payload")
@@ -140,8 +195,14 @@ def main():
 
     if args.command == "test-stage":
         sys.exit(run_stage_tests(args.stage))
+    elif args.command == "sdr-loopback":
+        handle_sdr_loopback(args)
     elif args.command == "plot-ber":
         run_ber_simulation(save_path=args.out)
+    elif args.command == "plot-psd":
+        compute_and_plot_psd(sf=args.sf, save_path=args.out)
+    elif args.command == "benchmark-gain":
+        run_processing_gain_benchmark()
     elif args.command == "encrypt":
         handle_encrypt(args)
     elif args.command == "decrypt":
