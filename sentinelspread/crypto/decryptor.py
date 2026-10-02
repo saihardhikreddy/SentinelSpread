@@ -20,12 +20,14 @@ def decrypt_payload(bundle_or_bytes: Union[CryptoBundle, bytes], rsa_private_key
     else:
         bundle = bundle_or_bytes
 
+    # 1. Unwrap AES session key using RSA private key
     rsa_cipher = PKCS1_OAEP.new(rsa_private_key)
     try:
         aes_key_bytes = rsa_cipher.decrypt(bundle.wrapped_key)
     except ValueError as e:
         raise ValueError(f"RSA key unwrapping failed: {e}")
 
+    # 2. Decrypt ciphertext with AES-GCM and verify integrity tag
     aes_cipher = AES.new(aes_key_bytes, AES.MODE_GCM, nonce=bundle.nonce)
     try:
         payload_bytes = aes_cipher.decrypt_and_verify(bundle.ciphertext, bundle.tag)

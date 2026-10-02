@@ -4,7 +4,7 @@ Unit tests for RSA key management, AES-256-GCM encryption/decryption, and Crypto
 
 from pathlib import Path
 import pytest
-from sentinelspread.crypto.key_mgmt import generate_rsa_keypair, export_key, import_key
+from sentinelspread.crypto.key_mgmt import generate_rsa_keypair, export_key, import_key, derive_pn_seed
 from sentinelspread.crypto.encryptor import encrypt_payload, CryptoBundle
 from sentinelspread.crypto.decryptor import decrypt_payload
 
@@ -54,6 +54,7 @@ def test_tamper_detection():
 
     bundle = encrypt_payload(plaintext, pub_key)
 
+    # Modify ciphertext bit to simulate channel corruption or tampering
     corrupted_ciphertext = bytearray(bundle.ciphertext)
     corrupted_ciphertext[0] ^= 0xFF
     corrupted_bundle = CryptoBundle(
@@ -65,3 +66,19 @@ def test_tamper_detection():
 
     with pytest.raises(ValueError, match="AES-GCM decryption/verification failed"):
         decrypt_payload(corrupted_bundle, priv_key)
+
+
+def test_derive_pn_seed():
+    key1 = b"\x01" * 32
+    key2 = b"\x02" * 32
+
+    seed1_a = derive_pn_seed(key1)
+    seed1_b = derive_pn_seed(key1)
+    seed2 = derive_pn_seed(key2)
+
+    assert isinstance(seed1_a, int)
+    assert seed1_a > 0
+    # Deterministic with same key
+    assert seed1_a == seed1_b
+    # Divergent with different keys
+    assert seed1_a != seed2
