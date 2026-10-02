@@ -1,0 +1,9 @@
+# Python bytecode and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# GNU Radio output (the API writes these to the system temp folder; never commit them)
+*.c64
+*.iq
+sentinelspread_radio/
