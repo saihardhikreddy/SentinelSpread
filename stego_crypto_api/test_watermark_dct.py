@@ -38,3 +38,21 @@ def test_dct_mark_round_trip_any_size(h, w, kind):
     got = W.extract_invisible_dct_watermark(res["watermarked_bytes"], res["bits_embedded"], 20.0)
     assert got["extracted_text"] == "SENTINEL"
 
+
+@pytest.mark.parametrize("name", ["sawtooth", "saturated-noise", "checkerboard"])
+def test_dct_mark_survives_saturated_images(name):
+    """Blocks of pure 0/255 lose the coefficient gap to RGB clipping; the embedder must read the
+    mark back and reinforce those blocks rather than return a damaged mark."""
+    h, w = 180, 240
+    if name == "sawtooth":
+        i = np.arange(h * w).reshape(h, w) * 4
+        arr = np.stack([(i * 7) % 256, ((i + 1) * 13) % 256, ((i + 2) * 3) % 256], -1).astype("uint8")
+    elif name == "saturated-noise":
+        arr = (np.random.default_rng(7).integers(0, 2, (h, w, 3)) * 255).astype("uint8")
+    else:
+        arr = ((np.indices((h, w)).sum(0) % 2) * 255).astype("uint8")[..., None].repeat(3, -1)
+
+    text = "Copyright SentinelSpread 2026"
+    res = W.embed_invisible_dct_watermark(_png(arr), text, 20.0)
+    got = W.extract_invisible_dct_watermark(res["watermarked_bytes"], res["bits_embedded"], 20.0)
+    assert got["extracted_text"] == text
