@@ -100,14 +100,14 @@
       <div class="copy">
         <p class="step"><span class="dot"></span>Chapter 02 — High-gain antenna</p>
         <h2 id="h-transmit">Sixteen chips <em>per bit.</em></h2>
-        <p>The downlink multiplies every bit by a pseudo-noise code running sixteen times faster, smearing its energy below the noise floor. On the ground, a Costas loop cancels the drift and the same code collapses it back into bits.</p>
+        <p>Every bit is multiplied by a pseudo-noise code running sixteen times faster, so the downlink looks and sounds like static to anyone without the code. The receiver is a real GNU Radio flowgraph: it recovers symbol timing, locks the drifting carrier with a Costas loop and collapses the code back into bits, cleanly up to a channel noise of σ ≈ 0.3.</p>
         <dl class="spec spec--readings" id="live-readings">
           <div><dt>Spreading</dt><dd>SF 16 · BPSK · RRC α 0.35</dd></div>
           <div><dt>Channel noise σ</dt><dd data-live="noise">0.0200 <small>Stage 4 snapshot · set 0.02</small></dd></div>
           <div><dt>Residual drift after lock</dt><dd data-live="drift">−0.00002 rad/symbol <small>Stage 4 snapshot</small></dd></div>
           <div><dt>Bit errors after despread</dt><dd data-live="ber">0 <small>Stage 4 snapshot</small></dd></div>
         </dl>
-        <p class="source"><span class="live-badge" data-live="false">Stage 4 snapshot</span><span id="live-source">Run a live check to replace these with a real transmission.</span></p>
+        <p class="source"><span class="live-badge" data-live="false">Stage 4 snapshot</span><span id="live-source">Run a live check to send a real transmission now and replace these.</span></p>
         <span id="live-msg" hidden data-message="SentinelSpread live check"></span>
         <div class="actions">
           <button type="button" class="btn btn--primary" id="live-run">Run a live check</button>
