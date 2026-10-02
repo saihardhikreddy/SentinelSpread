@@ -120,11 +120,11 @@
       <div class="copy">
         <p class="step"><span class="dot"></span>Chapter 03 — Imaging module</p>
         <h2 id="h-image">A picture <em>that carries more.</em></h2>
-        <p>The payload is written into the least significant bit of each pixel, a change of one level in 255 that the eye cannot see. A watermark can be stamped on top, visibly or hidden in the image's DCT coefficients.</p>
+        <p>The message goes into the lowest bit of every colour channel, a change of at most one level in 255. Filled to capacity, an image still measures about 51 dB PSNR, well past the point where anyone can see a difference. A watermark can claim the same picture, stamped on top or hidden in its DCT coefficients.</p>
         <dl class="spec">
           <div><dt>Hiding</dt><dd>LSB, RGBA channels</dd></div>
           <div><dt>Marking</dt><dd>Visible text/logo · invisible DCT</dd></div>
-          <div><dt>Check</dt><dd>PSNR and MSE per image</dd></div>
+          <div><dt>At full capacity</dt><dd>≈ 51 dB PSNR</dd></div>
         </dl>
         <div class="actions"><a class="btn btn--primary" href="#workbench" data-open-tab="image">Hide text in an image</a><a class="btn" href="#workbench" data-open-tab="mark">Watermark</a></div>
       </div>
