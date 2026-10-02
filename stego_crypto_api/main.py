@@ -32,8 +32,8 @@ app = FastAPI(
     title="Secure Steganography, Cryptography & Watermarking API",
     description="Stateless REST API for modern hybrid encryption, educational BigInt RSA, LSB steganography, visible/invisible watermarking, and image quality metrics.",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    docs_url=None,       # no public API docs pages on the site
+    redoc_url=None
 )
 
 # Enable CORS
