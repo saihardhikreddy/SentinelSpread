@@ -116,12 +116,13 @@ def embed_invisible_dct_watermark(
     """
     img = Image.open(io.BytesIO(image_bytes)).convert('YCbCr')
     y_chan, cb_chan, cr_chan = img.split()
-    y_arr = np.array(y_chan, dtype=np.float32)
-    
-    h, w = y_arr.shape
+    y_full = np.array(y_chan, dtype=np.float32)
+
+    h, w = y_full.shape
     h_8 = (h // 8) * 8
     w_8 = (w // 8) * 8
-    y_arr = y_arr[:h_8, :w_8]
+    # Mark only the whole 8x8 blocks; the right/bottom remainder is left untouched.
+    y_arr = y_full[:h_8, :w_8].copy()
     
     bits = []
     for char in watermark_text.encode('utf-8'):
@@ -156,11 +157,11 @@ def embed_invisible_dct_watermark(
             y_arr[i:i+8, j:j+8] = idct_block
             block_idx += 1
             
-    y_arr = np.clip(y_arr, 0, 255).astype(np.uint8)
-    y_img = Image.fromarray(y_arr, 'L')
-    
-    if (w, h) != (w_8, h_8):
-        y_img = y_img.resize((w, h))
+    # Paste the marked blocks back in place. (Resizing the cropped grid back to the full size,
+    # as before, resampled every pixel and shifted the blocks off the 8x8 grid the extractor
+    # reads, so marks were lost on any image whose sides are not multiples of 8.)
+    y_full[:h_8, :w_8] = y_arr
+    y_img = Image.fromarray(np.clip(np.round(y_full), 0, 255).astype(np.uint8), 'L')
         
     stego_img = Image.merge('YCbCr', (y_img, cb_chan, cr_chan)).convert('RGB')
     
