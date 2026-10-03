@@ -113,3 +113,28 @@ def test_gnuradio_different_spreading_factor():
     assert proc.returncode == 0, f"SF=32 loopback failed:\nSTDOUT:\n{proc.stdout}\nSTDERR:\n{proc.stderr}"
     assert "[PASS - EXACT MATCH]" in proc.stdout
     assert f"Recovered Message       : '{test_msg}'" in proc.stdout
+
+
+def test_channel_switch_guards_never_transmit():
+    """The pluto channel refuses to transmit without the cabling flag, enforces the bare-cable
+    TX attenuation floor, and reports a missing board; an unknown channel is rejected. None of
+    these reach a transmit, so the test is safe with or without a Pluto attached."""
+    script = (
+        "from sentinelspread.gnuradio.runner import run_software_loopback, run_pluto_loopback, "
+        "HardwareNotReady, PlutoNotDetected\n"
+        "def expect(exc, fn, **kw):\n"
+        "    try:\n"
+        "        fn(**kw)\n"
+        "    except exc as e:\n"
+        "        print('OK', exc.__name__, e)\n"
+        "        return\n"
+        "    raise SystemExit(f'{exc.__name__} not raised for {kw}')\n"
+        "expect(ValueError, run_software_loopback, channel='bogus')\n"
+        "expect(HardwareNotReady, run_software_loopback, channel='pluto')\n"
+        "expect(HardwareNotReady, run_pluto_loopback, hardware_ready=True, direct_cable=True, tx_atten_db=40)\n"
+        "expect(PlutoNotDetected, run_pluto_loopback, hardware_ready=True, pluto_uri='usb:9.9.9')\n"
+    )
+    proc = _run_in_radioconda(["-c", script])
+    assert proc.returncode == 0, f"STDOUT:\n{proc.stdout}\nSTDERR:\n{proc.stderr}"
+    assert proc.stdout.count("OK ") == 4
+    assert "ADALM-Pluto not detected at usb:9.9.9" in proc.stdout

@@ -151,6 +151,7 @@ class dsss_crypto_rx(gr.sync_block):
         training_tones_len: int = 512,
         expected_num_symbols: Optional[int] = None,
         verbose: bool = True,
+        search_window: Optional[int] = None,
     ):
         gr.sync_block.__init__(
             self,
@@ -169,6 +170,9 @@ class dsss_crypto_rx(gr.sync_block):
         self.training_tones_len = training_tones_len
         self.expected_num_symbols = expected_num_symbols
         self.verbose = verbose
+        # Preamble search span in chips. None keeps the one-shot default (the burst starts at the
+        # top of the capture); a free-running hardware receiver passes one full burst period.
+        self.search_window = search_window
 
         # Output message port for recovered payload
         self.message_port_register_out(pmt.intern("msg_out"))
@@ -206,7 +210,8 @@ class dsss_crypto_rx(gr.sync_block):
         preamble_chips = preamble_gen.generate_chips(self.preamble_len, bipolar=True)
 
         # 2. Sliding correlation within acquisition search window
-        search_window = min(len(rx_chips) - self.preamble_len, 2 * self.training_tones_len + 1000)
+        default_window = 2 * self.training_tones_len + 1000
+        search_window = min(len(rx_chips) - self.preamble_len, self.search_window or default_window)
         corrs = np.empty(search_window, dtype=np.complex64)
         for tau in range(search_window):
             segment = rx_chips[tau : tau + self.preamble_len]
