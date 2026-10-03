@@ -49,6 +49,17 @@ python cli.py sdr-loopback
 ```
 `tests/test_gnuradio.py` skips its GNU Radio checks when GNU Radio is not installed. `MANUAL_TESTING_GUIDE.md` walks through testing by hand.
 
+### Real RF on an ADALM-Pluto
+The runner has a channel switch. `--channel sim` (the default) is the software channel model above. `--channel pluto` sends the same DSP chain through an ADALM-Pluto, TX1A cabled to RX1A. Only the channel changes: the Pluto sink and source take the channel model's place, and the RX side adds a DC blocker and an AGC.
+
+Never fit antennas for this. The Pluto transmits at about +7 dBm at 0 dB attenuation, which is more than its receiver input can take. Use one of two cablings, and confirm it on the command line or the run refuses to transmit:
+- `--attenuator-in-line`: TX1A → ~30 dB SMA attenuator → RX1A. Defaults: TX attenuation 20 dB, RX gain 40 dB.
+- `--direct-cable`: a bare SMA male-to-male cable. The Pluto's own TX attenuator is the only protection. The run sets it to maximum before starting and after finishing, and refuses anything below 60 dB. Defaults: TX attenuation 70 dB, RX gain 50 dB.
+```bash
+<radioconda>/python -m sentinelspread.gnuradio.runner --channel pluto --direct-cable
+```
+It runs at 915 MHz and 2 MS/s (500 kchip/s, 4 samples per chip). With no `--uri` it uses the first Pluto that a USB scan finds. The run logs the device serial, RX power in dBFS, the DC offset before and after the DC blocker, and the carrier offset the Costas loop corrected. With no board attached, it stops before building the flowgraph with `ADALM-Pluto not detected at <uri>`.
+
 ## Running the web app
 ```bash
 pip install -r stego_crypto_api/requirements.txt
@@ -58,12 +69,12 @@ Then open http://localhost:8001. The API serves the frontend from `stego_crypto_
 
 The page needs no GNU Radio: its 20 tools cover steganography, watermarking, encryption and measurement. Images, audio and keys are processed per request and not stored. Chapter 02 shows readings recorded in the Stage 4 GNU Radio verification run.
 
-The backend still has `/api/radio` (transmit, receive, WAV) for running the flowgraph locally. It runs GNU Radio in a separate process, controlled by two environment variables:
+The backend still has `/api/radio` (transmit, receive, WAV, status) for running the flowgraph locally. `POST /api/radio/transmit` accepts `"channel": "pluto"` with `direct_cable` or `attenuator_in_line`, and optionally `pluto_uri`, `pluto_freq_hz`, `tx_atten_db` and `rx_gain_db`. A Pluto run transmits and decodes in one call. `GET /api/radio/status` reports whether a Pluto is attached. GNU Radio runs in a separate process, controlled by two environment variables:
 - `SENTINEL_RADIO_PYTHON`: the Python with GNU Radio (default `C:\Users\csaih\radioconda\python.exe`).
 - `SENTINEL_PROJECT_ROOT`: where the `sentinelspread` package lives (default: this repository).
 
 ## Tests
 ```bash
-python -m pytest tests              # pipeline: 35 tests
-python -m pytest stego_crypto_api   # web API: 25 tests
+python -m pytest tests              # pipeline: 36 tests
+python -m pytest stego_crypto_api   # web API: 30 tests
 ```
