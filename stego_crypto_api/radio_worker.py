@@ -4,6 +4,8 @@ GNU Radio worker for the SentinelSpread web API. Runs under radioconda's Python
 
     python radio_worker.py transmit <workdir> '<json args>'
     python radio_worker.py receive  <workdir>
+    python radio_worker.py pluto    <workdir> '<json args>'   (real RF: TX+RX in one run)
+    python radio_worker.py probe    <workdir>                 (is an ADALM-Pluto attached?)
 
 It reuses the verified flowgraph blocks from the sentinelspread project, unchanged
 (crypto_dsss_tx, dsss_crypto_rx, RRC, channel_model, symbol_sync, Costas). The two halves
@@ -13,6 +15,10 @@ are split so the receiver can run in a fresh process:
             saves meta.json: RSA private key (PEM), symbol count, transmitted bits
   receive : file_source(tx.c64) -> RRC -> symbol_sync -> Costas -> dsss_crypto_rx
             restores the TX-side state the RX block expects, then reports BER / EVM / text
+
+The Pluto mode cannot be split the same way (RX has to be capturing while TX is on air), so it
+runs the whole loopback via sentinelspread.gnuradio.runner.run_pluto_loopback and stores the
+decode as result_pluto.json; /receive later returns that stored result.
 
 Result JSON goes to <workdir>/result_<mode>.json; GNU Radio's console output goes to stdout.
 """
@@ -158,9 +164,51 @@ def receive(workdir: Path) -> dict:
     }
 
 
+def pluto(workdir: Path, args: dict) -> dict:
+    from sentinelspread.gnuradio.runner import HardwareNotReady, PlutoNotDetected, run_pluto_loopback
+
+    try:
+        r = run_pluto_loopback(
+            message=args["message"],
+            spreading_factor=int(args["spreading_factor"]),
+            pluto_uri=args.get("pluto_uri") or "",
+            freq_hz=int(args["pluto_freq_hz"]),
+            tx_atten_db=float(args["tx_atten_db"]),
+            rx_gain_db=float(args["rx_gain_db"]),
+            hardware_ready=bool(args.get("attenuator_in_line") or args.get("direct_cable")),
+            direct_cable=bool(args.get("direct_cable")),
+        )
+    except (PlutoNotDetected, HardwareNotReady) as e:
+        return {"refused": True, "error": str(e)}
+    r.pop("_raw_iq", None)
+    total = int(crypto_dsss_tx.LAST_NUM_SYMBOLS)
+    r["recovered_text"] = r.pop("recovered_message") if r["success"] else None
+    r["error"] = None if r["success"] else "No intact payload recovered over the Pluto loopback"
+    r["total_bits"] = total
+    r["bit_errors"] = int(round(r["ber"] * total))
+    r.pop("original_message", None)
+    return r
+
+
+def probe() -> dict:
+    from sentinelspread.gnuradio.runner import PlutoNotDetected, find_pluto
+
+    try:
+        return {"detected": True, **find_pluto("")}
+    except PlutoNotDetected as e:
+        return {"detected": False, "detail": str(e)}
+
+
 def main():
     mode, workdir = sys.argv[1], Path(sys.argv[2])
-    out = transmit(workdir, json.loads(sys.argv[3])) if mode == "transmit" else receive(workdir)
+    if mode == "transmit":
+        out = transmit(workdir, json.loads(sys.argv[3]))
+    elif mode == "pluto":
+        out = pluto(workdir, json.loads(sys.argv[3]))
+    elif mode == "probe":
+        out = probe()
+    else:
+        out = receive(workdir)
     (workdir / f"result_{mode}.json").write_text(json.dumps(out))
 
 

@@ -57,3 +57,34 @@ def test_heavy_noise_is_a_readable_400_not_a_500():
     assert rx.status_code == 400
     detail = rx.json()["detail"]
     assert "Could not decode" in detail["message"] and detail["total_bits"] > 0 and detail["ber"] > 0.1
+
+
+# Pluto channel: only the refusal paths are tested here. None of them transmit, so the suite is
+# safe to run with a Pluto plugged in (and antennas on); real-RF runs are done by hand.
+
+def test_rejects_unknown_channel_and_bad_uri():
+    assert client.post("/api/radio/transmit", json={"message": "x", "channel": "bogus"}).status_code == 422
+    assert client.post("/api/radio/transmit", json={"message": "x", "channel": "pluto", "pluto_uri": "file:/etc"}).status_code == 422
+
+
+def test_pluto_refuses_without_cabling_confirmation():
+    r = client.post("/api/radio/transmit", json={"message": "x", "channel": "pluto"})
+    assert r.status_code == 400 and "Refusing to transmit" in r.json()["detail"]
+
+
+def test_pluto_bare_cable_enforces_attenuation_floor():
+    r = client.post("/api/radio/transmit", json={"message": "x", "channel": "pluto", "direct_cable": True, "tx_atten_db": 30})
+    assert r.status_code == 400 and "at least 60 dB" in r.json()["detail"]
+
+
+@needs_gnuradio
+def test_pluto_missing_board_is_a_400():
+    r = client.post("/api/radio/transmit", json={"message": "x", "channel": "pluto", "direct_cable": True, "pluto_uri": "usb:9.9.9"})
+    assert r.status_code == 400 and "ADALM-Pluto not detected at usb:9.9.9" in r.json()["detail"]
+
+
+@needs_gnuradio
+def test_status_reports_pluto_detection():
+    body = client.get("/api/radio/status").json()
+    assert body["channels"] == ["sim", "pluto"]
+    assert isinstance(body["pluto"]["detected"], bool)
