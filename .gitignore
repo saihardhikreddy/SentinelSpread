@@ -4,11 +4,15 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
-# Keys and sensitive outputs
+# Keys, secrets and environment variables
+.env
+*.env
+.env.*
 keys/
 *.pem
 *.bin
 *.wav
+
 
 # GNU Radio output (the API writes these to the system temp folder; never commit them)
 *.c64
