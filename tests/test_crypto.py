@@ -82,3 +82,17 @@ def test_derive_pn_seed():
     assert seed1_a == seed1_b
     # Divergent with different keys
     assert seed1_a != seed2
+
+
+def test_empty_payload_roundtrip():
+    priv_key, pub_key = generate_rsa_keypair(key_bits=2048)
+    plaintext = b""
+    bundle = encrypt_payload(plaintext, pub_key)
+    decrypted = decrypt_payload(bundle, priv_key)
+    assert decrypted == b""
+
+
+def test_malformed_crypto_bundle_deserialize():
+    with pytest.raises(ValueError, match="Crypto bundle data too short to read header"):
+        CryptoBundle.deserialize(b"too_short")
+
