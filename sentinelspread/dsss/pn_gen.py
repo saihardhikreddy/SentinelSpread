@@ -9,13 +9,14 @@ import numpy as np
 from sentinelspread.crypto.key_mgmt import derive_pn_seed
 
 
-# Known primitive polynomial feedback tap pairs for maximum-length sequences (m-sequences)
-# Form: x^degree + x^k + 1
+# Feedback taps of primitive polynomials, so each LFSR produces a maximum-length sequence
+# (period 2^degree - 1). (deg, k) is x^deg + x^k + 1. Degree 8 has no primitive trinomial, so it
+# needs four taps: x^8 + x^6 + x^5 + x^4 + 1. (The old pair (8, 4) repeated every 12 chips.)
 PRIMITIVE_POLYNOMIALS = {
     5: (5, 2),
     6: (6, 1),
     7: (7, 1),
-    8: (8, 4),
+    8: (8, 6, 5, 4),
     9: (9, 4),
     10: (10, 3),
     11: (11, 2),
@@ -40,7 +41,10 @@ class PNGenerator:
             )
 
         self.degree = degree
-        self.deg, self.k = PRIMITIVE_POLYNOMIALS[degree]
+        taps = PRIMITIVE_POLYNOMIALS[degree]
+        self.deg = taps[0]
+        self.taps = taps[1:]
+        self.k = self.taps[0]
         self.period = (1 << degree) - 1
         self.mask = self.period
 
@@ -66,7 +70,10 @@ class PNGenerator:
     def step(self) -> int:
         """Advance LFSR by one step and return output bit (0 or 1)."""
         out_bit = (self.state >> (self.deg - 1)) & 1
-        feedback = ((self.state >> (self.deg - 1)) ^ (self.state >> (self.k - 1))) & 1
+        feedback = self.state >> (self.deg - 1)
+        for t in self.taps:
+            feedback ^= self.state >> (t - 1)
+        feedback &= 1
         self.state = ((self.state << 1) & self.mask) | feedback
         return out_bit
 
