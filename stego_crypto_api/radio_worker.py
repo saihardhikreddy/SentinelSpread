@@ -13,7 +13,8 @@ are split so the receiver can run in a fresh process:
 
   transmit: crypto_dsss_tx -> RRC interp -> channel_model -> file_sink(tx.c64) (+ signal.wav)
             saves meta.json: RSA private key (PEM), symbol count, transmitted bits
-  receive : file_source(tx.c64) -> RRC -> symbol_sync -> Costas -> dsss_crypto_rx
+  receive : file_source(tx.c64) -> RRC -> dsss_despread_rx           (receiver="despread", default)
+            file_source(tx.c64) -> RRC -> symbol_sync -> Costas -> dsss_crypto_rx   ("classic")
             restores the TX-side state the RX block expects, then reports BER / EVM / text
 
 The Pluto mode cannot be split the same way (RX has to be capturing while TX is on air), so it
@@ -31,7 +32,7 @@ import numpy as np
 from gnuradio import blocks, channels, digital, filter, gr
 from scipy.io import wavfile
 
-from sentinelspread.gnuradio.blocks import crypto_dsss_tx, dsss_crypto_rx
+from sentinelspread.gnuradio.blocks import crypto_dsss_tx, dsss_crypto_rx, dsss_despread_rx
 
 SPS = 4
 SAMP_RATE = 200_000          # nominal sample rate of the baseband stream
@@ -99,6 +100,7 @@ def transmit(workdir: Path, args: dict) -> dict:
         "spreading_factor": sf,
         "noise_voltage": noise,
         "freq_offset": freq,
+        "receiver": args.get("receiver", "despread"),
         "message_bytes": len(args["message"].encode()),
     }
     (workdir / "meta.json").write_text(json.dumps(meta))
@@ -127,9 +129,34 @@ def receive(workdir: Path) -> dict:
     crypto_dsss_tx.LAST_NUM_SYMBOLS = meta["num_symbols"]
     crypto_dsss_tx.LAST_TX_BITS = np.asarray(meta["tx_bits"], dtype=int)
 
+    receiver = meta.get("receiver", "despread")
     tb = gr.top_block("SentinelSpread_RX")
     src = blocks.file_source(gr.sizeof_gr_complex, str(workdir / "tx.c64"), False)
     rx_rrc = filter.fir_filter_ccf(1, rrc_taps())
+    if receiver == "despread":
+        rx = dsss_despread_rx(
+            expected_message=None, spreading_factor=meta["spreading_factor"], sps=SPS,
+            expected_num_symbols=meta["num_symbols"], verbose=True,
+        )
+        tb.connect(src, rx_rrc, rx)
+        tb.run()
+        tb.wait()
+        r = rx.result
+        total = meta["num_symbols"]
+        return {
+            "success": bool(rx.success),
+            "receiver": receiver,
+            "recovered_text": rx.recovered_text if rx.success else None,
+            "error": None if rx.success else str(rx.recovered_text or "No payload recovered"),
+            "total_bits": total,
+            "bit_errors": int(round(rx.ber * total)),
+            "ber": float(rx.ber),
+            "evm_db": float(rx.evm_db),
+            "residual_drift_rad": None,
+            "acquisition_db": None if r is None else r.acquisition_db,
+            "cfo_rad_per_chip": None if r is None else r.cfo_rad_per_chip,
+            "symbol_snr_db": None if r is None else r.symbol_snr_db,
+        }
     sync = make_sync()
     costas = digital.costas_loop_cc(0.0628, 2, False)
     # expected_message=None: decrypt-and-return-whatever (no ground-truth comparison)
@@ -154,6 +181,7 @@ def receive(workdir: Path) -> dict:
     total = meta["num_symbols"]
     return {
         "success": bool(rx.success),
+        "receiver": receiver,
         "recovered_text": rx.recovered_text if rx.success else None,
         "error": None if rx.success else str(rx.recovered_text or "No payload recovered"),
         "total_bits": total,
@@ -177,6 +205,7 @@ def pluto(workdir: Path, args: dict) -> dict:
             rx_gain_db=float(args["rx_gain_db"]),
             hardware_ready=bool(args.get("attenuator_in_line") or args.get("direct_cable")),
             direct_cable=bool(args.get("direct_cable")),
+            receiver=args.get("receiver", "despread"),
         )
     except (PlutoNotDetected, HardwareNotReady) as e:
         return {"refused": True, "error": str(e)}

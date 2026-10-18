@@ -66,6 +66,9 @@ class TransmitRequest(BaseModel):
     noise_voltage: float = Field(0.02, ge=0.0, le=20.0, description="Channel AWGN standard deviation")
     freq_offset: float = Field(0.0005, ge=-0.01, le=0.01, description="Carrier offset, normalised to the sample rate")
     channel: Literal["sim", "pluto"] = Field("sim", description="sim = software channel model; pluto = real RF on an ADALM-Pluto")
+    receiver: Literal["despread", "classic"] = Field(
+        "despread", description="despread = despread-first receiver (decodes below the noise floor); "
+                                "classic = symbol sync + Costas on the raw chips")
     pluto_uri: str = Field("", pattern=r"^(|usb:[0-9.]*|ip:[A-Za-z0-9.\-]+)$", description="IIO URI; empty = first Pluto found")
     pluto_freq_hz: int = Field(915_000_000, ge=325_000_000, le=3_800_000_000, description="Carrier frequency (AD9363 range)")
     tx_atten_db: Optional[float] = Field(None, ge=0.0, le=89.75, description="Pluto TX attenuation in dB (higher = weaker)")
@@ -250,9 +253,14 @@ def radio_receive(req: ReceiveRequest):
     result["console"] = _console(proc)
     if not result["success"]:
         # A readable 400, not a 500: the receiver ran fine, the signal just did not survive.
+        if result.get("receiver") == "classic":
+            hint = ("Lower the channel noise and try again. With the classic receiver a higher spreading factor "
+                    "will not help: it locks symbol timing and carrier phase on the raw chips before despreading.")
+        else:
+            hint = "Lower the channel noise or raise the spreading factor and try again."
         raise HTTPException(400, detail={
             "message": "Could not decode this transmission. AES-GCM accepts a message only if every bit "
-                       "is intact, so any residual bit error rejects it entirely. Lower the channel noise and try again. A higher spreading factor will not help here: " "this receiver locks symbol timing and carrier phase on the raw chips before despreading.",
+                       "is intact, so any residual bit error rejects it entirely. " + hint,
             "bit_errors": result["bit_errors"],
             "total_bits": result["total_bits"],
             "ber": result["ber"],

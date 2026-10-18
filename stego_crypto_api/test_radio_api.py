@@ -52,11 +52,33 @@ def test_round_trip_recovers_exact_message(sf):
 
 @needs_gnuradio
 def test_heavy_noise_is_a_readable_400_not_a_500():
-    tx = client.post("/api/radio/transmit", json={"message": MESSAGE, "spreading_factor": 16, "noise_voltage": 0.6}).json()
+    # sigma 5.0 is -20 dB per sample: beyond what even the despread-first receiver can find.
+    tx = client.post("/api/radio/transmit", json={"message": MESSAGE, "spreading_factor": 16, "noise_voltage": 5.0}).json()
     rx = client.post("/api/radio/receive", json={"transmission_id": tx["transmission_id"]})
     assert rx.status_code == 400
     detail = rx.json()["detail"]
     assert "Could not decode" in detail["message"] and detail["total_bits"] > 0 and detail["ber"] > 0.1
+    assert "raise the spreading factor" in detail["message"]
+
+
+def test_decodes_below_the_noise_floor():
+    # sigma 1.4 is -8.9 dB SNR per sample: the noise is stronger than the signal. The default
+    # despread-first receiver recovers the exact text at SF 64 (measured to sigma 2.0 there).
+    tx = client.post("/api/radio/transmit", json={"message": MESSAGE, "spreading_factor": 64, "noise_voltage": 1.4}).json()
+    assert tx["snr_db"] < 0
+    rx = client.post("/api/radio/receive", json={"transmission_id": tx["transmission_id"]})
+    assert rx.status_code == 200, rx.text
+    body = rx.json()
+    assert body["recovered_text"] == MESSAGE and body["bit_errors"] == 0 and body["receiver"] == "despread"
+
+
+def test_classic_receiver_cannot_use_spreading_gain():
+    # The same -8.9 dB channel defeats the classic chain at any SF: it locks on the raw chips.
+    tx = client.post("/api/radio/transmit", json={"message": MESSAGE, "spreading_factor": 64, "noise_voltage": 1.4,
+                                                 "receiver": "classic"}).json()
+    rx = client.post("/api/radio/receive", json={"transmission_id": tx["transmission_id"]})
+    assert rx.status_code == 400
+    assert "a higher spreading factor will not help" in rx.json()["detail"]["message"]
 
 
 # Pluto channel: only the refusal paths are tested here. None of them transmit, so the suite is
