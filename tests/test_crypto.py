@@ -93,6 +93,10 @@ def test_empty_payload_roundtrip():
 
 
 def test_malformed_crypto_bundle_deserialize():
+    # The header is 4 bytes (>HBB), so anything shorter cannot even be parsed.
     with pytest.raises(ValueError, match="Crypto bundle data too short to read header"):
+        CryptoBundle.deserialize(b"\x00\x01")
+    # A readable header that promises more key/nonce/tag bytes than are present.
+    with pytest.raises(ValueError, match="Crypto bundle data incomplete"):
         CryptoBundle.deserialize(b"too_short")
 
