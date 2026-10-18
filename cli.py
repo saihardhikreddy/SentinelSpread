@@ -45,6 +45,13 @@ def run_stage_tests(stage_name: str) -> int:
         test_args = [
             "-v",
             "tests/test_gnuradio.py",
+            "tests/test_acquisition.py",
+        ]
+    elif stage_lower in ("detector", "harden", "stage5", "5"):
+        test_args = [
+            "-v",
+            "tests/test_detector.py",
+            "tests/test_harden.py",
         ]
     elif stage_lower in ("all", "full"):
         test_args = [
@@ -52,7 +59,7 @@ def run_stage_tests(stage_name: str) -> int:
             "tests/",
         ]
     else:
-        print(f"[!] Unknown stage '{stage_name}'. Available: 'stage1', 'stage2', 'stage3', 'stage4', 'all'")
+        print(f"[!] Unknown stage '{stage_name}'. Available: 'stage1'..'stage5', 'all'")
         return 1
 
     return pytest.main(test_args)
@@ -144,6 +151,26 @@ def handle_sdr_loopback(args):
     sys.exit(proc.returncode)
 
 
+def run_detect_sweep(args):
+    """Stage 5: calibrate every detector on noise, then report detection rate vs noise level."""
+    from sentinelspread.detector.evaluate import sweep, format_sweep
+
+    transform = None
+    if args.fhss:
+        from sentinelspread.harden.fhss import fhss_transform
+        transform = fhss_transform(b"SentinelSpread_SDR_SessionKey_26",
+                                   chips_per_hop=32, num_channels=8, channel_spacing=0.06)
+
+    print("\n==========================================")
+    print(f"   SentinelSpread Stage 5: detector sweep (SF {args.sf}"
+          f"{', FHSS hardened' if args.fhss else ''})")
+    print("==========================================\n")
+    result = sweep([0.25, 0.5, 1.0, 2.0, 4.0], trials=args.trials, length=2048,
+                   spreading_factor=args.sf, pfa=0.01, include_ml=not args.no_ml,
+                   observer_sps=1, transform=transform)
+    print(format_sweep(result))
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="SentinelSpread: DSSS Covert Communication System & Detector Suite"
@@ -177,6 +204,13 @@ def main():
     # Command: benchmark-gain
     subparsers.add_parser("benchmark-gain", help="Empirically verify processing gain Gp across spreading factors")
 
+    # Command: detect-sweep (Stage 5)
+    det_parser = subparsers.add_parser("detect-sweep", help="Sweep detector detection rate vs noise, optionally with FHSS hardening")
+    det_parser.add_argument("--sf", type=int, default=16, help="Spreading factor (default: 16)")
+    det_parser.add_argument("--trials", type=int, default=24, help="Signal captures per noise level (default: 24)")
+    det_parser.add_argument("--fhss", action="store_true", help="Apply FHSS hardening to the signal before detection")
+    det_parser.add_argument("--no-ml", action="store_true", help="Skip the ML detector (faster)")
+
     # Command: encrypt
     enc_parser = subparsers.add_parser("encrypt", help="Prepare & Encrypt a text or audio payload")
     enc_parser.add_argument("--input", "-i", required=True, help="Input string or path to text/WAV file")
@@ -203,6 +237,8 @@ def main():
         compute_and_plot_psd(sf=args.sf, save_path=args.out)
     elif args.command == "benchmark-gain":
         run_processing_gain_benchmark()
+    elif args.command == "detect-sweep":
+        run_detect_sweep(args)
     elif args.command == "encrypt":
         handle_encrypt(args)
     elif args.command == "decrypt":

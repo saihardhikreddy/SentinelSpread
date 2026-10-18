@@ -20,7 +20,8 @@ Encryption hides what a message says. SentinelSpread also hides that it was sent
 - `channel/`: Simulated AWGN channel and swappable hardware SDR (Adalm Pluto / RTL-SDR) interface.
 - `gnuradio/`: GNU Radio 3.10 blocks, the `sentinelspread_flowgraph.grc` transceiver, and the propagation verifier.
 - `eval/`: BER benchmarking, processing gain, and PSD plot generation.
-- `detector/`, `harden/`: planned (statistical/ML covert detectors; FHSS, adaptive power, FEC, session rotation).
+- `detector/`: key-free signal detectors — energy, spectral flatness, kurtosis, carrier-squaring and chip-autocorrelation statistics, each calibrated to a false-alarm budget, plus a random-forest detector over all of them and an evaluation sweep.
+- `harden/`: FHSS (key-derived frequency hopping over the chips), Hamming(7,4) FEC with interleaving, an adaptive transmit-power policy, and an HKDF key ratchet for per-epoch session keys.
 
 ## Status
 | Stage | What it covers | State |
@@ -29,9 +30,11 @@ Encryption hides what a message says. SentinelSpread also hides that it was sent
 | 2 | BPSK/QPSK modem, RRC pulse shaping, AWGN, BER vs Eb/N0 | done |
 | 3 | DSSS: PN generator, spreader, correlator, processing gain | done |
 | 4 | GNU Radio software SDR loopback with timing and Costas recovery | done, see `STAGE4_VERIFICATION_REPORT.md` and `VERIFY_GNURADIO_PROPAGATION_RESULTS.md` |
-| 5 | Detectors and hardening | planned |
+| 5 | Detector suite and hardening | done, see `STAGE5_DETECTOR_HARDENING.md` |
 
-Measured limit of the current receiver: it locks symbol timing and carrier phase on the raw chips before despreading, so it decodes cleanly up to a channel noise of σ ≈ 0.3 and fails by σ 0.4 at any spreading factor (checked at SF 16 and SF 64).
+### Two receivers
+- **despread-first** (`--receiver despread`, the default): finds the burst on its known preamble, estimates the carrier from it, despreads, then tracks phase on the despread symbols. Because it applies the processing gain before synchronising, it decodes below the noise floor — every trial in the numpy model recovers at σ 1.4 for SF 16 (−8.9 dB per sample) and σ 2.8 for SF 128 (−15 dB), confirmed through the real GNU Radio flowgraph at SF 64, σ 1.4–2.0.
+- **classic** (`--receiver classic`): symbol timing (Mueller & Müller) then a Costas loop on the raw chips, then despread. It locks before the processing gain, so it stops at about σ 0.3 (+4.4 dB) regardless of spreading factor. This is the chain the Stage 4 propagation verifier checks.
 
 ## Running the pipeline
 ```bash
@@ -40,6 +43,8 @@ python cli.py test-stage all          # run every stage's tests
 python cli.py plot-ber                # BER vs SNR -> eval/ber_vs_snr.png
 python cli.py plot-psd                # PSD flattening -> eval/psd_flattening.png
 python cli.py benchmark-gain          # processing gain across spreading factors
+python cli.py detect-sweep            # Stage 5: detection rate vs noise, per detector
+python cli.py detect-sweep --fhss     # same, with FHSS hardening applied to the signal
 ```
 
 GNU Radio parts need a Python with GNU Radio 3.10, for example [radioconda](https://github.com/ryanvolz/radioconda). `sdr-loopback` launches it from `C:\Users\csaih\radioconda\python.exe`; the verifier is run with it directly:
