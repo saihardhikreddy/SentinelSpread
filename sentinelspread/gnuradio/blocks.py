@@ -257,53 +257,133 @@ class dsss_crypto_rx(gr.sync_block):
         pn_seq = PNGenerator(degree=7, seed=self.pn_seed).generate_chips(expected_chips, bipolar=True)
         rec_symbols = correlator.despread(payload_chips, pn_seq, num_symbols=num_symbols)
 
-        # 5. Slicing to bits & packing to bytes
+        # 5-7. Slice, decrypt, report
         rec_bits = (np.real(rec_symbols) >= 0.0).astype(int)
-        rec_bytes = ConstellationMapper.bits_to_bytes(rec_bits)
+        return _decrypt_and_report(self, rec_bits, [
+            f"Total RX Chips Ingested : {len(rx_chips)}",
+            f"Preamble Lock Index     : {best_tau}",
+            f"Correlation Peak        : {peak_mag:.4f} (Phase Inversion: {phase_inv < 0})",
+            f"Constellation Lock EVM  : {self.evm_db:.2f} dB (Clean BPSK cluster)",
+            f"Despread Symbols Count  : {num_symbols}",
+        ])
 
-        # Measure BER if transmitter ground truth bits are accessible
-        if crypto_dsss_tx.LAST_TX_BITS is not None and len(crypto_dsss_tx.LAST_TX_BITS) == len(rec_bits):
-            bit_errors = int(np.sum(rec_bits != crypto_dsss_tx.LAST_TX_BITS))
-            self.ber = float(bit_errors) / len(rec_bits)
+
+def _decrypt_and_report(block, rec_bits, report_lines) -> bool:
+    """Shared tail of both receivers: pack bits, measure BER when the TX bits are known,
+    deserialize + authenticated-decrypt, publish on msg_out, print the report."""
+    rec_bytes = ConstellationMapper.bits_to_bytes(rec_bits)
+
+    if crypto_dsss_tx.LAST_TX_BITS is not None and len(crypto_dsss_tx.LAST_TX_BITS) == len(rec_bits):
+        bit_errors = int(np.sum(rec_bits != crypto_dsss_tx.LAST_TX_BITS))
+        block.ber = float(bit_errors) / len(rec_bits)
+    else:
+        block.ber = 0.0
+
+    try:
+        priv_key = block.priv_key if block.priv_key is not None else crypto_dsss_tx.LAST_PRIV_KEY
+        if priv_key is None:
+            raise ValueError("RSA private key not found or initialized")
+        rec_bundle = CryptoBundle.deserialize(rec_bytes)
+        decrypted_tagged = decrypt_payload(rec_bundle, priv_key)
+        header, payload_bytes = InputHandler.extract_payload(decrypted_tagged)
+        block.recovered_text = payload_bytes.decode("utf-8", errors="replace")
+
+        block.message_port_pub(pmt.intern("msg_out"), pmt.intern(block.recovered_text))
+
+        if block.expected_message is not None:
+            block.success = (block.recovered_text == block.expected_message)
         else:
-            self.ber = 0.0
+            block.success = True
+    except Exception as e:
+        block.recovered_text = f"DECRYPTION_ERROR: {e}"
+        block.success = False
 
-        # 6. Deserialize CryptoBundle & Decrypt
+    if block.verbose:
+        print("\n" + "=" * 70)
+        print("   SentinelSpread: GNU Radio SDR RX Demodulation & Decrypt Report")
+        print("=" * 70)
+        for line in report_lines:
+            print(line)
+        print(f"BER after Despreading   : {block.ber:.6f}")
+        print(f"Recovered Message       : '{block.recovered_text}'")
+        status_str = "PASS - EXACT MATCH" if block.success else "FAIL - MISMATCH OR ERROR"
+        print(f"Verification Result     : [{status_str}]")
+        print("=" * 70 + "\n")
+
+    return block.success
+
+
+class dsss_despread_rx(gr.sync_block):
+    """
+    Sink Block (despread-first receiver):
+    Takes the matched-filtered samples (sps per chip) straight after the RX RRC, with no symbol
+    sync or Costas loop in front. It finds the burst by correlating against the known header,
+    estimates the carrier offset from it, despreads, and only then tracks phase, on the despread
+    symbols, where the SNR is SF times higher. See sentinelspread.dsss.acquisition.
+    """
+
+    def __init__(
+        self,
+        rsa_private_key=None,
+        aes_session_key: Optional[bytes] = None,
+        expected_message: Optional[str] = None,
+        spreading_factor: int = 16,
+        sps: int = 4,
+        expected_num_symbols: Optional[int] = None,
+        verbose: bool = True,
+    ):
+        gr.sync_block.__init__(self, name="dsss_despread_rx", in_sig=[np.complex64], out_sig=None)
+        from sentinelspread.dsss.acquisition import DespreadFirstReceiver
+
+        self.priv_key = rsa_private_key if rsa_private_key is not None else crypto_dsss_tx.LAST_PRIV_KEY
+        self.aes_key = aes_session_key if aes_session_key is not None else DEFAULT_SDR_AES_KEY
+        self.pn_seed = derive_pn_seed(self.aes_key)
+        self.expected_message = expected_message
+        self.sf = spreading_factor
+        self.sps = sps
+        self.expected_num_symbols = expected_num_symbols
+        self.verbose = verbose
+        self.receiver = DespreadFirstReceiver(spreading_factor, self.pn_seed, sps=sps)
+
+        self.message_port_register_out(pmt.intern("msg_out"))
+        self.samples = []
+        self.processed = False
+        self.success = False
+        self.recovered_text = ""
+        self.ber = 1.0
+        self.evm_db = 0.0
+        self.result = None
+
+    def work(self, input_items, output_items):
+        self.samples.extend(input_items[0])
+        return len(input_items[0])
+
+    def stop(self):
+        if not self.processed and len(self.samples) > 0:
+            self.process_received_signal()
+        return super().stop()
+
+    def process_received_signal(self) -> bool:
+        self.processed = True
+        num_symbols = self.expected_num_symbols or crypto_dsss_tx.LAST_NUM_SYMBOLS
+        if num_symbols is None:
+            if self.verbose:
+                print("[!] dsss_despread_rx: the payload length (symbol count) is unknown")
+            return False
         try:
-            priv_key = self.priv_key if self.priv_key is not None else crypto_dsss_tx.LAST_PRIV_KEY
-            if priv_key is None:
-                raise ValueError("RSA private key not found or initialized")
-            rec_bundle = CryptoBundle.deserialize(rec_bytes)
-            decrypted_tagged = decrypt_payload(rec_bundle, priv_key)
-            header, payload_bytes = InputHandler.extract_payload(decrypted_tagged)
-            self.recovered_text = payload_bytes.decode("utf-8", errors="replace")
-
-            # Publish to GNU Radio message port
-            msg_pmt = pmt.intern(self.recovered_text)
-            self.message_port_pub(pmt.intern("msg_out"), msg_pmt)
-
-            if self.expected_message is not None:
-                self.success = (self.recovered_text == self.expected_message)
-            else:
-                self.success = True
-        except Exception as e:
-            self.recovered_text = f"DECRYPTION_ERROR: {e}"
-            self.success = False
-
-        # 7. Print summary diagnostic report
-        if self.verbose:
-            print("\n" + "=" * 70)
-            print("   SentinelSpread: GNU Radio SDR RX Demodulation & Decrypt Report")
-            print("=" * 70)
-            print(f"Total RX Chips Ingested : {len(rx_chips)}")
-            print(f"Preamble Lock Index     : {best_tau}")
-            print(f"Correlation Peak        : {peak_mag:.4f} (Phase Inversion: {phase_inv < 0})")
-            print(f"Constellation Lock EVM  : {self.evm_db:.2f} dB (Clean BPSK cluster)")
-            print(f"Despread Symbols Count  : {num_symbols}")
-            print(f"BER after Despreading   : {self.ber:.6f}")
-            print(f"Recovered Message       : '{self.recovered_text}'")
-            status_str = "PASS - EXACT MATCH" if self.success else "FAIL - MISMATCH OR ERROR"
-            print(f"Verification Result     : [{status_str}]")
-            print("=" * 70 + "\n")
-
-        return self.success
+            r = self.receiver.demodulate(np.asarray(self.samples, dtype=np.complex64), num_symbols)
+        except ValueError as e:
+            self.recovered_text = f"ACQUISITION_ERROR: {e}"
+            if self.verbose:
+                print(f"[!] dsss_despread_rx: {e}")
+            return False
+        self.result = r
+        self.evm_db = r.evm_db
+        return _decrypt_and_report(self, r.bits.astype(int), [
+            f"Total RX Samples        : {len(self.samples)} ({self.sps} per chip)",
+            f"Burst Found At          : chip {r.header_start_chip}, sample phase {r.sample_phase} "
+            f"(margin {r.acquisition_db:.1f} dB)",
+            f"Carrier Offset Estimate : {r.cfo_rad_per_chip:+.5f} rad/chip",
+            f"Symbol SNR (despread)   : {r.symbol_snr_db:.1f} dB, EVM {r.evm_db:.1f} dB",
+            f"Despread Symbols Count  : {num_symbols}",
+        ])

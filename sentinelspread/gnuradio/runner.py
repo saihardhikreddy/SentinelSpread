@@ -3,10 +3,17 @@ SentinelSpread GNU Radio SDR Loopback Transceiver Runner.
 
 One DSP chain, two channels (selected with `channel`):
 
-  sim   (default)  Crypto + DSSS TX -> RRC TX -> Channel Model (AWGN + Freq Offset) -> RRC RX
-                   -> Symbol Sync -> Costas Loop -> DSSS + Crypto RX
+  sim   (default)  Crypto + DSSS TX -> RRC TX -> Channel Model (AWGN + Freq Offset) -> RRC RX -> [receiver]
   pluto            Crypto + DSSS TX -> RRC TX -> ADALM-Pluto TX1A ==[cable + attenuation]==> RX1A
-                   -> DC block -> AGC -> RRC RX -> Symbol Sync -> Costas Loop -> DSSS + Crypto RX
+                   -> DC block -> AGC -> RRC RX -> [receiver]
+
+and two receivers (selected with `receiver`):
+
+  despread (default)  dsss_despread_rx: find the burst on the known header, estimate the carrier
+                      from it, despread, then track phase on the despread symbols. Uses the
+                      processing gain before synchronising, so it decodes below the noise floor.
+  classic             Symbol Sync -> Costas Loop -> dsss_crypto_rx: locks on the raw chips first,
+                      so it stops at about 0 dB chip SNR whatever the spreading factor.
 
 The TX/RX DSP blocks are built by the same helpers in both modes; only the channel differs.
 
@@ -29,7 +36,7 @@ import numpy as np
 try:
     from gnuradio import gr, blocks, filter, channels, digital, analog
     import pmt
-    from sentinelspread.gnuradio.blocks import crypto_dsss_tx, dsss_crypto_rx
+    from sentinelspread.gnuradio.blocks import crypto_dsss_tx, dsss_crypto_rx, dsss_despread_rx
     GNURADIO_AVAILABLE = True
 except ImportError:
     GNURADIO_AVAILABLE = False
@@ -93,6 +100,28 @@ def make_costas():
     return digital.costas_loop_cc(0.0628, 2, False)
 
 
+RECEIVERS = ("despread", "classic")
+
+
+def make_receiver(tb, upstream, receiver: str, message: str, spreading_factor: int, sps: int,
+                  verbose: bool, search_window=None):
+    """Connect `upstream` (matched-filtered samples) to the chosen receiver and return
+    (rx_block, costas or None)."""
+    if receiver == "despread":
+        rx_block = dsss_despread_rx(expected_message=message, spreading_factor=spreading_factor,
+                                    sps=sps, verbose=verbose)
+        tb.connect(upstream, rx_block)
+        return rx_block, None
+    if receiver != "classic":
+        raise ValueError(f"receiver must be one of {RECEIVERS}, not {receiver!r}")
+    sync = make_symbol_sync(sps)
+    costas = make_costas()
+    rx_block = dsss_crypto_rx(expected_message=message, spreading_factor=spreading_factor,
+                              verbose=verbose, search_window=search_window)
+    tb.connect(upstream, sync, costas, rx_block)
+    return rx_block, costas
+
+
 # --------------------------------------------------------------------------------------------
 # Simulated channel
 # --------------------------------------------------------------------------------------------
@@ -107,6 +136,7 @@ def run_software_loopback(
     samp_rate: int = 200000,
     verbose: bool = True,
     channel: str = "sim",
+    receiver: str = "despread",
     **pluto_kwargs,
 ) -> dict:
     """
@@ -116,7 +146,7 @@ def run_software_loopback(
     """
     if channel == "pluto":
         return run_pluto_loopback(message=message, spreading_factor=spreading_factor, sps=sps,
-                                  verbose=verbose, **pluto_kwargs)
+                                  verbose=verbose, receiver=receiver, **pluto_kwargs)
     if channel != "sim":
         raise ValueError(f"channel must be 'sim' or 'pluto', not {channel!r}")
     if pluto_kwargs:
@@ -144,17 +174,10 @@ def run_software_loopback(
     )
 
     rx_rrc = filter.fir_filter_ccf(1, rrc_taps)
-    sync = make_symbol_sync(sps)
-    costas = make_costas()
-
-    rx_block = dsss_crypto_rx(
-        expected_message=message,
-        spreading_factor=spreading_factor,
-        verbose=verbose,
-    )
 
     # 4. Connect Signal Pipeline
-    tb.connect(tx_block, throttle, tx_rrc, chan, rx_rrc, sync, costas, rx_block)
+    tb.connect(tx_block, throttle, tx_rrc, chan, rx_rrc)
+    rx_block, _ = make_receiver(tb, rx_rrc, receiver, message, spreading_factor, sps, verbose)
 
     # 5. Execute flowgraph to completion
     tb.run()
@@ -166,6 +189,7 @@ def run_software_loopback(
         "ber": rx_block.ber,
         "evm_db": rx_block.evm_db,
         "channel": "sim",
+        "receiver": receiver,
     }
 
 
@@ -255,6 +279,7 @@ def run_pluto_loopback(
     hardware_ready: bool = False,
     direct_cable: bool = False,
     verbose: bool = True,
+    receiver: str = "despread",
 ) -> dict:
     """
     Real-RF loopback on one ADALM-Pluto: the burst is transmitted on repeat out of TX1A while
@@ -333,20 +358,15 @@ def run_pluto_loopback(
     agc = analog.agc2_cc(1e-2, 1e-3, 0.5, 1.0)
     agc.set_max_gain(1e5)
     rx_rrc = filter.fir_filter_ccf(1, rrc_taps)
-    sync = make_symbol_sync(sps)
-    costas = make_costas()
-    rx_block = dsss_crypto_rx(
-        expected_message=message,
-        spreading_factor=spreading_factor,
-        verbose=verbose,
-        # One burst period (+ slack) guarantees a whole preamble+payload inside the capture.
-        search_window=tx_block.total_chips + 1000,
-    )
     raw_tap = blocks.vector_sink_c()
     dc_tap = blocks.vector_sink_c()
 
     tb.connect(tx_block, tx_rrc, tx_gain, tx)
-    tb.connect(rx, skip, head, dc_block, agc, rx_rrc, sync, costas, rx_block)
+    tb.connect(rx, skip, head, dc_block, agc, rx_rrc)
+    # Classic receiver: one burst period (+ slack) guarantees a whole preamble+payload inside the
+    # capture. The despread receiver searches the whole capture for a burst that fits.
+    rx_block, costas = make_receiver(tb, rx_rrc, receiver, message, spreading_factor, sps, verbose,
+                                     search_window=tx_block.total_chips + 1000)
     tb.connect(head, raw_tap)
     tb.connect(dc_block, dc_tap)
 
@@ -380,7 +400,12 @@ def run_pluto_loopback(
     peak_dbfs = float(20 * np.log10(np.max(np.abs(raw)) + 1e-20))
     dc_in = complex(np.mean(raw))
     dc_after = complex(np.mean(dc_out[1000:])) if len(dc_out) > 1000 else 0j
-    cfo_rad_per_chip = float(costas.get_frequency())
+    if costas is not None:
+        cfo_rad_per_chip = float(costas.get_frequency())
+    elif rx_block.result is not None:
+        cfo_rad_per_chip = rx_block.result.cfo_rad_per_chip
+    else:
+        cfo_rad_per_chip = float("nan")
     cfo_hz = cfo_rad_per_chip * chip_rate / (2 * np.pi)
 
     if verbose:
@@ -388,7 +413,7 @@ def run_pluto_loopback(
               f"RX power {rx_power_dbfs:.1f} dBFS, peak {peak_dbfs:.1f} dBFS")
         print(f"[pluto] DC offset in {dc_in.real:+.3e}{dc_in.imag:+.3e}j "
               f"(|{abs(dc_in):.3e}|) -> after dc_blocker |{abs(dc_after):.3e}|")
-        print(f"[pluto] Costas carrier offset {cfo_hz:+.1f} Hz "
+        print(f"[pluto] carrier offset {cfo_hz:+.1f} Hz "
               f"({cfo_rad_per_chip:+.3e} rad/chip)")
 
     return {
@@ -398,6 +423,7 @@ def run_pluto_loopback(
         "ber": rx_block.ber,
         "evm_db": rx_block.evm_db,
         "channel": "pluto",
+        "receiver": receiver,
         "device": device,
         "freq_hz": freq_hz,
         "samp_rate": samp_rate,
@@ -422,6 +448,8 @@ def main():
     parser.add_argument("--noise", type=float, default=0.02, help="Channel AWGN noise voltage (default: 0.02)")
     parser.add_argument("--freq-offset", type=float, default=0.0, help="Channel carrier frequency offset (default: 0.0)")
     parser.add_argument("--quiet", "-q", action="store_true", help="Suppress diagnostic printout")
+    parser.add_argument("--receiver", choices=RECEIVERS, default="despread",
+                        help="despread = despread-first receiver (default); classic = symbol sync + Costas on raw chips")
     parser.add_argument("--channel", choices=("sim", "pluto"), default="sim",
                         help="sim = GNU Radio channel model (default); pluto = real RF on an ADALM-Pluto")
     pluto = parser.add_argument_group("ADALM-Pluto (--channel pluto)")
@@ -457,6 +485,7 @@ def main():
                 hardware_ready=args.attenuator_in_line or args.direct_cable,
                 direct_cable=args.direct_cable,
                 verbose=not args.quiet,
+                receiver=args.receiver,
             )
         except (PlutoNotDetected, HardwareNotReady) as e:
             print(f"[!] {e}", file=sys.stderr)
@@ -470,6 +499,7 @@ def main():
             noise_voltage=args.noise,
             freq_offset=args.freq_offset,
             verbose=not args.quiet,
+            receiver=args.receiver,
         )
 
     if result["success"]:
