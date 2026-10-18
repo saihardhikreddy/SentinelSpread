@@ -26,6 +26,13 @@ Two parts:
 import sys
 import numpy as np
 
+# The report prints a few non-ASCII characters (approx, >=). On a non-UTF-8 console (Windows
+# cp1252 when launched outside PowerShell) a bare print would crash, so force UTF-8 output.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except (AttributeError, ValueError):
+    pass
+
 try:
     from gnuradio import gr, blocks, filter, channels, digital
 except ImportError:
