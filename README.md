@@ -1,5 +1,7 @@
 # SentinelSpread: Spread-Spectrum Covert Communication System
 
+[![tests](https://github.com/saihardhikreddy/SentinelSpread/actions/workflows/tests.yml/badge.svg)](https://github.com/saihardhikreddy/SentinelSpread/actions/workflows/tests.yml)
+
 **SentinelSpread** is a software-defined communication system featuring Direct Sequence Spread Spectrum (DSSS) covert transmission, an independent statistical/ML detector suite, and dynamic hardening mechanisms.
 
 Encryption hides what a message says. SentinelSpread also hides that it was sent: the payload is sealed with AES-256-GCM, spread with a pseudo-noise code and carried through a real GNU Radio flowgraph, and can be folded into ordinary images and audio. The repository holds the DSP pipeline and a web app built on it.
@@ -40,6 +42,7 @@ Encryption hides what a message says. SentinelSpread also hides that it was sent
 ```bash
 pip install -r requirements.txt
 python cli.py test-stage all          # run every stage's tests
+python -m pytest -q tests             # or run the suite directly (GNU Radio tests skip without it)
 python cli.py plot-ber                # BER vs SNR -> eval/ber_vs_snr.png
 python cli.py plot-psd                # PSD flattening -> eval/psd_flattening.png
 python cli.py benchmark-gain          # processing gain across spreading factors
