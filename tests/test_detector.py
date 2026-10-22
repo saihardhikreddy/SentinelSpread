@@ -62,4 +62,5 @@ def test_ml_detector_trains_and_reports_importances():
     ml.calibrate(cal, pfa=0.05)
     assert ml.detection_rate(sig) >= 0.8
     imp = ml.importances()
-    assert set(imp) == set(FEATURE_NAMES) and abs(sum(imp.values()) - 1.0) < 1e-6
+    # importances() rounds each value to 4 decimals, so the sum can drift by up to 0.5e-4 per feature
+    assert set(imp) == set(FEATURE_NAMES) and abs(sum(imp.values()) - 1.0) <= 0.5e-4 * len(FEATURE_NAMES)
