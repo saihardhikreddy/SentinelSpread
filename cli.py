@@ -126,14 +126,22 @@ def handle_decrypt(args):
 
 def handle_sdr_loopback(args):
     """CLI handler for running GNU Radio SDR software loopback."""
-    radioconda_python = Path(r"C:\Users\csaih\radioconda\python.exe")
+    import subprocess
+    import os
+
+    env_python = os.environ.get("RADIOCONDA_PYTHON")
+    if env_python and Path(env_python).is_file():
+        radioconda_python = Path(env_python)
+    else:
+        user_radioconda = Path.home() / "radioconda" / "python.exe"
+        default_radioconda = Path(r"C:\Users\csaih\radioconda\python.exe")
+        radioconda_python = user_radioconda if user_radioconda.is_file() else default_radioconda
+
     repo_root = Path(__file__).resolve().parent
     if not radioconda_python.is_file():
         print(f"[!] Error: radioconda python not found at {radioconda_python}")
+        print("[!] Hint: Install radioconda or set RADIOCONDA_PYTHON environment variable.")
         sys.exit(1)
-
-    import subprocess
-    import os
 
     env = os.environ.copy()
     env["PYTHONPATH"] = f"{repo_root};{repo_root / 'sentinelspread' / 'gnuradio'}"
