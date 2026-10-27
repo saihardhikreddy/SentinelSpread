@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap">
   <link rel="stylesheet" href="styles.css">
   <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
-  <script type="module" src="js/main.js?v=20261002b"></script>
+  <script type="module" src="js/main.js?v=20261027a"></script>
 </head>
 <body>
   <a class="skip" href="#workbench">Skip to the workbench</a>
@@ -451,6 +451,44 @@
               <button class="btn btn--primary" type="submit">Compare</button>
             </div>
             <output class="result" aria-live="polite"><p class="placeholder">Readings appear here.</p></output>
+          </form>
+        </article>
+      </div>
+
+      <!-- ─── ADALM-Pluto SDR ─── -->
+      <div class="tool-group" data-group="radio" data-label="SDR / Pluto">
+        <article class="tool tool--wide">
+          <header>
+            <h3>ADALM-Pluto link</h3>
+            <p>Live status of the software-defined radio. The tools below run on the simulation channel, or over the real Pluto RF chain when a cabled loopback is connected.</p>
+            <p class="radio-status" id="radio-status" data-state="checking"><span class="dot" aria-hidden="true"></span><span class="label">Checking the radio…</span></p>
+          </header>
+        </article>
+
+        <article class="tool tool--wide">
+          <header><h3>Covert transmit &amp; recover</h3><p>Encrypt, spread below the noise floor, carry it through the channel and despread it back. Simulation needs no hardware; the Pluto option runs it through the real RF chain over your cable.</p><code>POST /api/radio/transmit · /receive</code></header>
+          <form data-tool="radio-transfer" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Message</span><textarea name="message" rows="2" required placeholder="Meet at the north gate, 21:40.">Meet at the north gate, 21:40.</textarea></label>
+              <div class="row">
+                <label class="field"><span>Channel</span><select name="channel"><option value="sim">Simulation (AWGN)</option><option value="pluto" data-pluto disabled>ADALM-Pluto (direct cable)</option></select></label>
+                <label class="field"><span>Spreading factor</span><select name="sf"><option>16</option><option selected>64</option><option>128</option></select></label>
+                <label class="field" data-sim-only><span>Noise σ</span><input type="number" name="noise" value="1.4" min="0" max="20" step="0.1"></label>
+              </div>
+              <button class="btn btn--primary" type="submit">Transmit &amp; recover</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">The recovered message, SNR, processing gain and bit error rate appear here.</p></output>
+          </form>
+        </article>
+
+        <article class="tool tool--wide">
+          <header><h3>Self-attack &amp; harden</h3><p>Stand outside the link with no key: calibrate five detectors on noise, then see how often each one flags the burst — plain, and with key-derived frequency hopping applied.</p><code>POST /api/radio/detect-sweep</code></header>
+          <form data-tool="radio-attack" class="tool-body">
+            <div class="inputs">
+              <label class="field"><span>Spreading factor</span><select name="sf"><option selected>16</option><option>32</option><option>64</option></select></label>
+              <button class="btn btn--primary" type="submit">Run the attack</button>
+            </div>
+            <output class="result" aria-live="polite"><p class="placeholder">Detection rates per detector, plain and hardened, appear here.</p></output>
           </form>
         </article>
       </div>

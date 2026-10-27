@@ -6,3 +6,8 @@ pyyaml>=6.0
 matplotlib>=3.7.0
 scikit-learn>=1.2.0
 pytest>=7.3.0
+
+# Stage 6 (CNN adversary) only. Optional: the rest of the pipeline and the Stage 6 tests run
+# without it (the tests skip when torch is absent). CPU build:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# torch>=2.2

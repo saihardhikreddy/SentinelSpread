@@ -47,10 +47,13 @@ def signal_segments(n: int, length: int, sigma: float, spreading_factor: int = 1
                     transform: Optional[Callable[[np.ndarray], np.ndarray]] = None,
                     freq_offset: float = 0.0005,
                     uncertainty_db: float = NOISE_UNCERTAINTY_DB,
-                    observer_sps: int = 1) -> list:
+                    observer_sps: int = 1, rsa_keys=None) -> list:
     """n captures of the payload region of a burst, in noise drawn from the same band, decimated
     to `observer_sps` samples per chip. `transform` (optional) rewrites the chip stream before
-    the channel: this is how a hardening measure is evaluated against the detectors."""
+    the channel: this is how a hardening measure is evaluated against the detectors. `rsa_keys`
+    (optional) reuses one keypair across captures instead of generating a fresh one each time:
+    the key wrapping does not affect what a key-free observer sees, so sharing it only speeds up
+    bulk generation (e.g. training the CNN adversary) and leaves the detector statistics unchanged."""
     from sentinelspread.dsss.simulate import build_burst, channel
 
     sps = 4
@@ -58,7 +61,7 @@ def signal_segments(n: int, length: int, sigma: float, spreading_factor: int = 1
     rng = np.random.default_rng(seed)
     out = []
     for i, level in enumerate(_levels(n, sigma, uncertainty_db, rng)):
-        burst = build_burst(f"{message} #{i}", spreading_factor)
+        burst = build_burst(f"{message} #{i}", spreading_factor, rsa_keys=rsa_keys)
         chips = burst["chips"]
         if transform is not None:
             chips = transform(chips)

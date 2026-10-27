@@ -150,6 +150,30 @@ def radio_status():
     }
 
 
+class DetectSweepRequest(BaseModel):
+    spreading_factor: int = Field(16, description="Spreading factor: 16, 32, 64 or 128")
+
+
+@router.post("/detect-sweep")
+def radio_detect_sweep(req: DetectSweepRequest):
+    """Run the Stage 5 self-attack: detection rate per key-free detector vs noise, plain and with
+    FHSS hardening. Numpy only, so it does not need a Pluto or GNU Radio runtime beyond the Python."""
+    if req.spreading_factor not in SPREADING_FACTORS:
+        raise HTTPException(400, f"Spreading factor must be one of {', '.join(map(str, SPREADING_FACTORS))}.")
+    STORE.mkdir(parents=True, exist_ok=True)
+    _prune()
+    workdir = Path(tempfile.mkdtemp(prefix="detect_", dir=STORE))
+    try:
+        proc = _run_worker("detect", workdir, req.model_dump(), timeout=180)
+        result_file = workdir / "result_detect.json"
+        if proc.returncode != 0 or not result_file.is_file():
+            tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-1:] or ["no output"]
+            raise HTTPException(500, f"The detector sweep failed: {tail[0]}")
+        return json.loads(result_file.read_text())
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
+
+
 def _pluto_transmit(req: TransmitRequest) -> dict:
     if not (req.attenuator_in_line or req.direct_cable):
         raise HTTPException(400, "Refusing to transmit on the Pluto: confirm the cabling first. Set attenuator_in_line "

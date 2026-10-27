@@ -24,6 +24,7 @@ Encryption hides what a message says. SentinelSpread also hides that it was sent
 - `eval/`: BER benchmarking, processing gain, and PSD plot generation.
 - `detector/`: key-free signal detectors — energy, spectral flatness, kurtosis, carrier-squaring and chip-autocorrelation statistics, each calibrated to a false-alarm budget, plus a random-forest detector over all of them and an evaluation sweep.
 - `harden/`: FHSS (key-derived frequency hopping over the chips), Hamming(7,4) FEC with interleaving, an adaptive transmit-power policy, and an HKDF key ratchet for per-epoch session keys.
+- `adversary/`: Stage 6 — a PyTorch CNN detector trained on raw I/Q, a detection-driven hardening loop that escalates FHSS then power backoff to push the CNN's confidence under a target, and a BER-vs-probability-of-detection benchmark. Needs PyTorch (optional; the rest of the pipeline and the Stage 6 tests run without it).
 
 ## Status
 | Stage | What it covers | State |
@@ -33,6 +34,7 @@ Encryption hides what a message says. SentinelSpread also hides that it was sent
 | 3 | DSSS: PN generator, spreader, correlator, processing gain | done |
 | 4 | GNU Radio software SDR loopback with timing and Costas recovery | done, see `STAGE4_VERIFICATION_REPORT.md` and `VERIFY_GNURADIO_PROPAGATION_RESULTS.md` |
 | 5 | Detector suite and hardening | done, see `STAGE5_DETECTOR_HARDENING.md` |
+| 6 | CNN adversary and the closed, detection-driven hardening loop | done, see `STAGE6_ADVERSARY_LOOP.md` |
 
 ### Two receivers
 - **despread-first** (`--receiver despread`, the default): finds the burst on its known preamble, estimates the carrier from it, despreads, then tracks phase on the despread symbols. Because it applies the processing gain before synchronising, it decodes below the noise floor — every trial in the numpy model recovers at σ 1.4 for SF 16 (−8.9 dB per sample) and σ 2.8 for SF 128 (−15 dB), confirmed through the real GNU Radio flowgraph at SF 64, σ 1.4–2.0.
@@ -48,6 +50,12 @@ python cli.py plot-psd                # PSD flattening -> eval/psd_flattening.pn
 python cli.py benchmark-gain          # processing gain across spreading factors
 python cli.py detect-sweep            # Stage 5: detection rate vs noise, per detector
 python cli.py detect-sweep --fhss     # same, with FHSS hardening applied to the signal
+python cli.py attack-benchmark        # Stage 6: train the CNN adversary, trade BER vs detection
+```
+
+Stage 6 needs PyTorch (CPU build is enough); the rest of the pipeline does not:
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 ```
 
 GNU Radio parts need a Python with GNU Radio 3.10, for example [radioconda](https://github.com/ryanvolz/radioconda). `sdr-loopback` launches it from `C:\Users\csaih\radioconda\python.exe`; the verifier is run with it directly:

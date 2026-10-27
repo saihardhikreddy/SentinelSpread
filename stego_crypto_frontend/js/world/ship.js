@@ -8,8 +8,8 @@
 
 import * as THREE from "three";
 import { GLTFLoader } from "../../vendor/addons/loaders/GLTFLoader.js";
-import { plateTexture, photoTexture, glyphTexture, glowTexture } from "./textures.js?v=20261002b";
-import { SUN_DIR, HOME, NOISE_GLSL } from "./space.js?v=20261002b";
+import { plateTexture, photoTexture, glyphTexture, glowTexture } from "./textures.js?v=20261027a";
+import { SUN_DIR, HOME, NOISE_GLSL } from "./space.js?v=20261027a";
 
 const ICE = new THREE.Color(0.45, 0.78, 1.7);
 const additive = (extra = {}) => ({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, ...extra });
@@ -217,7 +217,7 @@ function buildBeam(uniforms) {
 
 export async function buildShip(scene, renderer, uniforms) {
   scene.environment = envMap(renderer);
-  const gltf = await new GLTFLoader().loadAsync(new URL("../../assets/sentinel_ship.glb?v=20261002b", import.meta.url).href);
+  const gltf = await new GLTFLoader().loadAsync(new URL("../../assets/sentinel_ship.glb?v=20261027a", import.meta.url).href);
   const model = gltf.scene;
   const ship = new THREE.Group();
   ship.rotation.set(0.32, 0.25, -0.1);

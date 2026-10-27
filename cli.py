@@ -53,13 +53,18 @@ def run_stage_tests(stage_name: str) -> int:
             "tests/test_detector.py",
             "tests/test_harden.py",
         ]
+    elif stage_lower in ("adversary", "stage6", "6"):
+        test_args = [
+            "-v",
+            "tests/test_adversary.py",
+        ]
     elif stage_lower in ("all", "full"):
         test_args = [
             "-v",
             "tests/",
         ]
     else:
-        print(f"[!] Unknown stage '{stage_name}'. Available: 'stage1'..'stage5', 'all'")
+        print(f"[!] Unknown stage '{stage_name}'. Available: 'stage1'..'stage6', 'all'")
         return 1
 
     return pytest.main(test_args)
@@ -179,6 +184,37 @@ def run_detect_sweep(args):
     print(format_sweep(result))
 
 
+def run_attack_benchmark(args):
+    """Stage 6: train the CNN adversary, then trade keyed-receiver BER against its probability of
+    detection, plain and under the detection-driven hardening loop."""
+    from sentinelspread.adversary.cnn import CNNAdversary, torch_available
+    if not torch_available():
+        print("PyTorch is not installed. Install it to run the CNN adversary:\n"
+              "    pip install torch --index-url https://download.pytorch.org/whl/cpu")
+        sys.exit(2)
+    from sentinelspread.adversary import benchmark as bm
+    from sentinelspread.adversary.controller import AdaptiveHardeningController
+    from sentinelspread.adversary.dataset import build_dataset
+
+    length = 2048
+    print("\n==========================================")
+    print(f"   SentinelSpread Stage 6: CNN adversary & hardening loop (SF {args.sf})")
+    print("==========================================\n")
+    print("Training the CNN adversary on labelled I/Q captures across the SNR band ...")
+    x, y, _ = build_dataset([0.35, 0.5, 0.7, 1.0], per_class=args.train, length=length,
+                            spreading_factor=args.sf, seed=1)
+    adv = CNNAdversary(length=length, epochs=args.epochs, seed=0).fit(x, y)
+
+    controller = None
+    if not args.no_harden:
+        controller = AdaptiveHardeningController(adversary=adv, target_pd=args.target_pd,
+                                                 length=length, probe_trials=args.trials, pfa=0.01)
+    print("Benchmarking BER vs probability of detection ...\n")
+    result = bm.benchmark(adv, [0.3, 0.5, 0.7, 1.0], spreading_factor=args.sf, controller=controller,
+                          pfa=0.01, trials=args.trials, length=length, seed=5)
+    print(bm.format_benchmark(result))
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="SentinelSpread: DSSS Covert Communication System & Detector Suite"
@@ -219,6 +255,16 @@ def main():
     det_parser.add_argument("--fhss", action="store_true", help="Apply FHSS hardening to the signal before detection")
     det_parser.add_argument("--no-ml", action="store_true", help="Skip the ML detector (faster)")
 
+    # Command: attack-benchmark (Stage 6)
+    atk_parser = subparsers.add_parser("attack-benchmark",
+                                       help="Stage 6: train the CNN adversary and trade BER vs probability of detection")
+    atk_parser.add_argument("--sf", type=int, default=16, help="Spreading factor (default: 16)")
+    atk_parser.add_argument("--train", type=int, default=240, help="Training captures per class (default: 240)")
+    atk_parser.add_argument("--epochs", type=int, default=25, help="CNN training epochs (default: 25)")
+    atk_parser.add_argument("--trials", type=int, default=24, help="Signal captures per noise level (default: 24)")
+    atk_parser.add_argument("--target-pd", type=float, default=0.2, help="Hardening target probability of detection (default: 0.2)")
+    atk_parser.add_argument("--no-harden", action="store_true", help="Skip the hardening loop (plain BER/Pd only)")
+
     # Command: encrypt
     enc_parser = subparsers.add_parser("encrypt", help="Prepare & Encrypt a text or audio payload")
     enc_parser.add_argument("--input", "-i", required=True, help="Input string or path to text/WAV file")
@@ -247,6 +293,8 @@ def main():
         run_processing_gain_benchmark()
     elif args.command == "detect-sweep":
         run_detect_sweep(args)
+    elif args.command == "attack-benchmark":
+        run_attack_benchmark(args)
     elif args.command == "encrypt":
         handle_encrypt(args)
     elif args.command == "decrypt":

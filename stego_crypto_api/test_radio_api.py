@@ -61,6 +61,7 @@ def test_heavy_noise_is_a_readable_400_not_a_500():
     assert "raise the spreading factor" in detail["message"]
 
 
+@needs_gnuradio
 def test_decodes_below_the_noise_floor():
     # sigma 1.4 is -8.9 dB SNR per sample: the noise is stronger than the signal. The default
     # despread-first receiver recovers the exact text at SF 64 (measured to sigma 2.0 there).
@@ -72,6 +73,7 @@ def test_decodes_below_the_noise_floor():
     assert body["recovered_text"] == MESSAGE and body["bit_errors"] == 0 and body["receiver"] == "despread"
 
 
+@needs_gnuradio
 def test_classic_receiver_cannot_use_spreading_gain():
     # The same -8.9 dB channel defeats the classic chain at any SF: it locks on the raw chips.
     tx = client.post("/api/radio/transmit", json={"message": MESSAGE, "spreading_factor": 64, "noise_voltage": 1.4,

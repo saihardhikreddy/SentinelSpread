@@ -9,13 +9,28 @@ Verifies end-to-end transceiver operation in GNU Radio:
 """
 
 import os
+import shutil
 import sys
 import subprocess
 from pathlib import Path
 import pytest
 
-RADIOCONDA_PYTHON = Path(r"C:\Users\csaih\radioconda\python.exe")
-GRCC_EXECUTABLE = Path(r"C:\Users\csaih\radioconda\Scripts\grcc.exe")
+# The GNU Radio Python and grcc. Override with RADIOCONDA_PYTHON / RADIOCONDA_GRCC (any OS).
+# The default is the current interpreter when it can import GNU Radio (so a Linux box with
+# gnuradio installed just works), otherwise a radioconda path that is absent elsewhere, which
+# makes these tests skip rather than fail where GNU Radio is not available.
+def _default_gr_python() -> str:
+    try:
+        import gnuradio  # noqa: F401
+        return sys.executable
+    except Exception:
+        return r"C:\Users\csaih\radioconda\python.exe"
+
+
+RADIOCONDA_PYTHON = Path(os.environ.get("RADIOCONDA_PYTHON", _default_gr_python()))
+GRCC_EXECUTABLE = Path(os.environ.get(
+    "RADIOCONDA_GRCC",
+    shutil.which("grcc") or r"C:\Users\csaih\radioconda\Scripts\grcc.exe"))
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -25,7 +40,7 @@ def _run_in_radioconda(cmd_args: list[str]) -> subprocess.CompletedProcess:
         pytest.skip(f"radioconda python not found at {RADIOCONDA_PYTHON}")
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = f"{REPO_ROOT};{REPO_ROOT / 'sentinelspread' / 'gnuradio'}"
+    env["PYTHONPATH"] = os.pathsep.join([str(REPO_ROOT), str(REPO_ROOT / 'sentinelspread' / 'gnuradio')])
 
     full_cmd = [str(RADIOCONDA_PYTHON)] + cmd_args
     return subprocess.run(

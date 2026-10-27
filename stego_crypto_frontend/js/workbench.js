@@ -1,7 +1,7 @@
 /* Workbench: every <form data-tool> maps to one handler below.
    Results are built with DOM nodes (never innerHTML) so payload text can't inject markup. */
 
-import { postJSON, postForm, fileToDataURL, fileToBase64, ApiError, MSG } from "./api.js?v=20261002b";
+import { postJSON, getJSON, postForm, fileToDataURL, fileToBase64, ApiError, MSG } from "./api.js?v=20261027a";
 
 /* ─── tiny DOM helpers ─── */
 
@@ -482,7 +482,73 @@ const tools = {
       verdict(m.quality_verdict, m.verdict_badge === "success"),
     ];
   },
+
+  async "radio-transfer"(f) {
+    const channel = f.get("channel");
+    const sf = Number(f.get("sf"));
+    const body = { message: f.get("message"), spreading_factor: sf };
+    if (channel === "pluto") {
+      body.channel = "pluto";
+      body.direct_cable = true;
+      body.pluto_uri = "ip:192.168.2.1";
+    } else {
+      body.noise_voltage = Number(f.get("noise"));
+    }
+    const tx = await postJSON("/api/radio/transmit", body);
+    // The Pluto path transmits and decodes in one call; the simulation path decodes on /receive.
+    const rx = "recovered_text" in tx ? tx : await postJSON("/api/radio/receive", { transmission_id: tx.transmission_id });
+    const ok = rx.recovered_text === f.get("message");
+    const rows = [
+      ["Channel", channel === "pluto" ? "ADALM-Pluto (direct cable)" : "Simulation (AWGN)"],
+      ["Spreading factor", fmt(sf, 0)],
+      tx.snr_db != null ? ["SNR / sample", `${fmt(tx.snr_db)} dB`] : null,
+      rx.symbol_snr_db != null ? ["Symbol SNR (despread)", `${fmt(rx.symbol_snr_db)} dB`] : null,
+      tx.processing_gain_db != null ? ["Processing gain", `${fmt(tx.processing_gain_db, 1)} dB`] : null,
+      ["Bit errors", `${fmt(rx.bit_errors ?? 0, 0)} / ${fmt(rx.total_bits ?? 0, 0)}`],
+      ["BER", fmt(rx.ber ?? 0, 6)],
+    ];
+    const out = [
+      verdict(ok ? "Recovered intact below the noise floor." : "The payload did not come back cleanly.", ok),
+      textOut(rx.recovered_text || rx.error || "(nothing recovered)"),
+      readings(rows),
+    ];
+    if (tx.wav_url) out.push(h("div", { class: "result-actions" }, download(tx.wav_url, `sentinel_${tx.transmission_id}.wav`, "Download the IQ as WAV")));
+    return out;
+  },
+
+  async "radio-attack"(f) {
+    const sf = Number(f.get("sf"));
+    const r = await postJSON("/api/radio/detect-sweep", { spreading_factor: sf });
+    const squashed = r.detectors.map((d) => {
+      const worst = Math.max(...r.hardened[d]);
+      const before = Math.max(...r.plain[d]);
+      return before - worst;
+    });
+    const beaten = r.detectors.filter((_, i) => squashed[i] >= 0.5);
+    return [
+      h("p", { class: "result-note", text: `Detection rate at ${Math.round(r.pfa * 100)}% false alarm, SF ${r.spreading_factor}. Each column is one noise level; lower is more hidden.` }),
+      h("h4", { class: "sweep-caption", text: "Plain DSSS" }),
+      sweepTable(r.snr_db, r.detectors, r.plain),
+      h("h4", { class: "sweep-caption", text: "With key-derived frequency hopping" }),
+      sweepTable(r.snr_db, r.detectors, r.hardened),
+      verdict(beaten.length
+        ? `Hopping collapses ${beaten.join(" and ")} once the signal is near the noise floor.`
+        : "Hardening applied; the detectors are already weak at these levels.", true),
+    ];
+  },
 };
+
+/** A detection-rate table: one row per detector, one column per SNR level, cells shaded by rate. */
+function sweepTable(snrDb, detectors, rates) {
+  const head = h("tr", {}, h("th", { text: "detector" }), ...snrDb.map((s) => h("th", { text: `${s >= 0 ? "+" : ""}${s.toFixed(0)} dB` })));
+  const body = detectors.map((d) => h("tr", {},
+    h("th", { scope: "row", text: d }),
+    ...rates[d].map((v) => {
+      const pct = Math.round(v * 100);
+      return h("td", { class: "sweep-cell", "data-hot": v >= 0.5 ? "1" : null, text: `${pct}%` });
+    })));
+  return h("div", { class: "sweep-wrap" }, h("table", { class: "sweep-table" }, h("thead", {}, head), h("tbody", {}, ...body)));
+}
 
 /* ─── wiring ─── */
 
@@ -712,9 +778,51 @@ function initConsole() {
   addDependencyNotes();
 }
 
+/** Poll the radio link and reflect it in the SDR card: badge text, and whether the Pluto channel
+    option is selectable. Falls back silently to "simulation only" if the radio API is absent. */
+function initRadioStatus() {
+  const badge = document.getElementById("radio-status");
+  if (!badge) return;
+  const label = badge.querySelector(".label");
+  const plutoOpts = document.querySelectorAll('form[data-tool="radio-transfer"] option[data-pluto]');
+  const simOnly = document.querySelectorAll('form[data-tool="radio-transfer"] [data-sim-only]');
+  const channelSel = document.querySelector('form[data-tool="radio-transfer"] select[name="channel"]');
+
+  const applyChannel = () => {
+    const isPluto = channelSel && channelSel.value === "pluto";
+    simOnly.forEach((el) => (el.hidden = isPluto));
+  };
+  channelSel?.addEventListener("change", applyChannel);
+
+  const poll = async () => {
+    try {
+      const s = await getJSON("/api/radio/status");
+      const p = s.pluto || {};
+      if (p.detected) {
+        badge.dataset.state = "ok";
+        label.textContent = `Pluto connected — ${p.hw_model || "ADALM-Pluto"}, fw ${p.fw_version || "?"}`;
+        plutoOpts.forEach((o) => (o.disabled = false));
+      } else {
+        badge.dataset.state = s.available ? "warn" : "down";
+        label.textContent = s.available ? "No Pluto detected — simulation only" : "Radio runtime offline — simulation only";
+        plutoOpts.forEach((o) => { o.disabled = true; });
+        if (channelSel && channelSel.value === "pluto") { channelSel.value = "sim"; applyChannel(); }
+      }
+    } catch {
+      badge.dataset.state = "down";
+      label.textContent = "Radio status unavailable — simulation only";
+      plutoOpts.forEach((o) => (o.disabled = true));
+    }
+  };
+  applyChannel();
+  poll();
+  setInterval(poll, 6000);
+}
+
 export function initWorkbench() {
   initConsole();
   initDropzones();
   initRanges();
   initForms();
+  initRadioStatus();
 }

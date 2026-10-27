@@ -1,7 +1,7 @@
-import { createScrollConductor } from "./conductor.js?v=20261002b";
-import { createWorld, CHAPTERS } from "./world.js?v=20261002b";
-import { initWorkbench } from "./workbench.js?v=20261002b";
-import { health } from "./api.js?v=20261002b";
+import { createScrollConductor } from "./conductor.js?v=20261027a";
+import { createWorld, CHAPTERS } from "./world.js?v=20261027a";
+import { initWorkbench } from "./workbench.js?v=20261027a";
+import { health } from "./api.js?v=20261027a";
 
 const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 const body = document.body;

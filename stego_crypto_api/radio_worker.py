@@ -220,12 +220,35 @@ def pluto(workdir: Path, args: dict) -> dict:
 
 
 def probe() -> dict:
+    import os
+
     from sentinelspread.gnuradio.runner import PlutoNotDetected, find_pluto
 
+    # SENTINEL_PLUTO_URI lets a Pluto reached over its USB-ethernet link (e.g. ip:192.168.2.1) be
+    # found when the bare USB backend scan does not list it; empty keeps the plain USB scan.
+    uri = os.environ.get("SENTINEL_PLUTO_URI", "")
     try:
-        return {"detected": True, **find_pluto("")}
+        return {"detected": True, **find_pluto(uri)}
     except PlutoNotDetected as e:
         return {"detected": False, "detail": str(e)}
+
+
+def detect(args: dict) -> dict:
+    """Stage 5 self-attack: calibrate the key-free detectors on noise, then report how often each
+    one flags the burst, plain and with FHSS hardening applied. Pure numpy, no GNU Radio."""
+    from sentinelspread.detector.evaluate import sweep
+    from sentinelspread.harden.fhss import fhss_transform
+
+    sf = int(args.get("spreading_factor", 16))
+    sigmas = [0.25, 0.5, 1.0, 2.0]
+    common = dict(trials=12, length=4096, spreading_factor=sf, pfa=0.01, include_ml=False, observer_sps=1)
+    plain = sweep(sigmas, **common)
+    hard = sweep(sigmas, transform=fhss_transform(b"SentinelSpread_SDR_SessionKey_26",
+                                                  chips_per_hop=32, num_channels=8, channel_spacing=0.06),
+                 **common)
+    return {"spreading_factor": sf, "pfa": plain["pfa"], "snr_db": plain["snr_db"],
+            "detectors": list(plain["rates"].keys()),
+            "plain": plain["rates"], "hardened": hard["rates"]}
 
 
 def main():
@@ -236,6 +259,8 @@ def main():
         out = pluto(workdir, json.loads(sys.argv[3]))
     elif mode == "probe":
         out = probe()
+    elif mode == "detect":
+        out = detect(json.loads(sys.argv[3]))
     else:
         out = receive(workdir)
     (workdir / f"result_{mode}.json").write_text(json.dumps(out))

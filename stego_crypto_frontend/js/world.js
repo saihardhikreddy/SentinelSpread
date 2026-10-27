@@ -7,9 +7,9 @@
    shot a drag-to-rotate turntable with inertia. */
 
 import * as THREE from "three";
-import { createPost } from "./world/post.js?v=20261002b";
-import { buildSpace } from "./world/space.js?v=20261002b";
-import { buildShip } from "./world/ship.js?v=20261002b";
+import { createPost } from "./world/post.js?v=20261027a";
+import { buildSpace } from "./world/space.js?v=20261027a";
+import { buildShip } from "./world/ship.js?v=20261027a";
 
 /* Chapter ledger. side: where the copy sits. part: tag to emphasise. orbit: degrees swept
    while dwelling in the chapter. fx: open (bay door), beam (downlink), holo (hologram),

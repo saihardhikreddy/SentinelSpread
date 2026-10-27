@@ -3,7 +3,7 @@
    Colours inside GLSL are linear and may exceed 1.0 for the bloom pass. */
 
 import * as THREE from "three";
-import { glowTexture, streakTexture, mulberry32 } from "./textures.js?v=20261002b";
+import { glowTexture, streakTexture, mulberry32 } from "./textures.js?v=20261027a";
 
 export const SUN_DIR = new THREE.Vector3(0.62, 0.42, 0.66).normalize();
 export const GIANT = { center: new THREE.Vector3(-120, -46, -300), radius: 135 };
