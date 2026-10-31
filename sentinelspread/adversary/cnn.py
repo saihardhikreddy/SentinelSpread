@@ -13,7 +13,7 @@ building or training an adversary does. The network is deliberately small (three
 layers, global average pool, a linear head) and trains in seconds on CPU.
 """
 
-from typing import Optional, Sequence
+from typing import Sequence
 
 import numpy as np
 

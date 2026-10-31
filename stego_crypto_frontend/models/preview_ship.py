@@ -3,7 +3,6 @@
 Run:  blender --background --factory-startup --python models/preview_ship.py -- <ship.glb> <out_prefix>
 """
 
-import math
 import sys
 
 import bpy

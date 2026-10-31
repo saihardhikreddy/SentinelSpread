@@ -14,7 +14,7 @@ Radio; frequency hopping is invertible at the receiver and therefore does not en
 only the transmit-amplitude of the chosen rung does.
 """
 
-from typing import List, Optional, Sequence
+from typing import List, Sequence
 
 import numpy as np
 

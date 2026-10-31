@@ -3,7 +3,7 @@ Pseudo-Noise (PN) sequence and m-sequence generation via Linear Feedback Shift R
 Supports session-unique PN seed derivation from AES keys.
 """
 
-from typing import Optional, Union
+from typing import Optional
 import numpy as np
 
 from sentinelspread.crypto.key_mgmt import derive_pn_seed

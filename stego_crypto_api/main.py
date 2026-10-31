@@ -7,14 +7,13 @@ Stateless backend architecture designed to integrate with Google Stitch UI.
 """
 
 import base64
-import io
 import time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 import os
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 

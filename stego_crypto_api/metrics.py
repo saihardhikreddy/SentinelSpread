@@ -5,7 +5,7 @@ Provides quantitative metrics to evaluate image degradation caused by steganogra
 
 import io
 import math
-from typing import Union, Dict, Any, Tuple
+from typing import Union, Dict, Any
 import numpy as np
 from PIL import Image
 

@@ -12,7 +12,6 @@ The schedule is derived from the AES session key via the same HKDF path as the P
 receiver reconstructs the identical hop pattern and removes it before despreading.
 """
 
-from typing import Optional
 
 import numpy as np
 

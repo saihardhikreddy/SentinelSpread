@@ -6,11 +6,11 @@ Processing Gain, and Negative SNR decoding vs Unspread Control.
 import numpy as np
 import pytest
 
-from sentinelspread.crypto.key_mgmt import generate_rsa_keypair, derive_pn_seed
+from sentinelspread.crypto.key_mgmt import generate_rsa_keypair
 from sentinelspread.crypto.encryptor import encrypt_payload, CryptoBundle
 from sentinelspread.crypto.decryptor import decrypt_payload
 from sentinelspread.input.input_handler import InputHandler
-from sentinelspread.dsss.pn_gen import PNGenerator, PRIMITIVE_POLYNOMIALS
+from sentinelspread.dsss.pn_gen import PNGenerator
 from sentinelspread.dsss.spreader import DSSSSpreader
 from sentinelspread.dsss.correlator import DSSSCorrelator
 from sentinelspread.eval.processing_gain import measure_processing_gain

@@ -2,8 +2,6 @@
 Comprehensive Test Suite for FastAPI StegoCrypto Suite
 """
 
-import io
-from PIL import Image
 from fastapi.testclient import TestClient
 from main import app
 

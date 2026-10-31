@@ -9,7 +9,6 @@ import os
 import io
 import wave
 import struct
-import tempfile
 import numpy as np
 import hashlib
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -168,7 +167,7 @@ def extract_audio_bytes(wav_bytes: bytes, password: str) -> str:
     with wave.open(io.BytesIO(wav_bytes), 'rb') as wf:
         params = wf.getparams()
         if params.sampwidth != 2:
-            raise ValueError(f"Only 16-bit PCM WAV files supported.")
+            raise ValueError("Only 16-bit PCM WAV files supported.")
         raw_frames = wf.readframes(params.nframes)
         
     samples = np.frombuffer(raw_frames, dtype=np.int16)

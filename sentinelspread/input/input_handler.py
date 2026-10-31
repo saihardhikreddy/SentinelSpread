@@ -4,7 +4,6 @@ Applies header type-tagging before passing payloads to crypto/spreading layers.
 """
 
 from pathlib import Path
-import struct
 from typing import Tuple, Union
 import wave
 import numpy as np

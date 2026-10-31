@@ -19,9 +19,9 @@ from sentinelspread.eval.plot_psd import compute_and_plot_psd
 
 def run_stage_tests(stage_name: str) -> int:
     """Run pytest suite targeted at a specific project stage."""
-    print(f"\n==========================================")
+    print("\n==========================================")
     print(f"   SentinelSpread: Testing Stage '{stage_name}'")
-    print(f"==========================================\n")
+    print("==========================================\n")
 
     stage_lower = stage_name.lower()
     if stage_lower in ("crypto", "input", "stage1", "1"):
@@ -94,7 +94,7 @@ def handle_encrypt(args):
             print(f"[*] Processing text file payload: {input_path}")
             tagged_data = InputHandler.prepare_text_payload(input_path)
         else:
-            print(f"[*] Processing inline text string payload")
+            print("[*] Processing inline text string payload")
             tagged_data = InputHandler.prepare_text_payload(args.input)
 
     print(f"[*] Header attached. Total payload size before crypto: {len(tagged_data)} bytes")
@@ -120,7 +120,7 @@ def handle_decrypt(args):
     decrypted_tagged = decrypt_payload(bundle, priv_key)
     header, payload = InputHandler.extract_payload(decrypted_tagged)
 
-    print(f"[+] Decrypted successfully!")
+    print("[+] Decrypted successfully!")
     print(f"    - Type: {header.payload_type.name}")
     print(f"    - Original Length: {header.original_length} bytes")
 

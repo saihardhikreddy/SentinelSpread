@@ -12,16 +12,11 @@
 
 from gnuradio import blocks
 from gnuradio import channels
-from gnuradio.filter import firdes
 from gnuradio import digital
 from gnuradio import filter
 from gnuradio import gr
-from gnuradio.fft import window
 import sys
 import signal
-from argparse import ArgumentParser
-from gnuradio.eng_arg import eng_float, intx
-from gnuradio import eng_notation
 import sentinelspread_flowgraph_epy_block_0 as epy_block_0  # embedded python block
 import sentinelspread_flowgraph_epy_block_1 as epy_block_1  # embedded python block
 import threading

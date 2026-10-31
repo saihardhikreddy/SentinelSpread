@@ -12,8 +12,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from sentinelspread.modem.modem import Modem
-from sentinelspread.channel.awgn import add_awgn_ebn0
-from sentinelspread.eval.metrics import compute_ber
 
 
 def theoretical_ber(eb_n0_db: float) -> float:

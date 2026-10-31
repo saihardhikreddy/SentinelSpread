@@ -5,7 +5,7 @@ Embedded Python Blocks for GNU Radio Software SDR:
   DSSS despreading, authenticated decryption, and GNU Radio message publishing.
 """
 
-from typing import Optional, Tuple
+from typing import Optional
 import numpy as np
 from gnuradio import gr
 import pmt

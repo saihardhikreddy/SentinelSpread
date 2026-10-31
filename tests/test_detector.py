@@ -1,6 +1,5 @@
 """Stage 5 detector suite: features, threshold calibration, and the evaluation sweep."""
 import numpy as np
-import pytest
 
 from sentinelspread.detector import FEATURE_NAMES, all_detectors, feature_vector
 from sentinelspread.detector.evaluate import noise_segments, signal_segments, sweep

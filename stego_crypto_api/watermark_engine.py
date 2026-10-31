@@ -6,7 +6,6 @@ frequency domain embedding and extraction.
 """
 
 import io
-import struct
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import scipy.fftpack

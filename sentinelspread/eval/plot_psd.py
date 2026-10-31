@@ -13,7 +13,6 @@ signal's genuinely wider, flatter PSD is visible.
 """
 
 from pathlib import Path
-from typing import Optional
 import numpy as np
 from scipy import signal
 import matplotlib

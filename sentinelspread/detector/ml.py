@@ -6,7 +6,7 @@ thresholded on noise-only scores the same way the single-feature detectors are, 
 detection rate is quoted at the same false-alarm budget.
 """
 
-from typing import Optional, Sequence
+from typing import Sequence
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier

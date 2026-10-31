@@ -6,7 +6,7 @@ and digital image watermarking for authentication.
 
 from pathlib import Path
 import struct
-from typing import Tuple, Union
+from typing import Union
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 

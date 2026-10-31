@@ -21,7 +21,6 @@ This receiver uses the processing gain *before* it synchronises:
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 from scipy.signal import fftconvolve
