@@ -35,6 +35,9 @@ def add_awgn_ebn0(
     Returns:
         Noisy complex baseband samples.
     """
+    if len(iq_samples) == 0:
+        return np.array([], dtype=complex)
+
     if seed is not None:
         rng = np.random.default_rng(seed)
     else:
@@ -68,6 +71,9 @@ def add_awgn_snr(
     Returns:
         Noisy complex baseband samples.
     """
+    if len(iq_samples) == 0:
+        return np.array([], dtype=complex)
+
     if seed is not None:
         rng = np.random.default_rng(seed)
     else:
