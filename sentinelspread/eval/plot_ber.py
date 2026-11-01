@@ -4,7 +4,7 @@ Generates BER vs Eb/N0 waterfall comparison curves for BPSK and QPSK against the
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any, List, Tuple
 import numpy as np
 from scipy.special import erfc
 import matplotlib
@@ -15,7 +15,11 @@ from sentinelspread.modem.modem import Modem
 
 
 def theoretical_ber(eb_n0_db: float) -> float:
-    """Theoretical BER for BPSK and Gray-coded QPSK over AWGN: Pb = 0.5 * erfc(sqrt(Eb/N0))."""
+    """
+    Theoretical BER for BPSK and Gray-coded QPSK over AWGN channel.
+
+    Pb = 0.5 * erfc(sqrt(Eb/N0))
+    """
     eb_n0_lin = 10.0 ** (eb_n0_db / 10.0)
     return float(0.5 * erfc(np.sqrt(eb_n0_lin)))
 
@@ -29,13 +33,24 @@ def simulate_point_adaptive(
     sps: int = 4,
     span: int = 10,
     rng: Optional[np.random.Generator] = None,
-) -> tuple[float, int, int]:
+) -> Tuple[float, int, int]:
     """
     Adaptive Monte Carlo simulation at a single Eb/N0 operating point.
+
     Accumulates in chunk_size increments until min_errors observed or max_bits reached.
 
+    Args:
+        scheme: Modulation scheme ('BPSK' or 'QPSK').
+        ebn0_db: Signal energy to noise spectral density ratio in decibels (dB).
+        chunk_size: Number of bits per simulation batch.
+        max_bits: Upper limit of transmitted bits before stopping iteration.
+        min_errors: Target threshold of bit errors for statistical confidence.
+        sps: Samples per symbol for pulse shaping.
+        span: Filter span in symbols.
+        rng: Optional NumPy random number generator instance.
+
     Returns:
-        (ber, total_errors, total_bits)
+        Tuple of (ber, total_errors, total_bits).
     """
     if rng is None:
         rng = np.random.default_rng()
@@ -78,23 +93,33 @@ def simulate_point_adaptive(
 
 
 def run_ber_simulation(
-    snr_range: Optional[list[float]] = None,
+    snr_range: Optional[List[float]] = None,
     save_path: str = "eval/ber_vs_snr.png",
     verbose: bool = True,
-) -> dict:
+) -> Dict[str, Any]:
     """
     Run full Monte Carlo sweep from -3 dB to 10 dB in 1 dB steps for BPSK and QPSK.
+
     Generates and saves the comparison plot to save_path.
+
+    Args:
+        snr_range: List of Eb/N0 points in dB to evaluate. Defaults to range(-3, 11).
+        save_path: Destination file path for the waterfall comparison plot.
+        verbose: Whether to log tabular progress to stdout.
+
+    Returns:
+        Dictionary containing arrays for Eb/N0 values, theoretical BER,
+        simulated BPSK BER, simulated QPSK BER, and the generated plot path.
     """
     if snr_range is None:
         snr_range = [float(x) for x in range(-3, 11)]
 
     rng = np.random.default_rng(2026)
 
-    ebn0_arr = []
-    theory_arr = []
-    bpsk_arr = []
-    qpsk_arr = []
+    ebn0_arr: List[float] = []
+    theory_arr: List[float] = []
+    bpsk_arr: List[float] = []
+    qpsk_arr: List[float] = []
 
     if verbose:
         print("\n" + "=" * 80)
