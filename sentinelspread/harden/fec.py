@@ -26,10 +26,10 @@ _H = np.array([
 ], dtype=np.uint8)
 
 # syndrome (as an integer, bit order [s0 s1 s2]) -> index of the bit to flip, or -1
-_SYNDROME_TO_BIT = {0: -1}
+_SYNDROME_WEIGHTS = np.array([1, 2, 4])
+_SYNDROME_TO_BIT = np.full(8, -1, dtype=np.int64)
 for _col in range(7):
-    _s = int(_H[0, _col]) * 1 + int(_H[1, _col]) * 2 + int(_H[2, _col]) * 4
-    _SYNDROME_TO_BIT[_s] = _col
+    _SYNDROME_TO_BIT[int(_H[:, _col] @ _SYNDROME_WEIGHTS)] = _col
 
 
 def encode(bits: np.ndarray) -> np.ndarray:
@@ -52,12 +52,10 @@ def decode(bits: np.ndarray, num_message_bits: int) -> tuple:
     bits = bits[:n_words * 7]
     code = bits.reshape(7, n_words).T.copy()      # undo the interleave
     syndromes = (code @ _H.T) % 2                 # (n_words, 3)
-    corrected = 0
-    for i, syn in enumerate(syndromes):
-        s = int(syn[0]) + int(syn[1]) * 2 + int(syn[2]) * 4
-        flip = _SYNDROME_TO_BIT.get(s, -1)
-        if flip >= 0:
-            code[i, flip] ^= 1
-            corrected += 1
+    # Vectorized: look up every word's bad bit at once instead of looping in Python.
+    flips = _SYNDROME_TO_BIT[syndromes @ _SYNDROME_WEIGHTS]
+    rows = np.nonzero(flips >= 0)[0]
+    code[rows, flips[rows]] ^= 1
+    corrected = int(len(rows))
     message = code[:, :4].ravel()[:num_message_bits]
     return message.astype(np.uint8), corrected
