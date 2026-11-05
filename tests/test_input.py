@@ -21,6 +21,15 @@ def test_header_pack_unpack():
     assert len(payload_rem) == 0
 
 
+def test_header_unpack_drops_trailing_padding():
+    body = b"hello"
+    packed = Header(payload_type=PayloadType.TEXT, original_length=len(body)).pack()
+    hdr, payload = Header.unpack(packed + body + b"\x00\x00\x00")
+    assert payload == body
+    _, short = Header.unpack(packed + body[:3])
+    assert short == b"hel"  # truncated payloads are left for the caller to notice
+
+
 def test_header_invalid_magic():
     bad_data = b"BADM" + b"\x01\x01\x00\x00\x00\x10\x00\x00\x00\x00"
     with pytest.raises(ValueError, match="Invalid magic bytes"):

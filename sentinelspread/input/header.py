@@ -55,11 +55,10 @@ class Header:
         header = cls(payload_type=PayloadType(ptype), original_length=orig_len, version=version)
         payload = data[HEADER_SIZE:]
 
-        if len(payload) != orig_len:
-            # Note: Warn or enforce payload length check
-            pass
-
-        return header, payload
+        # The length field marks where the payload ends: anything after it (zero bytes padded
+        # on by a bit-level transport, for example) is not part of the file. A shorter payload
+        # is returned as is, so a caller can still detect and report the truncation.
+        return header, payload[:orig_len]
 
     def __repr__(self) -> str:
         return f"<Header magic={self.magic.decode()} ver={self.version} type={self.payload_type.name} len={self.original_length}>"
