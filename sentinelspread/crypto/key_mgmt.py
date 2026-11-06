@@ -2,6 +2,7 @@
 RSA Key Management: generation, export, and import of RSA keypairs.
 """
 
+import os
 from pathlib import Path
 from typing import Tuple, Union
 from Crypto.PublicKey import RSA
@@ -32,11 +33,20 @@ def generate_rsa_keypair(key_bits: int = 2048) -> Tuple[RSA.RsaKey, RSA.RsaKey]:
 
 
 def export_key(key: RSA.RsaKey, output_path: Union[str, Path]) -> Path:
-    """Export RSA key to PEM file."""
+    """Export RSA key to PEM file. Private keys are readable by the owner only."""
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     pem_data = key.export_key(format="PEM")
-    path.write_bytes(pem_data)
+    if not key.has_private():
+        path.write_bytes(pem_data)
+        return path
+    # Create the file as 0600 rather than chmod-ing it afterwards, so the key is
+    # never briefly readable by other users. Windows ignores the mode bits.
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "wb") as f:
+        f.write(pem_data)
+    if os.name == "posix":
+        os.chmod(path, 0o600)  # an existing file keeps its old mode on O_TRUNC
     return path
 
 

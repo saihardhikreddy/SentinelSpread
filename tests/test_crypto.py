@@ -2,6 +2,8 @@
 Unit tests for RSA key management, AES-256-GCM encryption/decryption, and CryptoBundle serialization.
 """
 
+import os
+import stat
 from pathlib import Path
 import pytest
 from sentinelspread.crypto.key_mgmt import generate_rsa_keypair, export_key, import_key, derive_pn_seed
@@ -100,3 +102,16 @@ def test_malformed_crypto_bundle_deserialize():
     with pytest.raises(ValueError, match="Crypto bundle data incomplete"):
         CryptoBundle.deserialize(b"too_short")
 
+
+
+@pytest.mark.skipif(os.name != "posix", reason="file modes are POSIX only")
+def test_private_key_file_is_owner_only(tmp_path: Path):
+    priv_key, pub_key = generate_rsa_keypair(1024)
+    priv_path = tmp_path / "private.pem"
+    priv_path.write_text("old")
+    priv_path.chmod(0o644)  # overwriting an existing, readable file
+    export_key(priv_key, priv_path)
+    export_key(pub_key, tmp_path / "public.pem")
+    assert stat.S_IMODE(priv_path.stat().st_mode) == 0o600
+    assert import_key(priv_path).export_key() == priv_key.export_key()
+    assert stat.S_IMODE((tmp_path / "public.pem").stat().st_mode) & 0o044  # public stays readable
