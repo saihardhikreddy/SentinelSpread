@@ -56,3 +56,14 @@ def test_digital_watermarking(tmp_path: Path):
     assert watermarked_path.is_file()
     img = Image.open(watermarked_path)
     assert img.size == (200, 200)
+
+
+def test_watermark_fits_a_narrow_image(tmp_path: Path):
+    cover = tmp_path / "narrow.png"
+    Image.new("RGB", (160, 600), (40, 90, 160)).save(cover)
+    out = DigitalWatermark.apply_watermark(cover, "SentinelSpread Secure Output", tmp_path / "wm.png")
+    px = np.array(Image.open(out).convert("RGB")).astype(int)
+    changed = np.argwhere(np.abs(px - [40, 90, 160]).sum(axis=2) > 0)
+    assert len(changed) > 0
+    # the darkened box and text start inside the image, not cut off at the left edge
+    assert changed[:, 1].min() >= 5

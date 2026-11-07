@@ -108,19 +108,26 @@ class DigitalWatermark:
         margin = 15
         width, height = base_img.size
 
-        # Simple default font size calculation
+        def load_font(size):
+            try:
+                return ImageFont.truetype("arial.ttf", size)
+            except OSError:
+                return ImageFont.load_default(size)  # Pillow >= 10.1 scales its built-in font
+
+        # Start from a size that suits the image height, then shrink until the text fits the
+        # width: on a small or narrow image the mark used to run off the left edge.
         font_size = max(14, int(height / 25))
-        try:
-            font = ImageFont.truetype("arial.ttf", font_size)
-        except OSError:
-            font = ImageFont.load_default()
+        while True:
+            font = load_font(font_size)
+            text_bbox = draw.textbbox((0, 0), watermark_text, font=font)
+            text_w = text_bbox[2] - text_bbox[0]
+            text_h = text_bbox[3] - text_bbox[1]
+            if text_w + 2 * margin <= width or font_size <= 6:
+                break
+            font_size -= 1
 
-        text_bbox = draw.textbbox((0, 0), watermark_text, font=font)
-        text_w = text_bbox[2] - text_bbox[0]
-        text_h = text_bbox[3] - text_bbox[1]
-
-        x = width - text_w - margin
-        y = height - text_h - margin
+        x = max(margin, width - text_w - margin)
+        y = max(margin, height - text_h - margin)
 
         # Draw semi-transparent background box and text
         draw.rectangle([x - 5, y - 5, x + text_w + 5, y + text_h + 5], fill=(0, 0, 0, 120))
