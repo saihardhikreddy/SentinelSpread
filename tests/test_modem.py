@@ -86,3 +86,15 @@ def test_modem_ber_vs_snr_progression(scheme):
     assert bers[1] < bers[0], f"BER at 4 dB ({bers[1]}) >= BER at 0 dB ({bers[0]}) for {scheme}"
     assert bers[2] < bers[1], f"BER at 8 dB ({bers[2]}) >= BER at 4 dB ({bers[1]}) for {scheme}"
     assert bers[2] < 0.001, f"High Eb/N0 (8 dB) BER ({bers[2]}) should be < 0.001 for {scheme}"
+
+
+def test_error_rates_count_missing_bits_as_errors():
+    from sentinelspread.eval.metrics import compute_ser
+
+    tx = np.array([1, 0, 1, 1, 0, 0, 1, 0])
+    assert compute_ber(tx, tx) == 0.0
+    assert compute_ber(tx, np.array([], dtype=int)) == 1.0   # receiver produced nothing
+    assert compute_ber(tx, tx[:6]) == 2 / 8                   # two bits never arrived
+    assert compute_ber(tx, np.concatenate([tx, [1, 1]])) == 0.0  # trailing padding is ignored
+    assert compute_ber([], [1, 0]) == 0.0
+    assert compute_ser(np.array([1 + 1j, -1 - 1j]), np.array([1 + 1j])) == 0.5
