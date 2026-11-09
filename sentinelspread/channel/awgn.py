@@ -7,6 +7,12 @@ from typing import Optional
 import numpy as np
 
 
+def _complex_noise(n: int, sigma_dim: float, seed: Optional[int]) -> np.ndarray:
+    """n samples of circular complex Gaussian noise, sigma_dim per I/Q dimension."""
+    rng = np.random.default_rng(seed)
+    return rng.normal(0.0, sigma_dim, n) + 1j * rng.normal(0.0, sigma_dim, n)
+
+
 def add_awgn_ebn0(
     iq_samples: np.ndarray,
     ebn0_db: float,
@@ -38,21 +44,12 @@ def add_awgn_ebn0(
     if len(iq_samples) == 0:
         return np.array([], dtype=complex)
 
-    if seed is not None:
-        rng = np.random.default_rng(seed)
-    else:
-        rng = np.random.default_rng()
-
     k = bits_per_symbol
     eb = es / float(k)
     n0 = eb / (10.0 ** (ebn0_db / 10.0))
     sigma_dim = np.sqrt((n0 * sps) / 2.0)
 
-    noise_i = rng.normal(0.0, sigma_dim, len(iq_samples))
-    noise_q = rng.normal(0.0, sigma_dim, len(iq_samples))
-    noise = noise_i + 1j * noise_q
-
-    return iq_samples + noise
+    return iq_samples + _complex_noise(len(iq_samples), sigma_dim, seed)
 
 
 def add_awgn_snr(
@@ -74,18 +71,9 @@ def add_awgn_snr(
     if len(iq_samples) == 0:
         return np.array([], dtype=complex)
 
-    if seed is not None:
-        rng = np.random.default_rng(seed)
-    else:
-        rng = np.random.default_rng()
-
     signal_pwr = np.mean(np.abs(iq_samples) ** 2)
     snr_lin = 10.0 ** (snr_db / 10.0)
     noise_pwr = signal_pwr / snr_lin
     sigma_dim = np.sqrt(noise_pwr / 2.0)
 
-    noise_i = rng.normal(0.0, sigma_dim, len(iq_samples))
-    noise_q = rng.normal(0.0, sigma_dim, len(iq_samples))
-    noise = noise_i + 1j * noise_q
-
-    return iq_samples + noise
+    return iq_samples + _complex_noise(len(iq_samples), sigma_dim, seed)
