@@ -115,3 +115,13 @@ def test_key_ratchet_different_roots_diverge():
 def test_key_ratchet_rejects_short_root():
     with pytest.raises(ValueError):
         KeyRatchet(b"short")
+
+
+def test_power_policy_counts_the_processing_gain_of_a_chip_level_measurement():
+    p = PowerPolicy(target_symbol_snr_db=9.0, step_db=3.0)
+    pg = 10 * np.log10(16)  # spreading factor 16, as DSSSSpreader.processing_gain_db gives
+    # 0 dB per chip with a 16x spreader is about 12 dB per symbol: 3 dB above target, so back off.
+    backed_off = p.required_amplitude(0.0, current_amplitude=0.5, processing_gain_db=pg)
+    assert backed_off == pytest.approx(0.5 * 10 ** (-3.0 / 20), rel=0.01)
+    # Without the gain the same reading looks 9 dB short and power goes up.
+    assert p.required_amplitude(0.0, current_amplitude=0.5) > 0.5

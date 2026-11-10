@@ -27,8 +27,13 @@ class PowerPolicy:
 
         The margin above target tells us how much we are overshooting; we scale amplitude down by
         that margin (and up when short), limited to `step_db` per update and the amplitude bounds.
+
+        If the SNR was measured per chip, before despreading, pass the spreader's
+        `processing_gain_db`: it is added to give the symbol SNR. (The argument used to be
+        accepted and ignored, so a chip-level measurement made the policy push power up when
+        the link already had the processing gain's worth of margin.)
         """
-        headroom_db = measured_symbol_snr_db - self.target_symbol_snr_db
+        headroom_db = measured_symbol_snr_db + processing_gain_db - self.target_symbol_snr_db
         change_db = float(np.clip(-headroom_db, -self.step_db, self.step_db))
         amp = current_amplitude * 10 ** (change_db / 20)
         return float(np.clip(amp, self.min_amplitude, self.max_amplitude))
