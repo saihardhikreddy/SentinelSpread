@@ -125,3 +125,33 @@ def test_power_policy_counts_the_processing_gain_of_a_chip_level_measurement():
     assert backed_off == pytest.approx(0.5 * 10 ** (-3.0 / 20), rel=0.01)
     # Without the gain the same reading looks 9 dB short and power goes up.
     assert p.required_amplitude(0.0, current_amplitude=0.5) > 0.5
+
+
+def test_fec_ignores_extra_trailing_bits():
+    # The receiver may hand back a few bits more than were sent (noise after the frame).
+    rng = np.random.default_rng(4)
+    bits = rng.integers(0, 2, 400).astype(np.uint8)
+    enc = fec_encode(bits)
+    for extra in (1, 7, 30):
+        padded = np.concatenate([enc, rng.integers(0, 2, extra).astype(np.uint8)])
+        msg, corrected = fec_decode(padded, len(bits))
+        assert np.array_equal(msg, bits), extra
+        assert corrected == 0
+
+
+def test_fec_survives_a_few_missing_trailing_bits():
+    # The last interleaved bits are the third parity bit of the last codewords, so losing
+    # them costs no message bits: the code corrects the zero-filled gap.
+    rng = np.random.default_rng(5)
+    bits = rng.integers(0, 2, 400).astype(np.uint8)
+    enc = fec_encode(bits)
+    for missing in (1, 3, 20):
+        msg, _ = fec_decode(enc[:-missing], len(bits))
+        assert np.array_equal(msg, bits), missing
+
+
+def test_fec_rejects_a_negative_length():
+    import pytest
+
+    with pytest.raises(ValueError):
+        fec_decode(np.zeros(7, dtype=np.uint8), -1)

@@ -46,9 +46,19 @@ def encode(bits: np.ndarray) -> np.ndarray:
 
 def decode(bits: np.ndarray, num_message_bits: int) -> tuple:
     """De-interleave, correct one error per codeword, return (message_bits, errors_corrected).
-    `num_message_bits` trims the padding added at encode time."""
+    `num_message_bits` trims the padding added at encode time.
+
+    The interleave layout depends on the number of codewords, so it is taken from
+    `num_message_bits`, not from the length of the received stream. Extra trailing bits are
+    ignored and missing ones are filled with zeros (left for the code to correct). Counting
+    words from the stream instead scrambled the whole message whenever the receiver
+    produced a few bits more or fewer than were sent."""
+    if num_message_bits < 0:
+        raise ValueError(f"num_message_bits must be >= 0, got {num_message_bits}")
     bits = np.asarray(bits, dtype=np.uint8).ravel()
-    n_words = len(bits) // 7
+    n_words = (num_message_bits + 3) // 4
+    if len(bits) < n_words * 7:
+        bits = np.concatenate([bits, np.zeros(n_words * 7 - len(bits), dtype=np.uint8)])
     bits = bits[:n_words * 7]
     code = bits.reshape(7, n_words).T.copy()      # undo the interleave
     syndromes = (code @ _H.T) % 2                 # (n_words, 3)
