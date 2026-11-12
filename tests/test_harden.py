@@ -155,3 +155,22 @@ def test_fec_rejects_a_negative_length():
 
     with pytest.raises(ValueError):
         fec_decode(np.zeros(7, dtype=np.uint8), -1)
+
+
+def test_hop_schedule_is_independent_of_the_pn_seed():
+    from sentinelspread.crypto.key_mgmt import derive_hop_seed, derive_pn_seed
+    from sentinelspread.harden.fhss import _hop_offsets
+
+    key = bytes(range(16))
+    assert derive_hop_seed(key) != derive_pn_seed(key)
+    # Knowing the PN seed no longer reproduces the hop pattern.
+    from_pn = _hop_offsets(4096, 64, 8, 0.05, derive_pn_seed(key))
+    actual = _hop_offsets(4096, 64, 8, 0.05, derive_hop_seed(key))
+    assert not np.array_equal(from_pn, actual)
+
+
+def test_fhss_rejects_a_zero_dwell():
+    import pytest
+
+    with pytest.raises(ValueError):
+        apply_fhss(np.ones(10), bytes(16), chips_per_hop=0)

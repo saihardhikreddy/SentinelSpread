@@ -8,14 +8,14 @@ whole dwell set sees the same total energy, but any test that relies on the carr
 one frequency (for example the x**2 carrier-tone statistic) only integrates coherently within a
 single dwell, so its peak is reduced by roughly the number of hops.
 
-The schedule is derived from the AES session key via the same HKDF path as the PN seed, so the
-receiver reconstructs the identical hop pattern and removes it before despreading.
+The schedule is derived from the AES session key with HKDF (its own context, separate from the
+PN seed's), so the receiver reconstructs the identical hop pattern and removes it before despreading.
 """
 
 
 import numpy as np
 
-from sentinelspread.crypto.key_mgmt import derive_pn_seed
+from sentinelspread.crypto.key_mgmt import derive_hop_seed
 
 
 def hop_schedule(num_hops: int, num_channels: int, seed: int) -> np.ndarray:
@@ -27,6 +27,8 @@ def hop_schedule(num_hops: int, num_channels: int, seed: int) -> np.ndarray:
 def _hop_offsets(num_chips: int, chips_per_hop: int, num_channels: int, channel_spacing: float,
                  seed: int) -> np.ndarray:
     """Per-chip normalised frequency offset (cycles per chip) for the whole burst."""
+    if chips_per_hop < 1 or num_channels < 1:
+        raise ValueError(f"chips_per_hop and num_channels must be at least 1, got {chips_per_hop}, {num_channels}")
     num_hops = int(np.ceil(num_chips / chips_per_hop))
     channels = hop_schedule(num_hops, num_channels, seed)
     # center the channel grid on zero so the mean offset is ~0
@@ -40,7 +42,7 @@ def apply_fhss(chips: np.ndarray, aes_key: bytes, chips_per_hop: int = 64, num_c
     boundaries so each dwell is phase-continuous (no artificial edges for an edge detector)."""
     chips = np.asarray(chips, dtype=np.complex128)
     offsets = _hop_offsets(len(chips), chips_per_hop, num_channels, channel_spacing,
-                           derive_pn_seed(aes_key))
+                           derive_hop_seed(aes_key))
     phase = 2 * np.pi * np.cumsum(offsets)
     return chips * np.exp(1j * phase)
 
@@ -50,7 +52,7 @@ def remove_fhss(chips: np.ndarray, aes_key: bytes, chips_per_hop: int = 64, num_
     """Inverse of apply_fhss: regenerate the same schedule and conjugate the hop exponential."""
     chips = np.asarray(chips, dtype=np.complex128)
     offsets = _hop_offsets(len(chips), chips_per_hop, num_channels, channel_spacing,
-                           derive_pn_seed(aes_key))
+                           derive_hop_seed(aes_key))
     phase = 2 * np.pi * np.cumsum(offsets)
     return chips * np.exp(-1j * phase)
 

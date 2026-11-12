@@ -10,19 +10,26 @@ from Crypto.Hash import SHA256
 from Crypto.Protocol.KDF import HKDF
 
 
+def derive_seed(aes_key: bytes, context: bytes) -> int:
+    """A non-zero 32-bit seed from the session key via HKDF-SHA256. Each use passes its own
+    `context`, so seeds for different purposes are independent of one another."""
+    derived_bytes = HKDF(master=aes_key, key_len=4, salt=b"", hashmod=SHA256, context=context)
+    seed = int.from_bytes(derived_bytes, byteorder="big")
+    return seed if seed != 0 else 1
+
+
 def derive_pn_seed(aes_key: bytes) -> int:
     """Derive a session-unique DSSS PN seed from the ephemeral AES session key
     via HKDF-SHA256, so the spreading sequence changes every session instead
     of reusing a static seed from config.yaml."""
-    derived_bytes = HKDF(
-        master=aes_key,
-        key_len=4,
-        salt=b"",
-        hashmod=SHA256,
-        context=b"sentinelspread-dsss-pn-seed",
-    )
-    seed = int.from_bytes(derived_bytes, byteorder="big")
-    return seed if seed != 0 else 1
+    return derive_seed(aes_key, b"sentinelspread-dsss-pn-seed")
+
+
+def derive_hop_seed(aes_key: bytes) -> int:
+    """Seed for the FHSS hop schedule. It used to be the PN seed itself, so anyone who
+    recovered the spreading code (for example by correlating a captured burst) also
+    held the hop pattern. A separate HKDF context keeps the two independent."""
+    return derive_seed(aes_key, b"sentinelspread-fhss-hop-schedule")
 
 
 def generate_rsa_keypair(key_bits: int = 2048) -> Tuple[RSA.RsaKey, RSA.RsaKey]:
