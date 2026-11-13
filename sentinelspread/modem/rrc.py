@@ -16,7 +16,14 @@ def generate_rrc_taps(rrc_alpha: float = 0.35, sps: int = 4, span: int = 10) -> 
 
     Returns:
         Energy-normalized filter taps (sum(h[n]^2) == 1.0).
+
+    alpha = 0 gives the sinc pulse. (It used to divide by zero looking for the 1/(4 alpha)
+    singularity, and values outside 0..1 or a zero sps or span went through unchecked.)
     """
+    if not 0.0 <= rrc_alpha <= 1.0:
+        raise ValueError(f"rrc_alpha must be between 0 and 1, got {rrc_alpha}")
+    if int(sps) != sps or sps < 1 or int(span) != span or span < 1:
+        raise ValueError(f"sps and span must be positive integers, got sps={sps}, span={span}")
     num_taps = span * sps + 1
     t = np.arange(-span / 2.0, span / 2.0 + 1e-9, 1.0 / sps)[:num_taps]
     h = np.zeros(num_taps, dtype=float)
@@ -24,6 +31,8 @@ def generate_rrc_taps(rrc_alpha: float = 0.35, sps: int = 4, span: int = 10) -> 
     for i, ti in enumerate(t):
         if np.isclose(ti, 0.0):
             h[i] = 1.0 - rrc_alpha + 4.0 * rrc_alpha / np.pi
+        elif rrc_alpha == 0.0:
+            h[i] = np.sin(np.pi * ti) / (np.pi * ti)
         elif np.isclose(abs(ti), 1.0 / (4.0 * rrc_alpha)):
             h[i] = (rrc_alpha / np.sqrt(2.0)) * (
                 (1.0 + 2.0 / np.pi) * np.sin(np.pi / (4.0 * rrc_alpha))

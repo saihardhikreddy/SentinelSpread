@@ -35,6 +35,28 @@ def test_rrc_filter_taps():
     assert np.isclose(np.sum(taps**2), 1.0)
 
 
+@pytest.mark.parametrize("alpha", [0.25, 0.35, 1.0])
+def test_rrc_pair_is_nyquist(alpha):
+    """TX RRC followed by the matched RRC is a raised cosine: no inter-symbol interference."""
+    taps = generate_rrc_taps(rrc_alpha=alpha, sps=8, span=40)
+    rc = np.convolve(taps, taps)
+    c = len(rc) // 2
+    assert np.abs(rc[c + 8::8]).max() / rc[c] < 1e-3
+
+
+def test_rrc_with_zero_rolloff_is_a_sinc():
+    taps = generate_rrc_taps(rrc_alpha=0.0, sps=4, span=10)  # used to raise ZeroDivisionError
+    assert np.isclose(np.sum(taps**2), 1.0) and np.allclose(taps, taps[::-1])
+    centre = len(taps) // 2
+    assert np.allclose(taps[centre + 4::4], 0.0, atol=1e-12)    # zero at every other symbol
+
+
+@pytest.mark.parametrize("kwargs", [dict(rrc_alpha=-0.1), dict(rrc_alpha=1.5), dict(sps=0), dict(span=0), dict(sps=2.5)])
+def test_rrc_rejects_impossible_settings(kwargs):
+    with pytest.raises(ValueError):
+        generate_rrc_taps(**kwargs)
+
+
 @pytest.mark.parametrize("scheme", ["BPSK", "QPSK"])
 def test_modem_clean_loopback(scheme):
     np.random.seed(123)
