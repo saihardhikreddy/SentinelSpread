@@ -15,11 +15,20 @@ class InputHandler:
     """Handles text and audio payload loading, header tagging, and saving."""
 
     @staticmethod
+    def _is_file(text_or_path: Union[str, Path]) -> bool:
+        """True when the argument names an existing file. A message longer than the file system's
+        name limit (255 bytes on most systems) made Path.is_file() raise "File name too long",
+        so any long message crashed instead of being sent as text."""
+        try:
+            return Path(text_or_path).is_file()
+        except (OSError, ValueError):
+            return False
+
+    @staticmethod
     def prepare_text_payload(text_or_path: Union[str, Path]) -> bytes:
         """Read text from string or file path, convert to UTF-8 bytes, and attach Header."""
-        path = Path(text_or_path)
-        if path.is_file():
-            text_bytes = path.read_bytes()
+        if InputHandler._is_file(text_or_path):
+            text_bytes = Path(text_or_path).read_bytes()
         else:
             text_bytes = str(text_or_path).encode("utf-8")
 

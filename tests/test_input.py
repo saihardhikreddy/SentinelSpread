@@ -53,6 +53,14 @@ def test_text_input_preparation(tmp_path: Path):
     assert body.decode("utf-8") == text_data
 
 
+def test_long_messages_are_sent_as_text():
+    """Messages past the 255-byte file-name limit used to crash with "File name too long"."""
+    for text in ("x" * 300, "path/like/" * 400, "नमस्ते " * 60, "nul\x00inside"):
+        header, payload = InputHandler.extract_payload(InputHandler.prepare_text_payload(text))
+        assert header.original_length == len(text.encode("utf-8"))
+        assert payload.decode("utf-8") == text
+
+
 def test_audio_input_preparation(tmp_path: Path):
     wav_file = tmp_path / "sample.wav"
     InputHandler.generate_sample_wav(wav_file, duration_sec=0.1, sample_rate=8000)
