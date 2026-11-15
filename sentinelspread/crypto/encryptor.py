@@ -25,9 +25,6 @@ class CryptoBundle:
         self.tag = tag
         self.ciphertext = ciphertext
         self.aes_key = aes_key
-        self.nonce = nonce
-        self.tag = tag
-        self.ciphertext = ciphertext
 
     def serialize(self) -> bytes:
         """Serialize bundle into flat byte stream for transmission."""

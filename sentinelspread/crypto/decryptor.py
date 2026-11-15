@@ -20,7 +20,11 @@ def decrypt_payload(bundle_or_bytes: Union[CryptoBundle, bytes], rsa_private_key
     else:
         bundle = bundle_or_bytes
 
-    # 1. Unwrap AES session key using RSA private key
+    # 1. Unwrap AES session key using RSA private key. Given the public key by mistake (the
+    # two PEM files sit side by side), PyCryptodome raised a bare TypeError from deep inside
+    # OAEP; say what is wrong instead.
+    if not rsa_private_key.has_private():
+        raise ValueError("RSA key unwrapping failed: this is a public key; decrypting needs the private key")
     rsa_cipher = PKCS1_OAEP.new(rsa_private_key)
     try:
         aes_key_bytes = rsa_cipher.decrypt(bundle.wrapped_key)
@@ -28,8 +32,9 @@ def decrypt_payload(bundle_or_bytes: Union[CryptoBundle, bytes], rsa_private_key
         raise ValueError(f"RSA key unwrapping failed: {e}")
 
     # 2. Decrypt ciphertext with AES-GCM and verify integrity tag
-    aes_cipher = AES.new(aes_key_bytes, AES.MODE_GCM, nonce=bundle.nonce)
     try:
+        # inside the try: an empty nonce from a damaged bundle makes AES.new raise too
+        aes_cipher = AES.new(aes_key_bytes, AES.MODE_GCM, nonce=bundle.nonce)
         payload_bytes = aes_cipher.decrypt_and_verify(bundle.ciphertext, bundle.tag)
     except ValueError as e:
         raise ValueError(f"AES-GCM decryption/verification failed: {e}")

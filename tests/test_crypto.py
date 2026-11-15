@@ -115,3 +115,19 @@ def test_private_key_file_is_owner_only(tmp_path: Path):
     assert stat.S_IMODE(priv_path.stat().st_mode) == 0o600
     assert import_key(priv_path).export_key() == priv_key.export_key()
     assert stat.S_IMODE((tmp_path / "public.pem").stat().st_mode) & 0o044  # public stays readable
+
+
+def test_decrypting_with_the_public_key_says_so():
+    priv, pub = generate_rsa_keypair(2048)
+    bundle = encrypt_payload(b"hello", pub)
+    with pytest.raises(ValueError, match="this is a public key"):
+        decrypt_payload(bundle, pub)
+    assert decrypt_payload(bundle, priv) == b"hello"
+
+
+def test_a_bundle_with_an_empty_nonce_is_a_clear_error():
+    priv, pub = generate_rsa_keypair(2048)
+    good = encrypt_payload(b"hello", pub)
+    bad = CryptoBundle(good.wrapped_key, b"", good.tag, good.ciphertext)
+    with pytest.raises(ValueError, match="AES-GCM decryption/verification failed"):
+        decrypt_payload(CryptoBundle.deserialize(bad.serialize()), priv)
