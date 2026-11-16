@@ -10,7 +10,7 @@ from sentinelspread.crypto.key_mgmt import generate_rsa_keypair
 from sentinelspread.crypto.encryptor import encrypt_payload, CryptoBundle
 from sentinelspread.crypto.decryptor import decrypt_payload
 from sentinelspread.input.input_handler import InputHandler
-from sentinelspread.dsss.pn_gen import PNGenerator
+from sentinelspread.dsss.pn_gen import PNGenerator, GOLD_PREFERRED_PAIRS, generate_gold_code
 from sentinelspread.dsss.spreader import DSSSSpreader
 from sentinelspread.dsss.correlator import DSSSCorrelator
 from sentinelspread.eval.processing_gain import measure_processing_gain
@@ -197,3 +197,27 @@ def test_end_to_end_crypto_dsss_pipeline():
     header, recovered_msg = InputHandler.extract_payload(decrypted_tagged)
 
     assert recovered_msg.decode("utf-8") == message
+
+
+@pytest.mark.parametrize("degree", sorted(GOLD_PREFERRED_PAIRS))
+def test_gold_codes_come_from_a_preferred_pair(degree):
+    n = (1 << degree) - 1
+    a_taps, b_taps = GOLD_PREFERRED_PAIRS[degree]
+    a = PNGenerator(degree, taps=a_taps).generate_msequence()
+    b = PNGenerator(degree, taps=b_taps).generate_msequence()
+    t = 1 + 2 ** ((degree + 2) // 2)                      # 1 + 2^floor((n+2)/2)
+    cross = {int(round(np.dot(a, np.roll(b, k)))) for k in range(n)}
+    assert cross == {-1, -t, t - 2}                         # three-valued: a preferred pair
+
+    gold = generate_gold_code(degree, seed1=1, seed2=5)
+    assert len(gold) == n
+    # Not just a shift of one m-sequence, which is what XORing one polynomial with itself gave.
+    assert not any(np.array_equal(gold, np.roll(a, k)) or np.array_equal(gold, np.roll(b, k))
+                   for k in range(n))
+    other = generate_gold_code(degree, seed1=1, seed2=9)
+    assert max(abs(int(round(np.dot(gold, np.roll(other, k))))) for k in range(n)) <= t
+
+
+def test_gold_code_refuses_degree_8():
+    with pytest.raises(ValueError, match="preferred pair"):
+        generate_gold_code(8)

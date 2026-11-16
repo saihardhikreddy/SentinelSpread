@@ -23,6 +23,19 @@ PRIMITIVE_POLYNOMIALS = {
 }
 
 
+# Preferred pairs of primitive polynomials, in the same tap notation: the two m-sequences of a
+# pair cross-correlate at only three values, which is what makes their XORs a Gold family.
+# Degree 8 (a multiple of 4) has no preferred pairs.
+GOLD_PREFERRED_PAIRS = {
+    5: ((5, 2), (5, 4, 3, 2)),
+    6: ((6, 1), (6, 5, 2, 1)),
+    7: ((7, 3), (7, 3, 2, 1)),
+    9: ((9, 4), (9, 6, 4, 3)),
+    10: ((10, 3), (10, 8, 3, 2)),
+    11: ((11, 2), (11, 8, 5, 2)),
+}
+
+
 class PNGenerator:
     """
     Maximal-length sequence (m-sequence) generator based on LFSR.
@@ -34,14 +47,17 @@ class PNGenerator:
         degree: int = 7,
         seed: Optional[int] = None,
         aes_key: Optional[bytes] = None,
+        taps: Optional[tuple] = None,
     ):
         if degree not in PRIMITIVE_POLYNOMIALS:
             raise ValueError(
                 f"Unsupported LFSR degree {degree}. Supported degrees: {list(PRIMITIVE_POLYNOMIALS.keys())}"
             )
+        if taps is not None and (not taps or taps[0] != degree):
+            raise ValueError(f"taps must start with the degree {degree}, got {taps!r}")
 
         self.degree = degree
-        taps = PRIMITIVE_POLYNOMIALS[degree]
+        taps = taps or PRIMITIVE_POLYNOMIALS[degree]
         self.deg = taps[0]
         self.taps = taps[1:]
         self.k = self.taps[0]
@@ -103,13 +119,23 @@ def generate_gold_code(
     bipolar: bool = True,
 ) -> np.ndarray:
     """
-    Generate Gold sequence from pair of preferred m-sequences.
+    Generate a Gold sequence: the XOR of the m-sequences of a preferred pair of polynomials.
+    Different seeds shift the second sequence against the first and give different members of
+    the family.
+
+    Both generators used to share one polynomial. By the shift-and-add property, the XOR of two
+    shifts of the same m-sequence is just a third shift of it, so every "Gold code" was the
+    plain m-sequence, with its poor cross-correlation between codes.
     """
+    if degree not in GOLD_PREFERRED_PAIRS:
+        raise ValueError(f"No preferred pair for degree {degree}; Gold codes are available for "
+                         f"degrees {sorted(GOLD_PREFERRED_PAIRS)}")
     if length is None:
         length = (1 << degree) - 1
 
-    gen1 = PNGenerator(degree=degree, seed=seed1)
-    gen2 = PNGenerator(degree=degree, seed=seed2)
+    taps1, taps2 = GOLD_PREFERRED_PAIRS[degree]
+    gen1 = PNGenerator(degree=degree, seed=seed1, taps=taps1)
+    gen2 = PNGenerator(degree=degree, seed=seed2, taps=taps2)
 
     bits1 = gen1.generate_chips(length, bipolar=False)
     bits2 = gen2.generate_chips(length, bipolar=False)
