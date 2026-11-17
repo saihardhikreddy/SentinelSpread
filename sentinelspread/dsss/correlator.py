@@ -54,7 +54,10 @@ class DSSSCorrelator:
         sync = np.asarray(sync_pattern)
         sync_len = len(sync)
 
-        max_search = min(search_window, len(rx) - sync_len)
+        # Offsets 0 .. len(rx) - sync_len all fit the whole pattern. Without the + 1 the last
+        # one was never tried: a pattern ending exactly at the end of the capture locked to a
+        # wrong offset, and a capture exactly as long as the pattern found nothing at all.
+        max_search = min(search_window, len(rx) - sync_len + 1)
         if max_search <= 0:
             return 0, 0.0
 

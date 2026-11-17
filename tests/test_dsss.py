@@ -84,6 +84,15 @@ def test_sliding_correlator_acquisition_and_early_late():
     assert abs(timing_err) < 0.1
 
 
+def test_sliding_correlator_tries_the_last_offset():
+    # A pattern that ends exactly at the end of the capture, and a capture exactly as long as it.
+    pattern = np.sign(np.random.default_rng(1).normal(size=64))
+    correlator = DSSSCorrelator(spreading_factor=16)
+    assert correlator.find_lock_offset(np.concatenate([np.zeros(5), pattern]), pattern) == (5, 1.0)
+    assert correlator.find_lock_offset(pattern, pattern) == (0, 1.0)
+    assert correlator.find_lock_offset(pattern[:10], pattern) == (0, 0.0)  # too short to hold it
+
+
 def test_processing_gain_empirical_vs_theoretical():
     for sf in [16, 32, 64]:
         res = measure_processing_gain(sf=sf, num_symbols=5000, input_snr_db=0.0, seed=123)
