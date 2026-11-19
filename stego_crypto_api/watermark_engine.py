@@ -26,10 +26,15 @@ def add_visible_text_watermark(
     try:
         font = ImageFont.truetype("arial.ttf", font_size)
     except IOError:
-        font = ImageFont.load_default()
-        
+        # No Arial (Linux, macOS without it): the bare load_default() is an 11 px bitmap font,
+        # so font_size did nothing there. Pillow 10.1+ can scale its built-in font.
+        font = ImageFont.load_default(size=font_size)
+
+    # textbbox is (left, top, right, bottom) and starts below and right of the anchor, so the
+    # width is right - left (it used right - top) and the drawing point is moved back by
+    # left/top; otherwise the 20 px margin wasn't 20 px from the edge.
     bbox = draw.textbbox((0, 0), text, font=font)
-    t_width = bbox[2] - bbox[1]
+    t_width = bbox[2] - bbox[0]
     t_height = bbox[3] - bbox[1]
     
     w, h = base.size
@@ -54,7 +59,7 @@ def add_visible_text_watermark(
     rgb_color = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     alpha_val = int(255 * opacity)
     
-    draw.text((x, y), text, fill=(*rgb_color, alpha_val), font=font)
+    draw.text((x - bbox[0], y - bbox[1]), text, fill=(*rgb_color, alpha_val), font=font)
     watermarked = Image.alpha_composite(base, txt_layer)
     
     out_io = io.BytesIO()
