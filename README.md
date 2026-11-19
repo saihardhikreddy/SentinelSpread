@@ -89,6 +89,8 @@ The backend still has `/api/radio` (transmit, receive, WAV, status) for running 
 - `SENTINEL_RADIO_PYTHON`: the Python with GNU Radio (default `C:\Users\csaih\radioconda\python.exe`).
 - `SENTINEL_PROJECT_ROOT`: where the `sentinelspread` package lives (default: this repository).
 
+The API answers its own page only: other websites get no CORS approval, so a page open in the same browser can't call `/api/radio/transmit`. To serve the frontend from somewhere else, list its origin in `SENTINEL_CORS_ORIGINS` (comma-separated).
+
 ## Tests
 ```bash
 python -m pytest tests              # pipeline: 36 tests

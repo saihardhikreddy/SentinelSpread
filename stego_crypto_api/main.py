@@ -35,11 +35,15 @@ app = FastAPI(
     redoc_url=None
 )
 
-# Enable CORS
+# The frontend is served by this app, so its requests are same-origin and need no CORS. Allowing
+# every origin with credentials (as before) told browsers that any website may call this API,
+# including /api/radio/transmit, which keys the Pluto SDR on the machine running the server.
+# A frontend hosted elsewhere can be allowed explicitly: SENTINEL_CORS_ORIGINS=https://a,https://b
+CORS_ORIGINS = [o.strip() for o in os.environ.get("SENTINEL_CORS_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
