@@ -43,3 +43,10 @@ def test_seed_is_reproducible_and_empty_input_is_empty():
     assert not np.array_equal(add_awgn_snr(x, 5, seed=9), add_awgn_snr(x, 5, seed=10))
     assert add_awgn_snr(np.array([]), 5).size == 0
     assert add_awgn_ebn0(np.array([]), 5).size == 0
+
+
+@pytest.mark.parametrize("kwargs", [{"sps": 0}, {"sps": -4}, {"es": 0.0}, {"bits_per_symbol": 0}])
+def test_ebn0_mode_refuses_settings_that_would_add_no_noise_or_nan(kwargs):
+    """sps=0 and es=0 used to return the clean signal (BER 0 at any Eb/N0); sps<0 gave nan."""
+    with pytest.raises(ValueError):
+        add_awgn_ebn0(np.ones(16, dtype=complex), 10.0, **kwargs)

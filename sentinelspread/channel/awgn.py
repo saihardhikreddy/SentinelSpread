@@ -41,6 +41,14 @@ def add_awgn_ebn0(
     Returns:
         Noisy complex baseband samples.
     """
+    # sps=0 or es=0 used to return the signal with no noise at all (a perfect BER at any Eb/N0),
+    # a negative sps filled it with nan, and bits_per_symbol=0 divided by zero.
+    if bits_per_symbol < 1:
+        raise ValueError(f"bits_per_symbol must be at least 1, got {bits_per_symbol}")
+    if sps < 1:
+        raise ValueError(f"sps must be at least 1, got {sps}")
+    if not es > 0:
+        raise ValueError(f"es must be more than 0, got {es}")
     if len(iq_samples) == 0:
         return np.array([], dtype=complex)
 
