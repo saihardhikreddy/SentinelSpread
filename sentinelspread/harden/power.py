@@ -33,6 +33,13 @@ class PowerPolicy:
         accepted and ignored, so a chip-level measurement made the policy push power up when
         the link already had the processing gain's worth of margin.)
         """
+        if not np.isfinite(current_amplitude):
+            current_amplitude = self.max_amplitude
+        if np.isnan(measured_symbol_snr_db) or np.isnan(processing_gain_db):
+            # An SNR estimate of 0/0 (an empty or all-zero burst) is NaN. It used to turn the
+            # amplitude into NaN, and every later update kept it NaN, so the link went silent
+            # for good. With no usable measurement, hold the current amplitude.
+            return float(np.clip(current_amplitude, self.min_amplitude, self.max_amplitude))
         headroom_db = measured_symbol_snr_db + processing_gain_db - self.target_symbol_snr_db
         change_db = float(np.clip(-headroom_db, -self.step_db, self.step_db))
         amp = current_amplitude * 10 ** (change_db / 20)

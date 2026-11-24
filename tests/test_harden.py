@@ -174,3 +174,14 @@ def test_fhss_rejects_a_zero_dwell():
 
     with pytest.raises(ValueError):
         apply_fhss(np.ones(10), bytes(16), chips_per_hop=0)
+
+
+def test_power_policy_holds_amplitude_on_a_nan_measurement_and_recovers_from_nan():
+    p = PowerPolicy(target_symbol_snr_db=9.0, step_db=1.0)
+    assert p.required_amplitude(float("nan"), 0.5) == pytest.approx(0.5)
+    assert p.required_amplitude(12.0, 0.5, processing_gain_db=float("nan")) == pytest.approx(0.5)
+    # A NaN amplitude from an earlier bug or a bad config restarts from full power, not NaN forever.
+    amp = p.required_amplitude(9.0, float("nan"))
+    assert np.isfinite(amp) and amp == pytest.approx(p.max_amplitude)
+    # No signal at all (-inf dB) still asks for more power, one step at a time.
+    assert p.required_amplitude(float("-inf"), 0.5) == pytest.approx(0.5 * 10 ** (1 / 20))
