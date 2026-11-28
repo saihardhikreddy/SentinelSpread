@@ -75,7 +75,12 @@ def handle_encrypt(args):
     input_path = Path(args.input)
     
     # Generate temporary or specified RSA keypair
-    if args.key and Path(args.key).is_file():
+    if args.key:
+        # A mistyped --key path used to fall through to a fresh keypair: the bundle was sealed
+        # to a key nobody had, and (without --save-keys) could never be decrypted.
+        if not Path(args.key).is_file():
+            print(f"[!] Error: Public key file not found: {args.key}")
+            sys.exit(1)
         pub_key = import_key(args.key)
         print(f"[*] Loaded public key from {args.key}")
     else:
@@ -85,6 +90,9 @@ def handle_encrypt(args):
             export_key(priv_key, "keys/private_key.pem")
             export_key(pub_key, "keys/public_key.pem")
             print("[+] Saved RSA keys to keys/private_key.pem and keys/public_key.pem")
+        else:
+            print("[!] Warning: the private key is not saved (no --save-keys), so this bundle "
+                  "cannot be decrypted later.")
 
     if args.type == "audio" or (input_path.is_file() and input_path.suffix.lower() in (".wav", ".wave")):
         print(f"[*] Processing audio payload: {input_path}")
